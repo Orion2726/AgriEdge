@@ -1,0 +1,17 @@
+{
+  "name": "agriedge-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local-only Node/Express/SQLite backend for the AgriEdge app. No deployment — run with `npm start` on your dev machine and point the app's AppConstants.backendBaseUrl at it.",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js",
+    "seed": "node -e \"require('./src/db').seedIfEmpty()\""
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.5.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.1"
+  }
+}

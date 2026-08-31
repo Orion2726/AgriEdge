@@ -1,0 +1,44 @@
+# AgriEdge backend (local dev only — no deployment)
+
+Node.js + Express + SQLite (`better-sqlite3`). Runs on your machine only; the
+Flutter app points at `http://localhost:4001` (see
+`app/lib/core/constants/app_constants.dart`).
+
+## Run it
+
+```bash
+cd backend
+npm install
+npm start
+```
+
+First run seeds sample market prices, MSP rates, a product catalog, and a
+handful of demo disease detections (see `src/db/index.js` — clearly not real
+Agmarknet/CACP/crowdsourced data, just enough to exercise every screen).
+
+## Endpoints
+
+| Method | Path                              | Purpose |
+|--------|-----------------------------------|---------|
+| GET    | `/api/prices`                     | Latest mandi prices |
+| GET    | `/api/prices/forecast/:commodity` | 7-day forecast (stub — see `ml_bridge/price_forecast`) |
+| GET    | `/api/msp`                        | MSP rates |
+| GET    | `/api/products`                   | Order catalog |
+| POST   | `/api/orders`                     | Place/sync an order |
+| POST   | `/api/soil-reports`               | Submit a soil report, get ranked crop recommendations back |
+| GET    | `/api/crop-recommendation/:id`    | Recompute recommendations for a stored report |
+| POST   | `/api/detections`                 | Upload a crowdsourced disease-detection event |
+| GET    | `/api/alerts/nearby`              | Clustered nearby-disease alerts (`?lat=&lng=&radiusKm=`) |
+| POST   | `/api/assistant/query`            | Mock-RAG FAQ answer |
+| GET    | `/api/models/disease`             | Downloadable `.tflite` (404 until you drop one in) |
+| GET    | `/api/models/disease/manifest`    | Model version manifest |
+
+## Where the 2 server-side models plug in
+
+- `src/ml_bridge/crop_recommendation/` — currently a rule-based stand-in.
+  See its `README.md` for the ONNX contract.
+- `src/ml_bridge/price_forecast/` — currently a random-walk stand-in. See
+  its `README.md` for the ONNX contract.
+
+Full model specs (architecture, preprocessing, export format) are in
+`../docs/MODEL_SPECS.md`.

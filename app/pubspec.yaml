@@ -1,0 +1,62 @@
+name: agriedge
+description: "AgriEdge — offline-first farmers' app."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # State management
+  flutter_riverpod: ^2.6.1
+
+  # Routing
+  go_router: ^14.6.2
+
+  # Local database (offline-first structured storage)
+  drift: ^2.22.1
+  sqlite3_flutter_libs: ^0.5.27
+  path_provider: ^2.1.5
+  path: ^1.9.1
+
+  # Networking
+  dio: ^5.7.0
+  connectivity_plus: ^6.1.1
+
+  # Background sync
+  workmanager: ^0.5.2
+
+  # On-device ML (disease detection)
+  tflite_flutter: ^0.11.0
+  image_picker: ^1.1.2
+  image: ^4.3.0
+
+  # Location (soil report geotag, nearby disease alerts)
+  geolocator: ^13.0.2
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+
+  # Utilities
+  intl: ^0.19.0
+  shared_preferences: ^2.3.3
+  uuid: ^4.5.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  drift_dev: ^2.22.1
+  build_runner: ^2.4.13
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/ml/disease/
+    - assets/knowledge_base/

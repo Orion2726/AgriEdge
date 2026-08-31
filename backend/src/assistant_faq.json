@@ -1,0 +1,30 @@
+[
+  {
+    "keywords": ["crop calendar", "when to sow", "sowing time", "planting time"],
+    "answer": "Sowing time depends on your crop and region: kharif crops (rice, maize, cotton) are typically sown June-July; rabi crops (wheat, mustard, potato) are sown October-November."
+  },
+  {
+    "keywords": ["msp", "minimum support price", "government price"],
+    "answer": "MSP (Minimum Support Price) is the guaranteed price the government pays for certain crops. Check the MSP tab in the app for current rates by crop."
+  },
+  {
+    "keywords": ["pest", "insect", "bug"],
+    "answer": "Use the Disease Prediction camera feature to identify the issue from a leaf photo, then follow the treatment advice shown. For general pest pressure, neem-oil based sprays are a low-cost first response."
+  },
+  {
+    "keywords": ["fertilizer", "urea", "npk", "nutrient"],
+    "answer": "Submit your Soil Test Report in the app to get nutrient-specific correction advice (e.g. urea/DAP quantity per acre) based on your soil's N, P, K, and pH levels."
+  },
+  {
+    "keywords": ["kvk", "krishi vigyan kendra", "local help", "contact", "extension officer"],
+    "answer": "Your nearest Krishi Vigyan Kendra (KVK) provides in-person agricultural extension support for your district."
+  },
+  {
+    "keywords": ["water", "irrigation", "drought"],
+    "answer": "Irrigation frequency depends on crop stage and soil type. Avoid waterlogging, and irrigate when the top few centimetres of soil feel dry, more frequently during flowering/grain-filling."
+  },
+  {
+    "keywords": ["order", "seeds", "fertilizer order", "equipment", "buy"],
+    "answer": "Go to the Orders tab, browse the catalog, add items to your cart, and place the order. Offline orders are queued and sent automatically once you're back online."
+  }
+]

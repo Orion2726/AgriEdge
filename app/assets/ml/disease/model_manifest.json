@@ -1,0 +1,12 @@
+{
+  "modelId": "disease_detection_v0",
+  "version": "0.0.0-placeholder",
+  "isPlaceholder": true,
+  "note": "No trained .tflite has been dropped in yet. Replace model.tflite in this directory with the trained MobileNetV2/EfficientNet-Lite0 export, bump version below, and set isPlaceholder to false. See docs/MODEL_SPECS.md for the full contract.",
+  "inputShape": [1, 224, 224, 3],
+  "inputNormalization": "[-1,1]",
+  "outputShape": [1, 16],
+  "labelsFile": "labels.txt",
+  "downloadUrl": "http://localhost:4001/api/models/disease",
+  "sha256": null
+}

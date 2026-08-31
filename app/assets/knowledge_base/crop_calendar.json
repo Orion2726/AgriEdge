@@ -1,0 +1,9 @@
+[
+  { "crop": "Rice", "season": "Kharif", "sowingWindow": "June - July", "harvestWindow": "October - November" },
+  { "crop": "Maize", "season": "Kharif", "sowingWindow": "June - July", "harvestWindow": "September - October" },
+  { "crop": "Cotton", "season": "Kharif", "sowingWindow": "May - June", "harvestWindow": "November - January" },
+  { "crop": "Wheat", "season": "Rabi", "sowingWindow": "October - November", "harvestWindow": "March - April" },
+  { "crop": "Mustard", "season": "Rabi", "sowingWindow": "October - November", "harvestWindow": "February - March" },
+  { "crop": "Potato", "season": "Rabi", "sowingWindow": "October - November", "harvestWindow": "January - February" },
+  { "crop": "Tomato", "season": "Year-round (regional)", "sowingWindow": "Varies by region", "harvestWindow": "60-80 days after transplant" }
+]

@@ -1,0 +1,12 @@
+# OS / editor cruft
+.DS_Store
+.vscode/
+.idea/
+*.swp
+
+# Claude Code local settings (personal, machine-specific — not shared)
+.claude/settings.local.json
+
+# Flutter and Node have their own .gitignore files inside app/ and backend/
+# (build/, .dart_tool/, node_modules/, the runtime sqlite db, etc.) — this
+# file only covers things at the repo root that those don't reach.

@@ -1,0 +1,37 @@
+[
+  {
+    "keywords": ["crop calendar", "when to sow", "sowing time", "planting time"],
+    "question": "When should I sow my crop?",
+    "answer": "Sowing time depends on your crop and region. Check the Crop Calendar section for kharif (June-July) and rabi (October-November) sowing windows for major crops."
+  },
+  {
+    "keywords": ["msp", "minimum support price", "government price"],
+    "question": "What is MSP?",
+    "answer": "MSP (Minimum Support Price) is the guaranteed price the government pays for certain crops, protecting farmers from price crashes. See the MSP tab for current rates by crop."
+  },
+  {
+    "keywords": ["pest", "insect", "bug"],
+    "question": "How do I deal with common pests?",
+    "answer": "Use the Disease Prediction camera feature to identify the issue from a leaf photo, then follow the treatment advice shown. For general pest pressure, neem-oil based sprays are a low-cost first response."
+  },
+  {
+    "keywords": ["fertilizer", "urea", "npk", "nutrient"],
+    "question": "How much fertilizer should I apply?",
+    "answer": "Submit your Soil Test Report in the app to get nutrient-specific correction advice (e.g. urea/DAP quantity per acre) based on your soil's N, P, K, and pH levels."
+  },
+  {
+    "keywords": ["kvk", "krishi vigyan kendra", "local help", "contact", "extension officer"],
+    "question": "Who can I contact for local help?",
+    "answer": "Your nearest Krishi Vigyan Kendra (KVK) provides in-person agricultural extension support. Contact details for your district are available on the Krishi Vigyan Kendra portal."
+  },
+  {
+    "keywords": ["water", "irrigation", "drought"],
+    "question": "How often should I irrigate?",
+    "answer": "Irrigation frequency depends on crop stage and soil type. As a general rule, avoid waterlogging and irrigate when the top few centimetres of soil feel dry, checking more often during flowering/grain-filling stages."
+  },
+  {
+    "keywords": ["order", "seeds", "fertilizer order", "equipment", "buy"],
+    "question": "How do I order seeds, fertilizer, or equipment?",
+    "answer": "Go to the Orders tab, browse the catalog, add items to your cart, and place the order. If you're offline, the order is queued and will be sent automatically once you're back online."
+  }
+]
