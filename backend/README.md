@@ -30,8 +30,12 @@ Agmarknet/CACP/crowdsourced data, just enough to exercise every screen).
 | POST   | `/api/detections`                 | Upload a crowdsourced disease-detection event |
 | GET    | `/api/alerts/nearby`              | Clustered nearby-disease alerts (`?lat=&lng=&radiusKm=`) |
 | POST   | `/api/assistant/query`            | Mock-RAG FAQ answer |
-| GET    | `/api/models/disease`             | Downloadable `.tflite` (404 until you drop one in) |
-| GET    | `/api/models/disease/manifest`    | Model version manifest |
+| GET    | `/api/models/disease/:cropId`             | Downloadable `.tflite` for that crop (404 until you drop one in) |
+| GET    | `/api/models/disease/:cropId/manifest`    | That crop's model version manifest |
+| GET    | `/api/models/disease/:cropId/labels`      | That crop's labels.txt |
+| GET    | `/api/models/crop-recommendation`         | Downloadable crop-recommendation `.tflite` |
+| GET    | `/api/models/crop-recommendation/manifest`| Crop-recommendation model version manifest |
+| GET    | `/api/models/crop-recommendation/labels`  | Crop-recommendation labels.txt |
 
 ## Where the 2 server-side models plug in
 

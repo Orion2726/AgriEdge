@@ -1,0 +1,14 @@
+{
+  "cropId": "rice",
+  "displayName": "Rice",
+  "modelId": "rice_disease_detection_v1",
+  "version": "1.0.0",
+  "isPlaceholder": false,
+  "note": "MobileNetV3Small classifier for rice pest/disease detection.",
+  "inputShape": [1, 224, 224, 3],
+  "inputNormalization": "raw_0_255",
+  "outputShape": [1, 13],
+  "labelsFile": "labels.txt",
+  "downloadUrl": "http://localhost:4001/api/models/disease/rice",
+  "sha256": "05e9b3522edcf9d079fd8db415d40df0667b99ac8c5c206527157e6f0915cd84"
+}

@@ -9,17 +9,21 @@ import '../../../core/data/offline_repository.dart';
 import '../../../core/db/app_database.dart';
 import '../../../core/db/db_provider.dart';
 import '../../../core/network/api_client.dart';
+import '../../crop_recommendation/ml/crop_recommendation_ml_service.dart';
 import '../domain/soil_report_entry.dart';
 
-/// Owns both the soil-report submit flow and caching the crop-recommendation
-/// response that comes back from it (POST /api/soil-reports returns ranked
-/// crops in one round trip — see backend/src/routes/soil.js). The
-/// crop_recommendation feature only reads what's cached here.
+/// Owns both the soil-report submit flow and the crop-recommendation cache.
+/// Recommendations are computed on-device (CropRecommendationMlService) the
+/// moment a report is submitted, so they're available immediately — even
+/// offline. The backend POST (see refresh()) is fire-and-forget, purely for
+/// server-side record-keeping; its response is no longer used to populate
+/// recommendations, since the on-device model is the source of truth.
 class SoilReportRepository implements OfflineRepository<SoilReportEntry> {
-  SoilReportRepository(this._db, this._dio);
+  SoilReportRepository(this._db, this._dio, this._mlService);
 
   final AppDatabase _db;
   final Dio _dio;
+  final CropRecommendationMlService _mlService;
   final _uuid = const Uuid();
 
   @override
@@ -63,7 +67,19 @@ class SoilReportRepository implements OfflineRepository<SoilReportEntry> {
             createdAt: createdAt,
           ),
         );
-    await _submitToBackend(id);
+
+    final result = await _mlService.predict(
+      nitrogen: nitrogen,
+      phosphorus: phosphorus,
+      potassium: potassium,
+      ph: ph,
+      organicCarbon: organicCarbon,
+      rainfallMm: rainfallMm,
+      temperatureC: temperatureC,
+      humidityPct: humidityPct,
+    );
+    await _cacheRecommendations(id, result);
+
     return id;
   }
 
@@ -71,7 +87,7 @@ class SoilReportRepository implements OfflineRepository<SoilReportEntry> {
     final report = await (_db.select(_db.soilReports)..where((t) => t.id.equals(soilReportId)))
         .getSingle();
     try {
-      final res = await _dio.post('/api/soil-reports', data: {
+      await _dio.post('/api/soil-reports', data: {
         'id': report.id,
         'nitrogen': report.nitrogen,
         'phosphorus': report.phosphorus,
@@ -82,7 +98,6 @@ class SoilReportRepository implements OfflineRepository<SoilReportEntry> {
         'temperatureC': report.temperatureC,
         'humidityPct': report.humidityPct,
       });
-      await _cacheRecommendations(soilReportId, res.data['recommendations'] as List);
       await (_db.update(_db.soilReports)..where((t) => t.id.equals(soilReportId)))
           .write(const SoilReportsCompanion(syncStatus: Value('synced')));
     } catch (_) {
@@ -90,20 +105,20 @@ class SoilReportRepository implements OfflineRepository<SoilReportEntry> {
     }
   }
 
-  Future<void> _cacheRecommendations(String soilReportId, List raw) async {
+  Future<void> _cacheRecommendations(String soilReportId, CropRecommendationResult result) async {
     await _db.batch((b) {
       b.deleteWhere(_db.cropRecommendations, (t) => t.soilReportId.equals(soilReportId));
       b.insertAll(
         _db.cropRecommendations,
-        raw.asMap().entries.map((e) {
+        result.suggestions.asMap().entries.map((e) {
           final index = e.key;
-          final item = e.value as Map<String, dynamic>;
+          final item = e.value;
           return CropRecommendationsCompanion.insert(
             soilReportId: soilReportId,
-            cropName: item['cropName'] as String,
+            cropName: item.cropName,
             rankPosition: index + 1,
-            suitabilityScore: (item['suitabilityScore'] as num).toDouble(),
-            nutrientAdviceJson: Value(jsonEncode(item['nutrientAdvice'] ?? [])),
+            suitabilityScore: item.suitabilityScore,
+            nutrientAdviceJson: Value(index == 0 ? jsonEncode(result.nutrientAdvice) : '[]'),
             cachedAt: DateTime.now(),
           );
         }),
@@ -136,7 +151,11 @@ class SoilReportRepository implements OfflineRepository<SoilReportEntry> {
 }
 
 final soilReportRepositoryProvider = Provider<SoilReportRepository>((ref) {
-  return SoilReportRepository(ref.watch(appDatabaseProvider), ref.watch(apiClientProvider));
+  return SoilReportRepository(
+    ref.watch(appDatabaseProvider),
+    ref.watch(apiClientProvider),
+    ref.watch(cropRecommendationMlServiceProvider),
+  );
 });
 
 final soilReportsProvider = StreamProvider<List<SoilReportEntry>>((ref) {

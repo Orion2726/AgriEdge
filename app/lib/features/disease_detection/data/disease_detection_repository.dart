@@ -28,6 +28,7 @@ class DiseaseDetectionRepository implements OfflineRepository<DiseaseDetectionEn
   /// queue — it must survive being offline, so this never talks to the
   /// network directly. geotag/image are only attached if [consentShared].
   Future<DiseaseDetectionEntry> recordDetection({
+    required String cropId,
     required String label,
     required double confidence,
     required bool isMock,
@@ -41,6 +42,7 @@ class DiseaseDetectionRepository implements OfflineRepository<DiseaseDetectionEn
     await _db.into(_db.diseaseDetections).insert(
           DiseaseDetectionsCompanion.insert(
             id: id,
+            cropId: Value(cropId),
             label: label,
             confidence: confidence,
             isMock: Value(isMock),
@@ -60,6 +62,7 @@ class DiseaseDetectionRepository implements OfflineRepository<DiseaseDetectionEn
         );
     return DiseaseDetectionEntry(
       id: id,
+      cropId: cropId,
       label: label,
       confidence: confidence,
       isMock: isMock,
@@ -89,6 +92,7 @@ class DiseaseDetectionRepository implements OfflineRepository<DiseaseDetectionEn
       try {
         await _dio.post('/api/detections', data: {
           'id': detection.id,
+          'cropId': detection.cropId,
           'label': detection.label,
           'confidence': detection.confidence,
           'lat': detection.lat,
@@ -110,6 +114,7 @@ class DiseaseDetectionRepository implements OfflineRepository<DiseaseDetectionEn
 
   DiseaseDetectionEntry _toEntry(DiseaseDetection row) => DiseaseDetectionEntry(
         id: row.id,
+        cropId: row.cropId,
         label: row.label,
         confidence: row.confidence,
         imagePath: row.imagePath,

@@ -1,4 +1,20 @@
-# Crop Recommendation — model drop-in contract
+# Crop Recommendation — model drop-in contract (superseded — kept as reference)
+
+**The app itself no longer uses this.** Crop recommendation now runs
+on-device via a TFLite model — see `docs/MODEL_SPECS.md` section 2 and
+`app/lib/features/crop_recommendation/ml/crop_recommendation_ml_service.dart`.
+That was a deliberate change from the ONNX/backend plan this file
+originally documented: it's the one feature that required connectivity at
+submit time in an otherwise fully offline-first app.
+
+`predict.js` below is still called by `POST /api/soil-reports` for
+server-side record-keeping (the app no longer reads its response), and its
+`buildNutrientAdvice()` / rule-based scoring were ported directly to Dart as
+`CropRecommendationMlService`'s no-model fallback. The ONNX swap-in steps
+below are left as-is in case a server-side ensemble is ever wanted for some
+other purpose, but this is not the active code path.
+
+---
 
 `predict.js` currently implements a **rule-based stand-in** (distance from
 hardcoded ideal N/P/K/pH ranges per crop). It exists only so the app has a

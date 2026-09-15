@@ -7,6 +7,16 @@ version: 1.0.0+1
 environment:
   sdk: ^3.10.4
 
+# sqlite3_flutter_libs already bundles a native sqlite3 build into the app
+# (via CocoaPods/Gradle) and links it into the running process. Without this,
+# the sqlite3 package's own build hook tries to *additionally* download a
+# separate precompiled binary from GitHub release assets at build time —
+# unnecessary here, and fails hard on networks that block that CDN host.
+hooks:
+  user_defines:
+    sqlite3:
+      source: process
+
 dependencies:
   flutter:
     sdk: flutter
@@ -58,5 +68,10 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/ml/disease/
+    - assets/ml/disease/potato/
+    - assets/ml/disease/cotton/
+    - assets/ml/disease/rice/
+    - assets/ml/disease/wheat/
+    - assets/ml/disease/staple_crops/
+    - assets/ml/crop_recommendation/
     - assets/knowledge_base/

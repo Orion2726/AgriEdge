@@ -1,0 +1,14 @@
+{
+  "cropId": "cotton",
+  "displayName": "Cotton",
+  "modelId": "cotton_disease_detection_v1",
+  "version": "1.0.0",
+  "isPlaceholder": false,
+  "note": "MobileNetV3Small classifier for cotton pest/disease detection.",
+  "inputShape": [1, 224, 224, 3],
+  "inputNormalization": "raw_0_255",
+  "outputShape": [1, 6],
+  "labelsFile": "labels.txt",
+  "downloadUrl": "http://localhost:4001/api/models/disease/cotton",
+  "sha256": "4e5598c295afbc1e843a9b5ae14ef78a3fdfc7b400b82e072928b4ea8cffc990"
+}

@@ -31,10 +31,7 @@ class CropRecommendationScreen extends ConsumerWidget {
                 return const Center(
                   child: Padding(
                     padding: EdgeInsets.all(24),
-                    child: Text(
-                      'No recommendation cached yet for your latest report — '
-                      'this appears once you\'re back online and it syncs.',
-                    ),
+                    child: Text('No recommendation available for this report.'),
                   ),
                 );
               }

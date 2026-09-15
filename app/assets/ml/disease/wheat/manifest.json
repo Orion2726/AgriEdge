@@ -1,0 +1,14 @@
+{
+  "cropId": "wheat",
+  "displayName": "Wheat",
+  "modelId": "wheat_disease_detection_v1",
+  "version": "1.0.0",
+  "isPlaceholder": false,
+  "note": "MobileNetV3Small classifier for wheat pest/disease detection.",
+  "inputShape": [1, 224, 224, 3],
+  "inputNormalization": "raw_0_255",
+  "outputShape": [1, 15],
+  "labelsFile": "labels.txt",
+  "downloadUrl": "http://localhost:4001/api/models/disease/wheat",
+  "sha256": "5318aa2288f38976aa4a4f68292574c4922c7c3487278863de6320f6d8890d75"
+}

@@ -1,0 +1,14 @@
+{
+  "cropId": "staple_crops",
+  "displayName": "Staple crops (Corn, Potato, Rice, Sugarcane, Wheat)",
+  "modelId": "staple_crops_disease_detection_v1",
+  "version": "1.0.0",
+  "isPlaceholder": false,
+  "note": "MobileNetV3Small multi-crop classifier covering common staple-crop diseases in one model. Use this when the crop isn't known ahead of time, or isn't covered by a dedicated single-crop model.",
+  "inputShape": [1, 224, 224, 3],
+  "inputNormalization": "raw_0_255",
+  "outputShape": [1, 17],
+  "labelsFile": "labels.txt",
+  "downloadUrl": "http://localhost:4001/api/models/disease/staple_crops",
+  "sha256": "d780f8a48812456606dc5950f489ecdec278571f57bf8dc285173a825710c225"
+}

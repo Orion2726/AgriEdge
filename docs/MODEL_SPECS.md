@@ -102,70 +102,76 @@ a farmer has downloaded an update.
 
 ## 2. Crop Recommendation
 
-**Where it's used**: `backend/src/routes/soil.js` calls
-`ml_bridge/crop_recommendation/predict()`. Currently a rule-based stand-in
-(distance from hardcoded ideal N/P/K/pH ranges per crop) — replace it with
-the trained ensemble without touching any route or Flutter code; see
-`backend/src/ml_bridge/crop_recommendation/README.md` for the mechanical
-swap steps.
+**Where it's used**: on-device, via
+`app/lib/features/crop_recommendation/ml/crop_recommendation_ml_service.dart`
+— `SoilReportRepository.submitReport()` calls it synchronously the moment a
+soil report is saved, so recommendations are cached immediately and work
+fully offline. This deviates from an earlier draft of this doc that
+specified a server-side RF+XGBoost/ONNX ensemble in the backend — that
+approach required connectivity at submit time (the whole rest of the app is
+offline-first; this was the one feature that wasn't), so it was replaced
+with an on-device model using the same TFLite/`ModelManager`-style pattern
+already built for disease detection. `backend/src/ml_bridge/crop_recommendation/predict.js`
+still exists as a rule-based fallback (now also ported to Dart directly in
+`CropRecommendationMlService._fallbackPredict()`, used only if no trained
+model can be resolved) and the backend's `/api/soil-reports` endpoint still
+computes/returns its own copy for server-side record-keeping, but the app
+no longer waits on or uses that response.
 
 ### Data
 
-- Soil Health Card (SHC) parameters: N, P, K, pH, organic carbon — entered
-  manually or OCR-scanned in-app (OCR scan is a stubbed "coming soon"
-  button today in `soil_report_screen.dart`).
-- Enriched with location climate data: rainfall, temperature, humidity
-  (IMD / weather API — currently manual entry fields in the same form,
-  defaulting to 0 if the farmer doesn't know them).
-- Historical crop-yield-vs-soil-and-climate data for the training set
-  itself (external to this repo).
+Trained on Kaggle's
+[atharvaingle/crop-recommendation-dataset](https://www.kaggle.com/datasets/atharvaingle/crop-recommendation-dataset)
+— 2200 rows, 22 crop classes, perfectly balanced (100/class). Columns:
+`N, P, K, temperature, humidity, ph, rainfall, label`. This dataset has
+**no organic_carbon column** — unlike the original 8-feature draft of this
+spec, the shipped model uses only the 7 features the dataset actually has.
+`organic_carbon` is still collected in the soil report form and used for
+the (non-model) nutrient-advice text, just not fed to the classifier.
 
 ### Architecture
 
-- **Random Forest** + **XGBoost**, combined via **soft voting**
-  (`sklearn.ensemble.VotingClassifier(voting='soft')`, or manually average
-  `predict_proba` from each).
-- Multi-class classifier over your crop label set.
+Small dense NN: `Normalization` (adapted on training data, baked into the
+graph) → `Dense(64, relu)` → `Dropout(0.2)` → `Dense(32, relu)` →
+`Dense(22, softmax)`. Baking normalization into the graph means the app
+feeds raw, unnormalized soil-report values directly — no separate scaler
+file to keep in sync between training and inference.
+
+Trained on an 85/15 stratified split; test accuracy 0.9939 (2 misclassified
+out of 330).
 
 ### Export
 
-**ONNX**, via `skl2onnx` (for the RF / the whole `VotingClassifier`) and
-`onnxmltools` (for the XGBoost sub-model, if exporting separately). Run
-inside the Node backend via `onnxruntime-node` — no separate Python service
-needed at request time.
+**TensorFlow Lite** (`model.tflite`), plain float32 — the whole model is
+~15KB, so INT8 quantization wasn't worth the added complexity/representative-dataset
+step it required for the (much larger) disease-detection CNNs.
 
 ### Exact I/O contract
 
-**Input** — `Float32Array`, shape `[1, 8]`, feature order fixed as:
+**Input** — `float32`, shape `[1, 7]`, **raw** (not pre-normalized) feature
+order fixed as:
 
 ```
-[nitrogen, phosphorus, potassium, ph, organicCarbon, rainfallMm, temperatureC, humidityPct]
+[N, P, K, temperature_c, humidity_pct, ph, rainfall_mm]
 ```
 
-**Output** — ranked array of:
+**Output** — `float32`, shape `[1, 22]`, softmax over crop classes, order
+matching `labels.txt` (alphabetical: apple, banana, blackgram, chickpea,
+coconut, coffee, cotton, grapes, jute, kidneybeans, lentil, maize, mango,
+mothbeans, mungbean, muskmelon, orange, papaya, pigeonpeas, pomegranate,
+rice, watermelon).
 
-```json
-{ "cropName": "Rice", "suitabilityScore": 0.87, "nutrientAdvice": ["..."] }
-```
-
-`nutrientAdvice` is **not** a model output — it's computed separately from
-threshold rules against the same soil inputs (see `buildNutrientAdvice()`
-in `predict.js`). Keep that function (or an improved version) regardless of
-what the classifier becomes; only the ranking/`suitabilityScore` comes from
-the trained model.
+`CropRecommendationMlService.predict()` takes the top 5 by score and
+attaches `nutrientAdvice` (threshold rules against N/P/K/pH/organic_carbon,
+not a model output) to the top-ranked suggestion only — same behavior the
+original rule-based `predict.js` had.
 
 ### Drop-in
 
-`backend/src/ml_bridge/crop_recommendation/`:
-
-- `model.onnx`
-- `label_map.json` — `{"0": "Rice", "1": "Wheat", ...}` (class index → crop name)
-- `feature_scaler.json` — mean/std or min/max per feature, if trained on
-  standardized inputs
-
-Then rewrite `predict()` in that directory's `predict.js` to load the ONNX
-session once at module scope and run inference instead of the rule-based
-scoring. Full steps in that directory's `README.md`.
+Bundled: `app/assets/ml/crop_recommendation/{model.tflite,labels.txt,manifest.json}`.
+Downloadable-at-runtime: `backend/assets/models/crop-recommendation/{model.tflite,labels.txt,manifest.json}`,
+served via `GET /api/models/crop-recommendation(/manifest|/labels)`. Both
+copies need to stay in sync — see `backend/assets/models/crop-recommendation/README.md`.
 
 ---
 

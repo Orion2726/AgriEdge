@@ -3,5 +3,9 @@ data/*.sqlite
 data/*.sqlite-journal
 data/*.sqlite-wal
 data/*.sqlite-shm
-assets/models/disease/model.tflite
-assets/models/disease/manifest.json
+assets/models/disease/*/model.tflite
+assets/models/disease/*/manifest.json
+assets/models/disease/*/labels.txt
+assets/models/crop-recommendation/model.tflite
+assets/models/crop-recommendation/manifest.json
+assets/models/crop-recommendation/labels.txt

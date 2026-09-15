@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/ml/crop_catalog.dart';
 import '../data/disease_detection_repository.dart';
 import '../data/treatment_knowledge_base.dart';
 import '../domain/disease_detection_entry.dart';
@@ -24,6 +25,7 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
   TreatmentAdvice? _advice;
   bool _isRunning = false;
   bool _consentShared = false;
+  String _cropId = cropCatalog.first.id;
 
   Future<void> _capture(ImageSource source) async {
     final picker = ImagePicker();
@@ -37,8 +39,8 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
     });
 
     final service = ref.read(tfliteDiseaseServiceProvider);
-    final prediction = await service.predict(_image!);
-    final advice = await ref.read(treatmentKnowledgeBaseProvider).lookup(prediction.label);
+    final prediction = await service.predict(_cropId, _image!);
+    final advice = await ref.read(treatmentKnowledgeBaseProvider).lookup(_cropId, prediction.label);
 
     if (!mounted) return;
     setState(() {
@@ -66,6 +68,7 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
       }
     }
     await ref.read(diseaseDetectionRepositoryProvider).recordDetection(
+          cropId: _cropId,
           label: prediction.label,
           confidence: prediction.confidence,
           isMock: prediction.isMock,
@@ -95,6 +98,36 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          DropdownButtonFormField<String>(
+            initialValue: _cropId,
+            isExpanded: true,
+            decoration: const InputDecoration(
+              labelText: 'Crop',
+              border: OutlineInputBorder(),
+            ),
+            items: cropCatalog
+                .map((crop) => DropdownMenuItem(
+                      value: crop.id,
+                      child: Text(
+                        crop.displayName,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    ))
+                .toList(),
+            onChanged: _isRunning
+                ? null
+                : (value) {
+                    if (value == null) return;
+                    setState(() {
+                      _cropId = value;
+                      _image = null;
+                      _prediction = null;
+                      _advice = null;
+                    });
+                  },
+          ),
+          const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
@@ -226,6 +259,13 @@ class _HistoryTile extends StatelessWidget {
   const _HistoryTile({required this.entry});
   final DiseaseDetectionEntry entry;
 
+  String _cropDisplayName(String cropId) {
+    for (final crop in cropCatalog) {
+      if (crop.id == cropId) return crop.displayName;
+    }
+    return cropId;
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListTile(
@@ -234,7 +274,9 @@ class _HistoryTile extends StatelessWidget {
         color: entry.syncStatus == 'synced' ? Colors.green : Colors.grey,
       ),
       title: Text(entry.label),
-      subtitle: Text(DateFormat.yMMMd().add_jm().format(entry.createdAt)),
+      subtitle: Text(
+        '${_cropDisplayName(entry.cropId)} · ${DateFormat.yMMMd().add_jm().format(entry.createdAt)}',
+      ),
       trailing: Text('${(entry.confidence * 100).toStringAsFixed(0)}%'),
     );
   }

@@ -65,7 +65,7 @@ class _SoilReportScreenState extends ConsumerState<SoilReportScreen> {
     if (!mounted) return;
     setState(() => _submitting = false);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Soil report saved. Crop recommendations updating...')),
+      const SnackBar(content: Text('Soil report saved. Crop recommendations ready.')),
     );
     context.push('/crop-recommendation');
   }

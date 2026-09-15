@@ -56,6 +56,7 @@ class CropRecommendations extends Table {
 
 class DiseaseDetections extends Table {
   TextColumn get id => text()();
+  TextColumn get cropId => text().withDefault(const Constant('potato'))();
   TextColumn get label => text()();
   RealColumn get confidence => real()();
   TextColumn get imagePath => text().nullable()();
@@ -156,7 +157,17 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(impl.openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) => m.createAll(),
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            await m.addColumn(diseaseDetections, diseaseDetections.cropId);
+          }
+        },
+      );
 
   Future<DateTime?> lastSyncedAt(String domain) async {
     final row = await (select(syncMeta)..where((t) => t.domain.equals(domain)))

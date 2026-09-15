@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:math';
 
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
@@ -16,64 +15,82 @@ class DiseasePrediction {
   final bool isMock;
 }
 
+class _LoadedCropModel {
+  _LoadedCropModel({
+    required this.interpreter,
+    required this.labels,
+    required this.inputNormalization,
+    required this.version,
+  });
+
+  final Interpreter interpreter;
+  final List<String> labels;
+  final String inputNormalization;
+  final String version;
+}
+
 /// Wraps tflite_flutter so the rest of the app never has to know whether a
-/// real trained model is present. If ModelManager can't resolve a usable
-/// .tflite (still a placeholder build), predict() falls back to a labeled
-/// mock result instead of crashing or blocking the feature — this is what
-/// keeps disease prediction demoable end-to-end before any model is trained.
+/// real trained model is present for a given crop. If ModelManager can't
+/// resolve a usable .tflite for that crop (still a placeholder build),
+/// predict() falls back to a labeled mock result instead of crashing or
+/// blocking the feature. Each crop's model can have been trained with a
+/// different preprocessing convention (see ActiveModel.inputNormalization),
+/// so preprocessing is resolved per-crop, not globally.
 class TFLiteDiseaseService {
   TFLiteDiseaseService(this._modelManager);
 
   final ModelManager _modelManager;
-  Interpreter? _interpreter;
-  List<String>? _labels;
-  ModelSource? _loadedSource;
+  final Map<String, _LoadedCropModel> _cache = {};
 
-  Future<void> _ensureLoaded() async {
-    final active = await _modelManager.resolveActiveModel();
+  Future<_LoadedCropModel?> _ensureLoaded(String cropId) async {
+    final active = await _modelManager.resolveActiveModel(cropId);
     if (!active.isUsable) {
-      _interpreter?.close();
-      _interpreter = null;
-      _labels = null;
-      _loadedSource = null;
-      return;
+      _cache.remove(cropId)?.interpreter.close();
+      return null;
     }
-    if (_loadedSource == active.source && _interpreter != null) return;
-    _interpreter?.close();
-    _interpreter = Interpreter.fromFile(active.file!);
-    _labels = await _loadLabels();
-    _loadedSource = active.source;
+    final cached = _cache[cropId];
+    if (cached != null && cached.version == active.version) return cached;
+    cached?.interpreter.close();
+    final loaded = _LoadedCropModel(
+      interpreter: Interpreter.fromFile(active.file!),
+      labels: active.labels!,
+      inputNormalization: active.inputNormalization ?? '[-1,1]',
+      version: active.version,
+    );
+    _cache[cropId] = loaded;
+    return loaded;
   }
 
-  Future<List<String>> _loadLabels() async {
-    final raw = await rootBundle.loadString(AppConstants.diseaseLabelsAssetPath);
-    return raw.split('\n').map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
-  }
-
-  Future<DiseasePrediction> predict(File imageFile) async {
-    await _ensureLoaded();
-    final interpreter = _interpreter;
-    final labels = _labels;
-    if (interpreter == null || labels == null) {
-      return _mockPredict();
+  Future<DiseasePrediction> predict(String cropId, File imageFile) async {
+    final loaded = await _ensureLoaded(cropId);
+    if (loaded == null) {
+      return _mockPredict(cropId);
     }
 
-    final input = await _preprocess(imageFile);
-    final output = [List.filled(labels.length, 0.0)];
-    interpreter.run(input, output);
+    final input = await _preprocess(imageFile, loaded.inputNormalization);
+    final output = [List.filled(loaded.labels.length, 0.0)];
+    loaded.interpreter.run(input, output);
 
     final scores = output[0];
     var bestIndex = 0;
     for (var i = 1; i < scores.length; i++) {
       if (scores[i] > scores[bestIndex]) bestIndex = i;
     }
-    return DiseasePrediction(label: labels[bestIndex], confidence: scores[bestIndex], isMock: false);
+    return DiseasePrediction(
+      label: loaded.labels[bestIndex],
+      confidence: scores[bestIndex],
+      isMock: false,
+    );
   }
 
-  /// Resize + normalize to [-1, 1], matching the manifest's declared
-  /// preprocessing. If a trained model expects different normalization,
-  /// update this alongside assets/ml/disease/model_manifest.json.
-  Future<List<List<List<List<double>>>>> _preprocess(File file) async {
+  /// Resize to the model's expected input, then normalize according to
+  /// that crop's manifest: '[-1,1]' pre-normalizes pixels here (e.g. the
+  /// potato MobileNetV2 model, which expects already-scaled input); models
+  /// with normalization baked into the graph want the raw [0,255] pixel
+  /// values instead (e.g. the MobileNetV3 crop models, which rescale
+  /// internally — pre-normalizing those would double-scale and break
+  /// inference).
+  Future<List<List<List<List<double>>>>> _preprocess(File file, String inputNormalization) async {
     final bytes = await file.readAsBytes();
     final decoded = img.decodeImage(bytes);
     if (decoded == null) {
@@ -81,34 +98,33 @@ class TFLiteDiseaseService {
     }
     final size = AppConstants.diseaseModelInputSize;
     final resized = img.copyResize(decoded, width: size, height: size);
+    final normalize = inputNormalization == 'raw_0_255'
+        ? (num v) => v.toDouble()
+        : (num v) => (v / 127.5) - 1.0;
 
     return [
       List.generate(
         size,
         (y) => List.generate(size, (x) {
           final pixel = resized.getPixel(x, y);
-          return [
-            (pixel.r / 127.5) - 1.0,
-            (pixel.g / 127.5) - 1.0,
-            (pixel.b / 127.5) - 1.0,
-          ];
+          return [normalize(pixel.r), normalize(pixel.g), normalize(pixel.b)];
         }),
       ),
     ];
   }
 
-  static const _mockLabels = [
-    'Tomato___Early_blight',
-    'Tomato___Healthy',
-    'Potato___Late_blight',
-    'Maize___Common_Rust',
-    'Rice___Leaf_Blast',
-    'Cotton___Bacterial_Blight',
-  ];
+  static const _mockLabelsByCrop = {
+    'potato': ['Potato___Early_blight', 'Potato___Late_blight', 'Potato___Healthy'],
+    'cotton': ['Aphids', 'Bacterial Blight', 'Healthy'],
+    'rice': ['blast', 'brown_spot', 'normal'],
+    'wheat': ['Brown Rust', 'Healthy', 'Septoria'],
+    'staple_crops': ['Corn___Common_Rust', 'Rice___Brown_Spot', 'Wheat___Healthy'],
+  };
 
-  DiseasePrediction _mockPredict() {
+  DiseasePrediction _mockPredict(String cropId) {
     final rand = Random();
-    final label = _mockLabels[rand.nextInt(_mockLabels.length)];
+    final labels = _mockLabelsByCrop[cropId] ?? const ['Unknown'];
+    final label = labels[rand.nextInt(labels.length)];
     final confidence = 0.55 + rand.nextDouble() * 0.4;
     return DiseasePrediction(label: label, confidence: confidence, isMock: true);
   }

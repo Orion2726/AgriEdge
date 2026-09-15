@@ -1,0 +1,13 @@
+{
+  "modelId": "crop_recommendation_v1",
+  "version": "1.0.0",
+  "isPlaceholder": false,
+  "note": "Dense NN (Normalization -> Dense64 -> Dense32 -> softmax) trained on Kaggle's atharvaingle/crop-recommendation-dataset. Test accuracy 0.9939 on a stratified 15% held-out split. Normalization is baked into the graph, so the app feeds raw (unnormalized) feature values directly. Dataset has no organic_carbon column, so this model uses 7 features, not the 8 in the original MODEL_SPECS.md draft.",
+  "inputShape": [1, 7],
+  "inputFeatureOrder": ["N", "P", "K", "temperature_c", "humidity_pct", "ph", "rainfall_mm"],
+  "inputNormalization": "raw",
+  "outputShape": [1, 22],
+  "labelsFile": "labels.txt",
+  "downloadUrl": "http://localhost:4001/api/models/crop-recommendation",
+  "sha256": "6c381ecd11cd6b0ff912113f7fbb820dfb799680140f1f8e23a09a911494c059"
+}

@@ -1,0 +1,14 @@
+{
+  "cropId": "potato",
+  "displayName": "Potato",
+  "modelId": "potato_disease_detection_v1",
+  "version": "1.0.0",
+  "isPlaceholder": false,
+  "note": "Potato-only classifier: MobileNetV2 (all layers trainable) fine-tuned on the PlantVillage potato subset (aarishasifkhan/plantvillage-potato-disease-dataset), INT8 post-training quantized. Test accuracy 0.9969 on a stratified 15% held-out split. Only detects Potato___Early_blight / Potato___Late_blight / Potato___Healthy — other crops are out of scope until their own models are trained. See docs/MODEL_SPECS.md for the full contract.",
+  "inputShape": [1, 224, 224, 3],
+  "inputNormalization": "[-1,1]",
+  "outputShape": [1, 3],
+  "labelsFile": "labels.txt",
+  "downloadUrl": "http://localhost:4001/api/models/disease/potato",
+  "sha256": "9449e1520791313664bd83facec0ab55e2d8b7bad0badfdabec968b415db39c2"
+}

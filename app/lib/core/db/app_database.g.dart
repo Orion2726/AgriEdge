@@ -1959,6 +1959,16 @@ class $DiseaseDetectionsTable extends DiseaseDetections
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _cropIdMeta = const VerificationMeta('cropId');
+  @override
+  late final GeneratedColumn<String> cropId = GeneratedColumn<String>(
+    'crop_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('potato'),
+  );
   static const VerificationMeta _labelMeta = const VerificationMeta('label');
   @override
   late final GeneratedColumn<String> label = GeneratedColumn<String>(
@@ -2062,6 +2072,7 @@ class $DiseaseDetectionsTable extends DiseaseDetections
   @override
   List<GeneratedColumn> get $columns => [
     id,
+    cropId,
     label,
     confidence,
     imagePath,
@@ -2088,6 +2099,12 @@ class $DiseaseDetectionsTable extends DiseaseDetections
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     } else if (isInserting) {
       context.missing(_idMeta);
+    }
+    if (data.containsKey('crop_id')) {
+      context.handle(
+        _cropIdMeta,
+        cropId.isAcceptableOrUnknown(data['crop_id']!, _cropIdMeta),
+      );
     }
     if (data.containsKey('label')) {
       context.handle(
@@ -2165,6 +2182,10 @@ class $DiseaseDetectionsTable extends DiseaseDetections
         DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
+      cropId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}crop_id'],
+      )!,
       label: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}label'],
@@ -2213,6 +2234,7 @@ class $DiseaseDetectionsTable extends DiseaseDetections
 class DiseaseDetection extends DataClass
     implements Insertable<DiseaseDetection> {
   final String id;
+  final String cropId;
   final String label;
   final double confidence;
   final String? imagePath;
@@ -2224,6 +2246,7 @@ class DiseaseDetection extends DataClass
   final String syncStatus;
   const DiseaseDetection({
     required this.id,
+    required this.cropId,
     required this.label,
     required this.confidence,
     this.imagePath,
@@ -2238,6 +2261,7 @@ class DiseaseDetection extends DataClass
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
+    map['crop_id'] = Variable<String>(cropId);
     map['label'] = Variable<String>(label);
     map['confidence'] = Variable<double>(confidence);
     if (!nullToAbsent || imagePath != null) {
@@ -2259,6 +2283,7 @@ class DiseaseDetection extends DataClass
   DiseaseDetectionsCompanion toCompanion(bool nullToAbsent) {
     return DiseaseDetectionsCompanion(
       id: Value(id),
+      cropId: Value(cropId),
       label: Value(label),
       confidence: Value(confidence),
       imagePath: imagePath == null && nullToAbsent
@@ -2280,6 +2305,7 @@ class DiseaseDetection extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return DiseaseDetection(
       id: serializer.fromJson<String>(json['id']),
+      cropId: serializer.fromJson<String>(json['cropId']),
       label: serializer.fromJson<String>(json['label']),
       confidence: serializer.fromJson<double>(json['confidence']),
       imagePath: serializer.fromJson<String?>(json['imagePath']),
@@ -2296,6 +2322,7 @@ class DiseaseDetection extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
+      'cropId': serializer.toJson<String>(cropId),
       'label': serializer.toJson<String>(label),
       'confidence': serializer.toJson<double>(confidence),
       'imagePath': serializer.toJson<String?>(imagePath),
@@ -2310,6 +2337,7 @@ class DiseaseDetection extends DataClass
 
   DiseaseDetection copyWith({
     String? id,
+    String? cropId,
     String? label,
     double? confidence,
     Value<String?> imagePath = const Value.absent(),
@@ -2321,6 +2349,7 @@ class DiseaseDetection extends DataClass
     String? syncStatus,
   }) => DiseaseDetection(
     id: id ?? this.id,
+    cropId: cropId ?? this.cropId,
     label: label ?? this.label,
     confidence: confidence ?? this.confidence,
     imagePath: imagePath.present ? imagePath.value : this.imagePath,
@@ -2334,6 +2363,7 @@ class DiseaseDetection extends DataClass
   DiseaseDetection copyWithCompanion(DiseaseDetectionsCompanion data) {
     return DiseaseDetection(
       id: data.id.present ? data.id.value : this.id,
+      cropId: data.cropId.present ? data.cropId.value : this.cropId,
       label: data.label.present ? data.label.value : this.label,
       confidence: data.confidence.present
           ? data.confidence.value
@@ -2356,6 +2386,7 @@ class DiseaseDetection extends DataClass
   String toString() {
     return (StringBuffer('DiseaseDetection(')
           ..write('id: $id, ')
+          ..write('cropId: $cropId, ')
           ..write('label: $label, ')
           ..write('confidence: $confidence, ')
           ..write('imagePath: $imagePath, ')
@@ -2372,6 +2403,7 @@ class DiseaseDetection extends DataClass
   @override
   int get hashCode => Object.hash(
     id,
+    cropId,
     label,
     confidence,
     imagePath,
@@ -2387,6 +2419,7 @@ class DiseaseDetection extends DataClass
       identical(this, other) ||
       (other is DiseaseDetection &&
           other.id == this.id &&
+          other.cropId == this.cropId &&
           other.label == this.label &&
           other.confidence == this.confidence &&
           other.imagePath == this.imagePath &&
@@ -2400,6 +2433,7 @@ class DiseaseDetection extends DataClass
 
 class DiseaseDetectionsCompanion extends UpdateCompanion<DiseaseDetection> {
   final Value<String> id;
+  final Value<String> cropId;
   final Value<String> label;
   final Value<double> confidence;
   final Value<String?> imagePath;
@@ -2412,6 +2446,7 @@ class DiseaseDetectionsCompanion extends UpdateCompanion<DiseaseDetection> {
   final Value<int> rowid;
   const DiseaseDetectionsCompanion({
     this.id = const Value.absent(),
+    this.cropId = const Value.absent(),
     this.label = const Value.absent(),
     this.confidence = const Value.absent(),
     this.imagePath = const Value.absent(),
@@ -2425,6 +2460,7 @@ class DiseaseDetectionsCompanion extends UpdateCompanion<DiseaseDetection> {
   });
   DiseaseDetectionsCompanion.insert({
     required String id,
+    this.cropId = const Value.absent(),
     required String label,
     required double confidence,
     this.imagePath = const Value.absent(),
@@ -2441,6 +2477,7 @@ class DiseaseDetectionsCompanion extends UpdateCompanion<DiseaseDetection> {
        createdAt = Value(createdAt);
   static Insertable<DiseaseDetection> custom({
     Expression<String>? id,
+    Expression<String>? cropId,
     Expression<String>? label,
     Expression<double>? confidence,
     Expression<String>? imagePath,
@@ -2454,6 +2491,7 @@ class DiseaseDetectionsCompanion extends UpdateCompanion<DiseaseDetection> {
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (cropId != null) 'crop_id': cropId,
       if (label != null) 'label': label,
       if (confidence != null) 'confidence': confidence,
       if (imagePath != null) 'image_path': imagePath,
@@ -2469,6 +2507,7 @@ class DiseaseDetectionsCompanion extends UpdateCompanion<DiseaseDetection> {
 
   DiseaseDetectionsCompanion copyWith({
     Value<String>? id,
+    Value<String>? cropId,
     Value<String>? label,
     Value<double>? confidence,
     Value<String?>? imagePath,
@@ -2482,6 +2521,7 @@ class DiseaseDetectionsCompanion extends UpdateCompanion<DiseaseDetection> {
   }) {
     return DiseaseDetectionsCompanion(
       id: id ?? this.id,
+      cropId: cropId ?? this.cropId,
       label: label ?? this.label,
       confidence: confidence ?? this.confidence,
       imagePath: imagePath ?? this.imagePath,
@@ -2500,6 +2540,9 @@ class DiseaseDetectionsCompanion extends UpdateCompanion<DiseaseDetection> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<String>(id.value);
+    }
+    if (cropId.present) {
+      map['crop_id'] = Variable<String>(cropId.value);
     }
     if (label.present) {
       map['label'] = Variable<String>(label.value);
@@ -2538,6 +2581,7 @@ class DiseaseDetectionsCompanion extends UpdateCompanion<DiseaseDetection> {
   String toString() {
     return (StringBuffer('DiseaseDetectionsCompanion(')
           ..write('id: $id, ')
+          ..write('cropId: $cropId, ')
           ..write('label: $label, ')
           ..write('confidence: $confidence, ')
           ..write('imagePath: $imagePath, ')
@@ -5965,6 +6009,7 @@ typedef $$CropRecommendationsTableProcessedTableManager =
 typedef $$DiseaseDetectionsTableCreateCompanionBuilder =
     DiseaseDetectionsCompanion Function({
       required String id,
+      Value<String> cropId,
       required String label,
       required double confidence,
       Value<String?> imagePath,
@@ -5979,6 +6024,7 @@ typedef $$DiseaseDetectionsTableCreateCompanionBuilder =
 typedef $$DiseaseDetectionsTableUpdateCompanionBuilder =
     DiseaseDetectionsCompanion Function({
       Value<String> id,
+      Value<String> cropId,
       Value<String> label,
       Value<double> confidence,
       Value<String?> imagePath,
@@ -6002,6 +6048,11 @@ class $$DiseaseDetectionsTableFilterComposer
   });
   ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cropId => $composableBuilder(
+    column: $table.cropId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6065,6 +6116,11 @@ class $$DiseaseDetectionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get cropId => $composableBuilder(
+    column: $table.cropId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get label => $composableBuilder(
     column: $table.label,
     builder: (column) => ColumnOrderings(column),
@@ -6122,6 +6178,9 @@ class $$DiseaseDetectionsTableAnnotationComposer
   });
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get cropId =>
+      $composableBuilder(column: $table.cropId, builder: (column) => column);
 
   GeneratedColumn<String> get label =>
       $composableBuilder(column: $table.label, builder: (column) => column);
@@ -6198,6 +6257,7 @@ class $$DiseaseDetectionsTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
+                Value<String> cropId = const Value.absent(),
                 Value<String> label = const Value.absent(),
                 Value<double> confidence = const Value.absent(),
                 Value<String?> imagePath = const Value.absent(),
@@ -6210,6 +6270,7 @@ class $$DiseaseDetectionsTableTableManager
                 Value<int> rowid = const Value.absent(),
               }) => DiseaseDetectionsCompanion(
                 id: id,
+                cropId: cropId,
                 label: label,
                 confidence: confidence,
                 imagePath: imagePath,
@@ -6224,6 +6285,7 @@ class $$DiseaseDetectionsTableTableManager
           createCompanionCallback:
               ({
                 required String id,
+                Value<String> cropId = const Value.absent(),
                 required String label,
                 required double confidence,
                 Value<String?> imagePath = const Value.absent(),
@@ -6236,6 +6298,7 @@ class $$DiseaseDetectionsTableTableManager
                 Value<int> rowid = const Value.absent(),
               }) => DiseaseDetectionsCompanion.insert(
                 id: id,
+                cropId: cropId,
                 label: label,
                 confidence: confidence,
                 imagePath: imagePath,

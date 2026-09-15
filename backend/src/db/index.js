@@ -9,6 +9,14 @@ db.pragma('journal_mode = WAL');
 const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
 db.exec(schema);
 
+// CREATE TABLE IF NOT EXISTS above only applies to fresh databases — patch
+// existing local dev DBs that predate the crop_id column.
+try {
+  db.exec('ALTER TABLE detections ADD COLUMN crop_id TEXT');
+} catch (_) {
+  // column already exists
+}
+
 /**
  * Sample data only — NOT real Agmarknet/MSP/CACP figures. Swap
  * seedPrices/seedMsp for a real Agmarknet + data.gov.in ingestion job before
@@ -94,15 +102,16 @@ function seedDetections() {
   const jitter = () => (Math.random() - 0.5) * 0.08; // ~ +/- 4km
   const rows = [];
   const clusters = [
-    { label: 'Tomato___Early_blight', count: 5 },
-    { label: 'Potato___Late_blight', count: 4 },
-    { label: 'Rice___Leaf_Blast', count: 2 },
+    { cropId: 'potato', label: 'Potato___Late_blight', count: 5 },
+    { cropId: 'rice', label: 'blast', count: 4 },
+    { cropId: 'wheat', label: 'Yellow Rust', count: 2 },
   ];
   let idSeq = 1;
   for (const cluster of clusters) {
     for (let i = 0; i < cluster.count; i++) {
       rows.push([
         `seed-detection-${idSeq++}`,
+        cluster.cropId,
         cluster.label,
         0.7 + Math.random() * 0.25,
         base.lat + jitter(),
@@ -113,7 +122,7 @@ function seedDetections() {
     }
   }
   const insert = db.prepare(
-    'INSERT INTO detections (id, label, confidence, lat, lng, consent_shared, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    'INSERT INTO detections (id, crop_id, label, confidence, lat, lng, consent_shared, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
   );
   const tx = db.transaction((rows) => rows.forEach((r) => insert.run(...r)));
   tx(rows);

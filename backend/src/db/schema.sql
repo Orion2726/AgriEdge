@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS soil_reports (
 
 CREATE TABLE IF NOT EXISTS detections (
   id TEXT PRIMARY KEY,
+  crop_id TEXT,
   label TEXT NOT NULL,
   confidence REAL NOT NULL,
   lat REAL,

@@ -1,6 +1,7 @@
 class DiseaseDetectionEntry {
   const DiseaseDetectionEntry({
     required this.id,
+    required this.cropId,
     required this.label,
     required this.confidence,
     required this.createdAt,
@@ -13,6 +14,7 @@ class DiseaseDetectionEntry {
   });
 
   final String id;
+  final String cropId;
   final String label;
   final double confidence;
   final String? imagePath;

@@ -1,0 +1,13 @@
+bacterial_leaf_blight
+bacterial_leaf_streak
+bacterial_panicle_blight
+black_stem_borer
+blast
+brown_spot
+downy_mildew
+hispa
+leaf_roller
+normal
+tungro
+white_stem_borer
+yellow_stem_borer

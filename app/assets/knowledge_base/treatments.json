@@ -1,114 +1,390 @@
 {
-  "Tomato___Bacterial_spot": {
-    "crop": "Tomato",
-    "disease": "Bacterial Spot",
-    "symptoms": "Small, dark, water-soaked spots on leaves and fruit that later turn scabby.",
-    "treatment": "Apply copper-based bactericide spray every 7-10 days. Remove and destroy infected plant debris.",
-    "prevention": "Use certified disease-free seed, avoid overhead irrigation, rotate crops for 2 years."
+  "potato": {
+    "Potato___Early_blight": {
+      "crop": "Potato",
+      "disease": "Early Blight",
+      "symptoms": "Dark concentric-ring spots on older leaves.",
+      "treatment": "Apply mancozeb or chlorothalonil fungicide at first sign of symptoms.",
+      "prevention": "Rotate crops, avoid overhead irrigation, ensure balanced nitrogen fertilization."
+    },
+    "Potato___Late_blight": {
+      "crop": "Potato",
+      "disease": "Late Blight",
+      "symptoms": "Water-soaked lesions on leaves and stems, rapid wilting in humid conditions.",
+      "treatment": "Apply systemic fungicide immediately; destroy severely infected plants.",
+      "prevention": "Use certified seed tubers, avoid excess irrigation, plant resistant varieties."
+    },
+    "Potato___Healthy": {
+      "crop": "Potato",
+      "disease": "Healthy",
+      "symptoms": "No visible disease symptoms detected.",
+      "treatment": "No treatment needed.",
+      "prevention": "Continue regular monitoring and balanced fertilization."
+    }
   },
-  "Tomato___Early_blight": {
-    "crop": "Tomato",
-    "disease": "Early Blight",
-    "symptoms": "Concentric dark rings on older leaves, yellowing around lesions.",
-    "treatment": "Apply chlorothalonil or mancozeb-based fungicide. Remove lower infected leaves.",
-    "prevention": "Stake plants for airflow, mulch to reduce soil splash, rotate with non-solanaceous crops."
+  "cotton": {
+    "Aphids": {
+      "crop": "Cotton",
+      "disease": "Aphids",
+      "symptoms": "Small sap-sucking insects clustered on leaf undersides; curling, yellowing leaves and sticky honeydew leading to sooty mold.",
+      "treatment": "Spray neem oil for mild infestations, or a systemic insecticide such as imidacloprid for heavy infestations.",
+      "prevention": "Encourage natural predators (ladybirds, lacewings), avoid excess nitrogen fertilization, monitor regularly."
+    },
+    "Army worm": {
+      "crop": "Cotton",
+      "disease": "Army Worm",
+      "symptoms": "Caterpillars chew ragged holes in leaves and bolls; can defoliate plants rapidly in heavy infestations.",
+      "treatment": "Apply a Bt-based biopesticide or chlorantraniliprole while larvae are still small.",
+      "prevention": "Use pheromone traps for early detection, scout fields regularly, rotate crops."
+    },
+    "Bacterial Blight": {
+      "crop": "Cotton",
+      "disease": "Bacterial Blight",
+      "symptoms": "Angular, water-soaked lesions on leaves that turn dark; blackened lesions on stems (black arm).",
+      "treatment": "Apply copper oxychloride spray; remove and destroy infected plant debris.",
+      "prevention": "Use acid-delinted or treated seed, avoid overhead irrigation, plant resistant varieties."
+    },
+    "Healthy": {
+      "crop": "Cotton",
+      "disease": "Healthy",
+      "symptoms": "No visible disease or pest symptoms detected.",
+      "treatment": "No treatment needed.",
+      "prevention": "Continue regular monitoring and balanced fertilization."
+    },
+    "Powdery Mildew": {
+      "crop": "Cotton",
+      "disease": "Powdery Mildew",
+      "symptoms": "White powdery fungal growth on the upper surface of leaves.",
+      "treatment": "Apply a sulfur-based or wettable sulfur fungicide spray.",
+      "prevention": "Maintain adequate plant spacing for airflow, avoid excess nitrogen fertilization."
+    },
+    "Target spot": {
+      "crop": "Cotton",
+      "disease": "Target Spot",
+      "symptoms": "Circular lesions with concentric target-like rings on leaves, causing defoliation in severe cases.",
+      "treatment": "Apply azoxystrobin or chlorothalonil fungicide.",
+      "prevention": "Rotate crops, remove infected crop residue, maintain balanced fertilization."
+    }
   },
-  "Tomato___Late_blight": {
-    "crop": "Tomato",
-    "disease": "Late Blight",
-    "symptoms": "Water-soaked lesions on leaves that rapidly turn brown/black; white mold on undersides in humid weather.",
-    "treatment": "Apply a systemic fungicide (e.g. metalaxyl + mancozeb) immediately; remove infected plants to stop spread.",
-    "prevention": "Avoid overhead watering, ensure good drainage, plant resistant varieties where available."
+  "rice": {
+    "bacterial_leaf_blight": {
+      "crop": "Rice",
+      "disease": "Bacterial Leaf Blight",
+      "symptoms": "Yellowing and wilting starting from leaf tips; water-soaked lesions turning white-grey along leaf margins.",
+      "treatment": "Apply a copper-based bactericide; drain standing water to reduce humidity around the crop.",
+      "prevention": "Use resistant varieties, avoid excess nitrogen, plant certified disease-free seed."
+    },
+    "bacterial_leaf_streak": {
+      "crop": "Rice",
+      "disease": "Bacterial Leaf Streak",
+      "symptoms": "Narrow, water-soaked interveinal streaks on leaves that turn brown over time.",
+      "treatment": "Apply copper-based bactericide spray at early symptom onset.",
+      "prevention": "Use resistant varieties, avoid excess nitrogen fertilization, maintain field sanitation."
+    },
+    "bacterial_panicle_blight": {
+      "crop": "Rice",
+      "disease": "Bacterial Panicle Blight",
+      "symptoms": "Panicle sterility and grain discoloration; most severe under high heat and humidity during flowering.",
+      "treatment": "No fully effective chemical control exists; remove and destroy severely infected panicles.",
+      "prevention": "Avoid planting windows that put flowering during peak heat stress, use balanced fertilization, plant resistant varieties where available."
+    },
+    "black_stem_borer": {
+      "crop": "Rice",
+      "disease": "Black Stem Borer",
+      "symptoms": "Larvae bore into stems, causing deadhearts in the vegetative stage and whiteheads at heading.",
+      "treatment": "Apply a recommended systemic insecticide (e.g. cartap hydrochloride) at first sign of infestation.",
+      "prevention": "Use pheromone traps for monitoring, remove and destroy stubble after harvest, synchronize planting across the area."
+    },
+    "blast": {
+      "crop": "Rice",
+      "disease": "Blast",
+      "symptoms": "Diamond-shaped lesions with grey centers and brown margins on leaves; neck rot at the panicle base.",
+      "treatment": "Apply tricyclazole or azoxystrobin fungicide.",
+      "prevention": "Plant resistant varieties, avoid excess nitrogen, use treated seed."
+    },
+    "brown_spot": {
+      "crop": "Rice",
+      "disease": "Brown Spot",
+      "symptoms": "Small oval brown lesions on leaves and grain.",
+      "treatment": "Apply mancozeb or propiconazole fungicide.",
+      "prevention": "Ensure balanced fertilization (especially potassium), use healthy seed, avoid water stress."
+    },
+    "downy_mildew": {
+      "crop": "Rice",
+      "disease": "Downy Mildew",
+      "symptoms": "Pale yellow streaks on leaves, stunted growth, and sporulation on leaf undersides in humid weather.",
+      "treatment": "Apply a metalaxyl-based fungicide.",
+      "prevention": "Improve field drainage, plant resistant varieties, rotate crops."
+    },
+    "hispa": {
+      "crop": "Rice",
+      "disease": "Rice Hispa",
+      "symptoms": "Beetle larvae and adults scrape leaf tissue, leaving white streaks along the leaf blade.",
+      "treatment": "Apply a recommended contact insecticide (e.g. chlorpyrifos) at early infestation.",
+      "prevention": "Clip and destroy affected leaf tips, avoid excess nitrogen, maintain field sanitation."
+    },
+    "leaf_roller": {
+      "crop": "Rice",
+      "disease": "Leaf Roller",
+      "symptoms": "Larvae roll leaves lengthwise and scrape the inner leaf tissue, leaving white patches.",
+      "treatment": "Apply a recommended insecticide (e.g. cartap hydrochloride).",
+      "prevention": "Encourage natural predators and parasitoids, maintain balanced fertilization, remove weed hosts."
+    },
+    "normal": {
+      "crop": "Rice",
+      "disease": "Healthy",
+      "symptoms": "No visible disease or pest symptoms detected.",
+      "treatment": "No treatment needed.",
+      "prevention": "Continue regular monitoring and balanced fertilization."
+    },
+    "tungro": {
+      "crop": "Rice",
+      "disease": "Tungro",
+      "symptoms": "Yellow-orange leaf discoloration and stunted growth; a viral disease spread by green leafhoppers.",
+      "treatment": "No cure once infected — rogue and remove infected plants; control the leafhopper vector with a recommended insecticide.",
+      "prevention": "Plant resistant varieties, synchronize planting across the area, control leafhopper populations early."
+    },
+    "white_stem_borer": {
+      "crop": "Rice",
+      "disease": "White Stem Borer",
+      "symptoms": "Larvae bore into stems, causing whiteheads at the reproductive stage.",
+      "treatment": "Apply a systemic insecticide at first sign of infestation.",
+      "prevention": "Use pheromone traps, destroy stubble after harvest, synchronize planting."
+    },
+    "yellow_stem_borer": {
+      "crop": "Rice",
+      "disease": "Yellow Stem Borer",
+      "symptoms": "The most common rice stem borer; causes deadhearts in the vegetative stage and whiteheads at heading.",
+      "treatment": "Apply cartap hydrochloride or chlorantraniliprole.",
+      "prevention": "Use pheromone traps, maintain balanced nitrogen, synchronize transplanting across the area."
+    }
   },
-  "Tomato___Leaf_Mold": {
-    "crop": "Tomato",
-    "disease": "Leaf Mold",
-    "symptoms": "Pale green/yellow spots on upper leaf surface with olive-green mold underneath.",
-    "treatment": "Improve ventilation, reduce humidity, apply a protectant fungicide.",
-    "prevention": "Space plants for airflow, avoid wetting foliage, use resistant varieties."
+  "wheat": {
+    "Aphid": {
+      "crop": "Wheat",
+      "disease": "Aphid",
+      "symptoms": "Sap-sucking insects on leaves and stems; honeydew and sooty mold, and can transmit viral diseases.",
+      "treatment": "Apply neem oil for mild infestations, or a systemic insecticide such as imidacloprid for heavy infestations.",
+      "prevention": "Encourage natural predators, sow on time, avoid excess nitrogen fertilization."
+    },
+    "Black Rust": {
+      "crop": "Wheat",
+      "disease": "Black Rust (Stem Rust)",
+      "symptoms": "Dark reddish-brown to black pustules on stems and leaves.",
+      "treatment": "Apply propiconazole or tebuconazole fungicide.",
+      "prevention": "Plant resistant varieties, sow on time, destroy volunteer wheat plants that can carry the fungus between seasons."
+    },
+    "Blast": {
+      "crop": "Wheat",
+      "disease": "Wheat Blast",
+      "symptoms": "Bleached spikes and grey lesions on leaves; spreads rapidly in humid, warm weather.",
+      "treatment": "Apply a triazole + strobilurin fungicide combination at the earliest sign of symptoms.",
+      "prevention": "Plant resistant varieties, avoid late sowing, avoid rotating with rice in blast-prone areas."
+    },
+    "Brown Rust": {
+      "crop": "Wheat",
+      "disease": "Brown Rust (Leaf Rust)",
+      "symptoms": "Small orange-brown pustules scattered across the leaf surface.",
+      "treatment": "Apply propiconazole fungicide spray.",
+      "prevention": "Plant resistant varieties, sow on time, monitor fields closely early in the season."
+    },
+    "Common Root Rot": {
+      "crop": "Wheat",
+      "disease": "Common Root Rot",
+      "symptoms": "Browning and rotting of roots and crown tissue, resulting in poor stand establishment.",
+      "treatment": "Treat seed with carboxin or thiram before sowing; no effective in-season chemical control exists.",
+      "prevention": "Rotate crops, maintain balanced fertilization, avoid water stress."
+    },
+    "Fusarium Head Blight": {
+      "crop": "Wheat",
+      "disease": "Fusarium Head Blight (Scab)",
+      "symptoms": "Bleached spikelets with pink or orange mold on infected florets; infected grain carries a mycotoxin risk.",
+      "treatment": "Apply a triazole fungicide (e.g. tebuconazole) at flowering.",
+      "prevention": "Plant resistant varieties, rotate away from maize or wheat residue, avoid flowering during prolonged wet weather."
+    },
+    "Healthy": {
+      "crop": "Wheat",
+      "disease": "Healthy",
+      "symptoms": "No visible disease or pest symptoms detected.",
+      "treatment": "No treatment needed.",
+      "prevention": "Continue regular monitoring and balanced fertilization."
+    },
+    "Leaf Blight": {
+      "crop": "Wheat",
+      "disease": "Leaf Blight",
+      "symptoms": "Irregular brown necrotic lesions on leaves.",
+      "treatment": "Apply mancozeb or propiconazole fungicide.",
+      "prevention": "Plant resistant varieties, maintain balanced fertilization, keep fields free of infected residue."
+    },
+    "Mildew": {
+      "crop": "Wheat",
+      "disease": "Powdery Mildew",
+      "symptoms": "White powdery fungal patches on leaves and stems.",
+      "treatment": "Apply a sulfur-based or triazole fungicide spray.",
+      "prevention": "Plant resistant varieties, avoid dense sowing, maintain balanced nitrogen."
+    },
+    "Mite": {
+      "crop": "Wheat",
+      "disease": "Mite",
+      "symptoms": "Tiny sap-sucking arachnids causing stippled, yellowing leaves; fine webbing in heavy infestations.",
+      "treatment": "Apply a miticide (e.g. dicofol) or neem oil spray.",
+      "prevention": "Avoid drought stress, encourage natural predators."
+    },
+    "Septoria": {
+      "crop": "Wheat",
+      "disease": "Septoria Leaf Blotch",
+      "symptoms": "Irregular brown blotches with tiny black fruiting bodies on leaves.",
+      "treatment": "Apply a triazole fungicide (e.g. propiconazole).",
+      "prevention": "Rotate crops, plant resistant varieties, avoid excess nitrogen."
+    },
+    "Smut": {
+      "crop": "Wheat",
+      "disease": "Smut",
+      "symptoms": "Grain is replaced by black spore masses at heading.",
+      "treatment": "No treatment once infected; treat seed with a systemic fungicide (e.g. carboxin) before sowing.",
+      "prevention": "Use certified disease-free seed, treat seed before sowing, plant resistant varieties."
+    },
+    "Stem fly": {
+      "crop": "Wheat",
+      "disease": "Stem Fly",
+      "symptoms": "Larvae bore into stems, causing deadhearts in young plants.",
+      "treatment": "Use a recommended systemic insecticide seed treatment, or an early foliar spray if infestation is detected.",
+      "prevention": "Sow on time, maintain field sanitation, avoid late-sown crop which is more susceptible."
+    },
+    "Tan spot": {
+      "crop": "Wheat",
+      "disease": "Tan Spot",
+      "symptoms": "Tan-colored lesions with a yellow halo on leaves.",
+      "treatment": "Apply a triazole or strobilurin fungicide.",
+      "prevention": "Rotate crops, manage residue (the fungus survives on wheat stubble), plant resistant varieties."
+    },
+    "Yellow Rust": {
+      "crop": "Wheat",
+      "disease": "Yellow Rust (Stripe Rust)",
+      "symptoms": "Yellow-orange pustules arranged in stripes along leaf veins.",
+      "treatment": "Apply propiconazole or tebuconazole fungicide at the first sign of symptoms.",
+      "prevention": "Plant resistant varieties, sow early, monitor fields closely in cool, humid weather."
+    }
   },
-  "Tomato___Healthy": {
-    "crop": "Tomato",
-    "disease": "Healthy",
-    "symptoms": "No visible disease symptoms detected.",
-    "treatment": "No treatment needed.",
-    "prevention": "Continue regular monitoring and balanced fertilization."
-  },
-  "Potato___Early_blight": {
-    "crop": "Potato",
-    "disease": "Early Blight",
-    "symptoms": "Dark concentric-ring spots on older leaves.",
-    "treatment": "Apply mancozeb or chlorothalonil fungicide at first sign of symptoms.",
-    "prevention": "Rotate crops, avoid overhead irrigation, ensure balanced nitrogen fertilization."
-  },
-  "Potato___Late_blight": {
-    "crop": "Potato",
-    "disease": "Late Blight",
-    "symptoms": "Water-soaked lesions on leaves and stems, rapid wilting in humid conditions.",
-    "treatment": "Apply systemic fungicide immediately; destroy severely infected plants.",
-    "prevention": "Use certified seed tubers, avoid excess irrigation, plant resistant varieties."
-  },
-  "Potato___Healthy": {
-    "crop": "Potato",
-    "disease": "Healthy",
-    "symptoms": "No visible disease symptoms detected.",
-    "treatment": "No treatment needed.",
-    "prevention": "Continue regular monitoring and balanced fertilization."
-  },
-  "Maize___Common_Rust": {
-    "crop": "Maize",
-    "disease": "Common Rust",
-    "symptoms": "Small reddish-brown pustules scattered on both leaf surfaces.",
-    "treatment": "Apply a triazole or strobilurin fungicide if severe; usually manageable with resistant hybrids.",
-    "prevention": "Plant rust-resistant hybrids, avoid dense planting."
-  },
-  "Maize___Northern_Leaf_Blight": {
-    "crop": "Maize",
-    "disease": "Northern Leaf Blight",
-    "symptoms": "Long, cigar-shaped grey-green lesions on leaves.",
-    "treatment": "Apply foliar fungicide at early symptom onset in susceptible hybrids.",
-    "prevention": "Rotate crops, till residue, plant resistant hybrids."
-  },
-  "Maize___Healthy": {
-    "crop": "Maize",
-    "disease": "Healthy",
-    "symptoms": "No visible disease symptoms detected.",
-    "treatment": "No treatment needed.",
-    "prevention": "Continue regular monitoring and balanced fertilization."
-  },
-  "Rice___Brown_Spot": {
-    "crop": "Rice",
-    "disease": "Brown Spot",
-    "symptoms": "Small oval brown lesions on leaves and grain, often linked to nutrient-poor soil.",
-    "treatment": "Apply propiconazole-based fungicide; correct potassium deficiency.",
-    "prevention": "Use certified seed, balanced fertilization, proper water management."
-  },
-  "Rice___Leaf_Blast": {
-    "crop": "Rice",
-    "disease": "Leaf Blast",
-    "symptoms": "Diamond-shaped lesions with grey centers and brown margins on leaves.",
-    "treatment": "Apply tricyclazole-based fungicide at first sign of lesions.",
-    "prevention": "Avoid excess nitrogen, use resistant varieties, maintain shallow standing water."
-  },
-  "Rice___Healthy": {
-    "crop": "Rice",
-    "disease": "Healthy",
-    "symptoms": "No visible disease symptoms detected.",
-    "treatment": "No treatment needed.",
-    "prevention": "Continue regular monitoring and balanced fertilization."
-  },
-  "Cotton___Bacterial_Blight": {
-    "crop": "Cotton",
-    "disease": "Bacterial Blight",
-    "symptoms": "Angular water-soaked lesions on leaves, blackened veins, boll rot.",
-    "treatment": "Apply copper oxychloride spray; remove and destroy infected plant debris.",
-    "prevention": "Use certified acid-delinted seed, avoid working fields when wet, rotate crops."
-  },
-  "Cotton___Healthy": {
-    "crop": "Cotton",
-    "disease": "Healthy",
-    "symptoms": "No visible disease symptoms detected.",
-    "treatment": "No treatment needed.",
-    "prevention": "Continue regular monitoring and balanced fertilization."
+  "staple_crops": {
+    "Corn___Common_Rust": {
+      "crop": "Corn",
+      "disease": "Common Rust",
+      "symptoms": "Small, round to elongate reddish-brown pustules on both leaf surfaces.",
+      "treatment": "Apply azoxystrobin or propiconazole fungicide if infestation is severe.",
+      "prevention": "Plant resistant hybrids, sow on time, monitor fields regularly."
+    },
+    "Corn___Gray_Leaf_Spot": {
+      "crop": "Corn",
+      "disease": "Gray Leaf Spot",
+      "symptoms": "Rectangular grey-tan lesions bound by leaf veins.",
+      "treatment": "Apply a strobilurin or triazole fungicide at early symptom onset.",
+      "prevention": "Rotate crops, plant resistant hybrids, manage residue since the fungus survives on corn debris."
+    },
+    "Corn___Healthy": {
+      "crop": "Corn",
+      "disease": "Healthy",
+      "symptoms": "No visible disease symptoms detected.",
+      "treatment": "No treatment needed.",
+      "prevention": "Continue regular monitoring and balanced fertilization."
+    },
+    "Corn___Northern_Leaf_Blight": {
+      "crop": "Corn",
+      "disease": "Northern Leaf Blight",
+      "symptoms": "Long, cigar-shaped grey-green lesions on leaves.",
+      "treatment": "Apply a fungicide (e.g. azoxystrobin + propiconazole) if detected early in susceptible hybrids.",
+      "prevention": "Plant resistant hybrids, rotate crops, manage crop residue."
+    },
+    "Potato___Early_Blight": {
+      "crop": "Potato",
+      "disease": "Early Blight",
+      "symptoms": "Dark concentric-ring spots on older leaves.",
+      "treatment": "Apply mancozeb or chlorothalonil fungicide at first sign of symptoms.",
+      "prevention": "Rotate crops, avoid overhead irrigation, ensure balanced nitrogen fertilization."
+    },
+    "Potato___Healthy": {
+      "crop": "Potato",
+      "disease": "Healthy",
+      "symptoms": "No visible disease symptoms detected.",
+      "treatment": "No treatment needed.",
+      "prevention": "Continue regular monitoring and balanced fertilization."
+    },
+    "Potato___Late_Blight": {
+      "crop": "Potato",
+      "disease": "Late Blight",
+      "symptoms": "Water-soaked lesions on leaves and stems that rapidly turn brown/black; white mold on undersides in humid weather.",
+      "treatment": "Apply a systemic fungicide (e.g. metalaxyl + mancozeb) immediately; remove infected plants to stop spread.",
+      "prevention": "Use certified seed tubers, avoid excess irrigation, plant resistant varieties where available."
+    },
+    "Rice___Brown_Spot": {
+      "crop": "Rice",
+      "disease": "Brown Spot",
+      "symptoms": "Small oval brown lesions on leaves and grain.",
+      "treatment": "Apply mancozeb or propiconazole fungicide.",
+      "prevention": "Ensure balanced fertilization (especially potassium), use healthy seed."
+    },
+    "Rice___Healthy": {
+      "crop": "Rice",
+      "disease": "Healthy",
+      "symptoms": "No visible disease symptoms detected.",
+      "treatment": "No treatment needed.",
+      "prevention": "Continue regular monitoring and balanced fertilization."
+    },
+    "Rice___Leaf_Blast": {
+      "crop": "Rice",
+      "disease": "Leaf Blast",
+      "symptoms": "Diamond-shaped lesions with grey centers and brown margins on leaves.",
+      "treatment": "Apply tricyclazole fungicide.",
+      "prevention": "Plant resistant varieties, avoid excess nitrogen."
+    },
+    "Rice___Neck_Blast": {
+      "crop": "Rice",
+      "disease": "Neck Blast",
+      "symptoms": "Infection at the panicle neck causes it to break or produce blank grains — the most damaging form of blast.",
+      "treatment": "Apply tricyclazole or azoxystrobin fungicide at the booting-to-heading stage.",
+      "prevention": "Plant resistant varieties, maintain balanced nitrogen, use treated seed."
+    },
+    "Sugarcane_Bacterial Blight": {
+      "crop": "Sugarcane",
+      "disease": "Bacterial Blight",
+      "symptoms": "Elongated, water-soaked to reddish-brown streaks along leaves.",
+      "treatment": "Remove and destroy infected clumps; copper-based bactericide as a supportive measure.",
+      "prevention": "Use disease-free planting material, avoid waterlogging, plant resistant varieties."
+    },
+    "Sugarcane_Healthy": {
+      "crop": "Sugarcane",
+      "disease": "Healthy",
+      "symptoms": "No visible disease symptoms detected.",
+      "treatment": "No treatment needed.",
+      "prevention": "Continue regular monitoring and balanced fertilization."
+    },
+    "Sugarcane_Red Rot": {
+      "crop": "Sugarcane",
+      "disease": "Red Rot",
+      "symptoms": "Reddish discoloration inside the stalk with white cross-bands; wilting and drying leaves.",
+      "treatment": "No effective in-season chemical cure; rogue and destroy infected clumps immediately.",
+      "prevention": "Use disease-free/resistant seed cane, rotate crops, avoid waterlogging, maintain field sanitation."
+    },
+    "Wheat___Brown_Rust": {
+      "crop": "Wheat",
+      "disease": "Brown Rust (Leaf Rust)",
+      "symptoms": "Small orange-brown pustules scattered across the leaf surface.",
+      "treatment": "Apply propiconazole fungicide spray.",
+      "prevention": "Plant resistant varieties, sow on time."
+    },
+    "Wheat___Healthy": {
+      "crop": "Wheat",
+      "disease": "Healthy",
+      "symptoms": "No visible disease symptoms detected.",
+      "treatment": "No treatment needed.",
+      "prevention": "Continue regular monitoring and balanced fertilization."
+    },
+    "Wheat___Yellow_Rust": {
+      "crop": "Wheat",
+      "disease": "Yellow Rust (Stripe Rust)",
+      "symptoms": "Yellow-orange pustules arranged in stripes along leaf veins.",
+      "treatment": "Apply propiconazole or tebuconazole fungicide at the first sign of symptoms.",
+      "prevention": "Plant resistant varieties, sow early, monitor fields closely in cool, humid weather."
+    }
   }
 }

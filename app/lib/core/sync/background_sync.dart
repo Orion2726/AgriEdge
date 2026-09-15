@@ -70,10 +70,16 @@ Future<void> _refreshMsp(AppDatabase db, Dio dio) async {
   await db.markSynced('msp');
 }
 
-/// workmanager is Android/iOS only — guarded so desktop/web dev runs don't
-/// crash on MissingPluginException.
+/// workmanager's periodic tasks are backed by Android's native WorkManager,
+/// which has no iOS equivalent — the iOS plugin side only implements
+/// one-off BGTaskScheduler requests, and registering a periodic task there
+/// throws a PlatformException ("Unhandled method registerPeriodicTask").
+/// Wiring true iOS background refresh needs its own BGTaskScheduler
+/// identifier (Info.plist + AppDelegate) which isn't set up here; until
+/// then, iOS relies on the foreground auto-sync-on-launch (see
+/// sync_registration.dart) plus the manual "sync now" button.
 Future<void> initBackgroundSync() async {
-  if (!(Platform.isAndroid || Platform.isIOS)) return;
+  if (!Platform.isAndroid) return;
   await Workmanager().initialize(backgroundSyncCallbackDispatcher);
   await Workmanager().registerPeriodicTask(
     backgroundSyncTaskName,
