@@ -1,3 +1,4 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -146,36 +147,148 @@ class _ForecastSheet extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   'Estimate based on seasonal patterns in historical mandi data — '
-                  'treat the shaded range as the realistic outcome, not the single number.',
+                  'treat the shaded range as the realistic outcome, not the line.',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
-                const SizedBox(height: 12),
-                for (var i = 0; i < forecast.length; i++)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 72,
-                          child: Text(DateFormat.MMMd().format(DateTime.now().add(Duration(days: i + 1)))),
-                        ),
-                        Expanded(
-                          child: Text(
-                            '${currency.format(forecast[i].lowerBound)} – ${currency.format(forecast[i].upperBound)}',
-                          ),
-                        ),
-                        Text(
-                          '~${currency.format(forecast[i].price)}',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  height: 240,
+                  child: _ForecastChart(
+                    todayPrice: entry.pricePerQuintal,
+                    forecast: forecast,
+                    currency: currency,
                   ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Container(width: 12, height: 12, color: Theme.of(context).colorScheme.primary),
+                    const SizedBox(width: 6),
+                    const Text('Estimate', style: TextStyle(fontSize: 12)),
+                    const SizedBox(width: 16),
+                    Container(
+                      width: 12,
+                      height: 12,
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.18),
+                    ),
+                    const SizedBox(width: 6),
+                    const Text('Typical range', style: TextStyle(fontSize: 12)),
+                  ],
+                ),
                 const SizedBox(height: 8),
               ],
             );
           },
         ),
+      ),
+    );
+  }
+}
+
+class _ForecastChart extends StatelessWidget {
+  const _ForecastChart({
+    required this.todayPrice,
+    required this.forecast,
+    required this.currency,
+  });
+
+  final double todayPrice;
+  final List<DayForecast> forecast;
+  final NumberFormat currency;
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
+    final lowerSpots = [
+      FlSpot(0, todayPrice),
+      for (var i = 0; i < forecast.length; i++) FlSpot((i + 1).toDouble(), forecast[i].lowerBound),
+    ];
+    final upperSpots = [
+      FlSpot(0, todayPrice),
+      for (var i = 0; i < forecast.length; i++) FlSpot((i + 1).toDouble(), forecast[i].upperBound),
+    ];
+    final pointSpots = [
+      FlSpot(0, todayPrice),
+      for (var i = 0; i < forecast.length; i++) FlSpot((i + 1).toDouble(), forecast[i].price),
+    ];
+
+    final allValues = [
+      todayPrice,
+      ...forecast.map((f) => f.lowerBound),
+      ...forecast.map((f) => f.upperBound),
+    ];
+    final minY = allValues.reduce((a, b) => a < b ? a : b);
+    final maxY = allValues.reduce((a, b) => a > b ? a : b);
+    final yPadding = (maxY - minY) * 0.1 + 1;
+
+    return LineChart(
+      LineChartData(
+        minX: 0,
+        maxX: forecast.length.toDouble(),
+        minY: minY - yPadding,
+        maxY: maxY + yPadding,
+        gridData: const FlGridData(drawVerticalLine: false),
+        borderData: FlBorderData(show: false),
+        titlesData: FlTitlesData(
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 52,
+              getTitlesWidget: (value, meta) => Text(
+                currency.format(value),
+                style: const TextStyle(fontSize: 10),
+              ),
+            ),
+          ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              interval: 1,
+              getTitlesWidget: (value, meta) {
+                final i = value.round();
+                final label = i == 0 ? 'Today' : DateFormat.Md().format(DateTime.now().add(Duration(days: i)));
+                return Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(label, style: const TextStyle(fontSize: 10)),
+                );
+              },
+            ),
+          ),
+        ),
+        lineTouchData: LineTouchData(
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipItems: (spots) => spots.map((spot) {
+              if (spot.barIndex != 2) return null; // only annotate the estimate line
+              return LineTooltipItem(currency.format(spot.y), const TextStyle(color: Colors.white));
+            }).toList(),
+          ),
+        ),
+        lineBarsData: [
+          LineChartBarData(
+            spots: lowerSpots,
+            color: Colors.transparent,
+            barWidth: 0,
+            dotData: const FlDotData(show: false),
+          ),
+          LineChartBarData(
+            spots: upperSpots,
+            color: Colors.transparent,
+            barWidth: 0,
+            dotData: const FlDotData(show: false),
+          ),
+          LineChartBarData(
+            spots: pointSpots,
+            color: primary,
+            barWidth: 2.5,
+            dotData: const FlDotData(show: true),
+          ),
+        ],
+        betweenBarsData: [
+          BetweenBarsData(fromIndex: 0, toIndex: 1, color: primary.withValues(alpha: 0.18)),
+        ],
       ),
     );
   }
