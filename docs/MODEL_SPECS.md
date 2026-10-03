@@ -177,54 +177,79 @@ copies need to stay in sync — see `backend/assets/models/crop-recommendation/R
 
 ## 3. Market Price Forecasting
 
-**Where it's used**: `backend/src/routes/prices.js`, endpoint
-`GET /api/prices/forecast/:commodity`, calling
-`ml_bridge/price_forecast/forecast()`. Currently a random-walk stand-in.
-**Not yet wired into the Flutter UI** — `market_price_screen.dart` only
-shows live price vs MSP today; adding a forecast chart is a small follow-up
-once real predictions exist. See `backend/src/ml_bridge/price_forecast/README.md`.
+**Where it's used**: on-device, via
+`app/lib/features/market_price/ml/price_forecast_ml_service.dart` — wired
+into `market_price_screen.dart`: tapping a commodity opens a 7-day outlook
+sheet. Like crop recommendation, this deviates from the original plan here
+(30-day-lookback LSTM via backend ONNX) for the same root reason: neither
+the app's local cache nor the backend keeps real price *history* (both only
+ever store the latest snapshot per commodity), so there's no real lookback
+window to feed a sequence model. `backend/src/ml_bridge/price_forecast/predict.js`
+still exists and is still called by `GET /api/prices/forecast/:commodity`
+(unused by the app now) — see that directory's README for why it's kept as
+reference only.
 
 ### Data
 
-- Daily mandi prices per commodity per mandi: **Agmarknet API**.
-- MSP figures (separate from this model): **data.gov.in** / CACP
-  publications — already ingested as static/manual seed data in
-  `backend/src/db/index.js#seedMsp`, no model involved there.
+Trained on a Kaggle mirror of Agmarknet's daily mandi price data —
+[khandelwalmanas/daily-commodity-prices-india](https://www.kaggle.com/datasets/khandelwalmanas/daily-commodity-prices-india),
+real government data, 2001–2026. Raw per-mandi rows are gappy (a mandi only
+reports on days it trades); aggregated to a daily **national median** price
+per commodity across 2015–2025, which came out 99%+ dense for all 8 of the
+app's existing commodities (Wheat, Rice, Maize, Cotton, Mustard, Potato,
+Tomato, Soybean — "Soybean" is spelled "Soyabean" in the raw dataset).
 
-### Architecture
+### Architecture — and an important caveat about accuracy
 
-- **LSTM or GRU**, Keras/TensorFlow.
-- Either one model per commodity, or a single model with commodity/mandi
-  as a categorical embedding input (scales better as you add commodities,
-  but needs more training data).
+Small dense NN: `Normalization` (baked into the graph) → `Dense(64, relu)`
+→ `Dropout(0.2)` → `Dense(32, relu)` → a ratio head, with the
+ratio-to-absolute-price conversion (`ratio × today's price`) also baked
+into the graph via a `Lambda` layer, so the app's input is just
+`[commodity one-hot (8), month_sin, month_cos, today's price]` and its
+output is already final ₹ values — no local price history needed at
+inference time, deliberately, since none is reliably available.
+
+**On held-out data (time-based split, last 180 days per commodity), this
+model ties the naive "price stays the same as today" baseline on every
+single commodity** (~3% MAPE either way, day 1 through day 7). Month-of-year
+and commodity identity alone don't carry enough signal at a 7-day horizon
+to beat persistence without a recent-price-momentum feature — and a
+momentum feature needs actual recent price history, which is exactly the
+local-history requirement this architecture was chosen to avoid. This was
+verified, not assumed — see the training notebook's baseline-comparison
+cells.
+
+Given that, the point forecast is shipped alongside
+`volatility_bands.json` — empirical p10/p90 price-ratio bands per commodity
+per day-ahead, computed directly from the real historical data (not a model
+output). The UI shows both: a central estimate plus the real range, so
+"Tomato can realistically swing ±14% this week" is communicated honestly
+instead of implying false precision. A real accuracy improvement would need
+the bigger-scope option that was explicitly declined when this was
+scoped: caching local price history (even just the last 7 days) to give the
+model an actual momentum feature.
 
 ### Export
 
-**ONNX** via `tf2onnx`, run via `onnxruntime-node` in the Node backend —
-same runtime choice as the crop-recommendation model, so the backend only
-needs one ONNX inference dependency.
+**TensorFlow Lite**, plain float32 (~15KB model — no quantization needed).
 
 ### Exact I/O contract
 
-**Input**: last 30 daily prices for the commodity/mandi, `Float32Array`,
-shape `[1, 30, 1]` (plus commodity/mandi categorical input(s) if using the
-single multi-commodity model — document your own ID mapping in
-`metadata.json`, see below).
+**Input** — `float32`, shape `[1, 11]`, raw (not pre-normalized) order:
 
-**Output**: `Float32Array`, shape `[1, 7]` — predicted price for each of
-the next 7 days, same units as input (₹/quintal).
+```
+[Wheat, Rice, Maize, Cotton, Mustard, Potato, Tomato, Soybean (one-hot), month_sin, month_cos, today_price]
+```
+
+**Output** — `float32`, shape `[1, 7]` — predicted price for each of the
+next 7 days, already absolute ₹/quintal.
 
 ### Drop-in
 
-`backend/src/ml_bridge/price_forecast/`:
-
-- Per-commodity: `<commodity-slug>.onnx` (e.g. `wheat.onnx`), **or**
-- Single multi-commodity: `model.onnx` + `metadata.json` (commodity/mandi
-  name → categorical ID mapping, plus normalization stats used on the
-  price series)
-
-Then rewrite `forecast()` in that directory's `predict.js` to load the
-session and run real inference instead of the random walk.
+Bundled: `app/assets/ml/price_forecast/{model.tflite,labels.txt,manifest.json,volatility_bands.json}`.
+Downloadable-at-runtime: `backend/assets/models/price-forecast/{...same 4 files}`,
+served via `GET /api/models/price-forecast(/manifest|/labels|/volatility-bands)`.
+See `backend/assets/models/price-forecast/README.md`.
 
 ---
 

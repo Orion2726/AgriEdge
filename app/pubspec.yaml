@@ -74,4 +74,5 @@ flutter:
     - assets/ml/disease/wheat/
     - assets/ml/disease/staple_crops/
     - assets/ml/crop_recommendation/
+    - assets/ml/price_forecast/
     - assets/knowledge_base/

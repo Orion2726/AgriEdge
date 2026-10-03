@@ -36,6 +36,10 @@ Agmarknet/CACP/crowdsourced data, just enough to exercise every screen).
 | GET    | `/api/models/crop-recommendation`         | Downloadable crop-recommendation `.tflite` |
 | GET    | `/api/models/crop-recommendation/manifest`| Crop-recommendation model version manifest |
 | GET    | `/api/models/crop-recommendation/labels`  | Crop-recommendation labels.txt |
+| GET    | `/api/models/price-forecast`              | Downloadable price-forecast `.tflite` |
+| GET    | `/api/models/price-forecast/manifest`     | Price-forecast model version manifest |
+| GET    | `/api/models/price-forecast/labels`       | Price-forecast labels.txt |
+| GET    | `/api/models/price-forecast/volatility-bands` | Empirical p10/p90 price-ratio bands per commodity |
 
 ## Where the 2 server-side models plug in
 

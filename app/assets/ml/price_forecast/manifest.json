@@ -1,0 +1,15 @@
+{
+  "modelId": "price_forecast_v1",
+  "version": "1.0.0",
+  "isPlaceholder": false,
+  "note": "Dense NN (Normalization -> Dense64 -> Dense32 -> ratio head, baked multiply-back-by-today's-price) trained on an Agmarknet historical price mirror (khandelwalmanas/daily-commodity-prices-india on Kaggle), aggregated to a daily national median per commodity, 2015-2025. On held-out data this ties the naive 'price stays the same' baseline on every commodity (~3% MAPE either way) -- month-of-year + commodity identity alone don't carry enough signal at a 7-day horizon without a recent-price-momentum feature, which would require caching local price history the app doesn't keep. Ship the point forecast alongside volatility_bands.json (empirical p10/p90 ratio bands per commodity per day-ahead, from the same historical data) so the UI shows an honest range, not false precision. See docs/MODEL_SPECS.md section 3.",
+  "inputShape": [1, 11],
+  "inputFeatureOrder": ["Wheat", "Rice", "Maize", "Cotton", "Mustard", "Potato", "Tomato", "Soybean", "month_sin", "month_cos", "today_price"],
+  "inputNormalization": "raw",
+  "outputShape": [1, 7],
+  "outputDescription": "Absolute predicted price (same units as today_price) for each of the next 7 days.",
+  "labelsFile": "labels.txt",
+  "volatilityBandsFile": "volatility_bands.json",
+  "downloadUrl": "http://localhost:4001/api/models/price-forecast",
+  "sha256": "c22da1567a56ac84952cd289cfd420d29e4e9c5ab228c0c20bf12ae733221a6f"
+}

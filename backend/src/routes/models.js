@@ -90,4 +90,42 @@ router.get('/crop-recommendation/labels', (req, res) => {
   res.type('text/plain').sendFile(labelsPath);
 });
 
+// Price forecast is also a single model — same pattern again. See
+// backend/assets/models/price-forecast/.
+const PRICE_FORECAST_DIR = path.join(__dirname, '..', '..', 'assets', 'models', 'price-forecast');
+
+router.get('/price-forecast', (req, res) => {
+  const modelPath = path.join(PRICE_FORECAST_DIR, 'model.tflite');
+  if (!fs.existsSync(modelPath)) {
+    return res.status(404).json({
+      error: 'No trained model uploaded yet. Drop model.tflite into backend/assets/models/price-forecast/.',
+    });
+  }
+  res.sendFile(modelPath);
+});
+
+router.get('/price-forecast/manifest', (req, res) => {
+  const manifestPath = path.join(PRICE_FORECAST_DIR, 'manifest.json');
+  if (fs.existsSync(manifestPath)) {
+    return res.sendFile(manifestPath);
+  }
+  res.json({ modelId: 'price_forecast_v0', version: '0.0.0-placeholder', isPlaceholder: true });
+});
+
+router.get('/price-forecast/labels', (req, res) => {
+  const labelsPath = path.join(PRICE_FORECAST_DIR, 'labels.txt');
+  if (!fs.existsSync(labelsPath)) {
+    return res.status(404).json({ error: 'No labels.txt for price-forecast.' });
+  }
+  res.type('text/plain').sendFile(labelsPath);
+});
+
+router.get('/price-forecast/volatility-bands', (req, res) => {
+  const bandsPath = path.join(PRICE_FORECAST_DIR, 'volatility_bands.json');
+  if (!fs.existsSync(bandsPath)) {
+    return res.status(404).json({ error: 'No volatility_bands.json for price-forecast.' });
+  }
+  res.sendFile(bandsPath);
+});
+
 module.exports = router;

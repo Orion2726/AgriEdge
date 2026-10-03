@@ -7,6 +7,7 @@ import '../../../core/ml/model_manager.dart';
 import '../../../core/network/connectivity_service.dart';
 import '../../../core/sync/sync_manager.dart';
 import '../../crop_recommendation/ml/crop_recommendation_model_manager.dart';
+import '../../market_price/ml/price_forecast_model_manager.dart';
 
 class SyncSettingsScreen extends ConsumerWidget {
   const SyncSettingsScreen({super.key});
@@ -56,6 +57,12 @@ class SyncSettingsScreen extends ConsumerWidget {
             child: Text('Crop recommendation model', style: Theme.of(context).textTheme.titleSmall),
           ),
           _CropRecommendationModelRow(isOnline: isOnline),
+          const Divider(height: 32),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            child: Text('Price forecast model', style: Theme.of(context).textTheme.titleSmall),
+          ),
+          _PriceForecastModelRow(isOnline: isOnline),
         ],
       ),
     );
@@ -188,6 +195,62 @@ class _CropRecommendationModelRow extends ConsumerWidget {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Crop recommendation model updated.')),
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context)
+                          .showSnackBar(SnackBar(content: Text('Download failed: $e')));
+                    }
+                  }
+                }
+              : null,
+          child: const Text('Download'),
+        ),
+      ),
+    );
+  }
+}
+
+class _PriceForecastModelRow extends ConsumerWidget {
+  const _PriceForecastModelRow({required this.isOnline});
+  final bool isOnline;
+
+  String _statusText(AsyncValue<ActivePriceForecastModel> status) {
+    return status.when(
+      data: (model) {
+        switch (model.source) {
+          case PriceForecastModelSource.downloaded:
+            return 'Downloaded model, v${model.version}';
+          case PriceForecastModelSource.bundled:
+            return 'Bundled model, v${model.version}';
+          case PriceForecastModelSource.none:
+            return model.version == 'placeholder' ? 'Not trained yet' : 'No model installed';
+        }
+      },
+      loading: () => 'Checking…',
+      error: (e, _) => 'Could not check status: $e',
+    );
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final status = ref.watch(priceForecastModelStatusProvider);
+
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.download_for_offline_outlined),
+        title: const Text('Price forecast'),
+        subtitle: Text(_statusText(status)),
+        trailing: FilledButton.tonal(
+          onPressed: isOnline
+              ? () async {
+                  try {
+                    await ref.read(priceForecastModelManagerProvider).downloadModel();
+                    ref.invalidate(priceForecastModelStatusProvider);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Price forecast model updated.')),
                       );
                     }
                   } catch (e) {

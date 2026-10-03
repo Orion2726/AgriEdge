@@ -1,4 +1,26 @@
-# Market Price Forecasting — model drop-in contract
+# Market Price Forecasting — model drop-in contract (superseded — kept as reference)
+
+**The app itself no longer uses this.** The 7-day price outlook now runs
+on-device via a TFLite model — see `docs/MODEL_SPECS.md` section 3 and
+`app/lib/features/market_price/ml/price_forecast_ml_service.dart`. Same
+reason as the crop-recommendation model's equivalent note: neither the
+local app cache nor this backend keeps real price *history* (both only
+ever store the latest snapshot), so there was never a real 30-day lookback
+window to feed the LSTM/GRU this file originally planned for.
+
+The shipped on-device model takes `[commodity, month, today's price]`
+instead and, honestly, ties the naive "price stays the same" baseline on
+held-out data — see `docs/MODEL_SPECS.md` section 3 for the actual
+numbers and why. It ships alongside `volatility_bands.json` (empirical
+p10/p90 ranges from real historical data) so the app shows a range, not
+false precision.
+
+`forecast()` below is still called by `GET /api/prices/forecast/:commodity`
+for completeness, but nothing in the app reads that endpoint anymore. Left
+as-is in case a real server-side ensemble is wanted later, but this is not
+the active code path.
+
+---
 
 `predict.js` currently implements a **naive random-walk stand-in** (last
 known price + small noise) so `GET /api/prices/forecast/:commodity` returns

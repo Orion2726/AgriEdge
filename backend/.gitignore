@@ -9,3 +9,7 @@ assets/models/disease/*/labels.txt
 assets/models/crop-recommendation/model.tflite
 assets/models/crop-recommendation/manifest.json
 assets/models/crop-recommendation/labels.txt
+assets/models/price-forecast/model.tflite
+assets/models/price-forecast/manifest.json
+assets/models/price-forecast/labels.txt
+assets/models/price-forecast/volatility_bands.json
