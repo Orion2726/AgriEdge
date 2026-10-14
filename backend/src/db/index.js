@@ -44,6 +44,9 @@ function seedIfEmpty() {
 
   const detectionCount = db.prepare('SELECT COUNT(*) AS c FROM detections').get().c;
   if (detectionCount === 0) seedDetections();
+
+  const regionalCount = db.prepare("SELECT COUNT(*) AS c FROM detections WHERE id LIKE 'seed-region-%'").get().c;
+  if (regionalCount === 0) seedRegionalDemo();
 }
 
 function seedPrices() {
@@ -136,6 +139,42 @@ function seedDetections() {
   );
   const tx = db.transaction((rows) => rows.forEach((r) => insert.run(...r)));
   tx(rows);
+}
+
+/**
+ * Demo outbreaks in other states so the app's "Other regions" view has
+ * something to show before real farmers report there. Demo data only.
+ */
+function seedRegionalDemo() {
+  const clusters = [
+    { cropId: 'wheat', label: 'Yellow Rust', lat: 30.9, lng: 75.85, count: 6 }, // Ludhiana
+    { cropId: 'cotton', label: 'Bacterial Blight', lat: 21.15, lng: 79.09, count: 4 }, // Nagpur
+    { cropId: 'rice', label: 'blast', lat: 16.51, lng: 80.65, count: 5 }, // Vijayawada
+    { cropId: 'rice', label: 'brown_spot', lat: 10.79, lng: 78.7, count: 3 }, // Tiruchirappalli
+    { cropId: 'potato', label: 'Potato___Early_blight', lat: 26.85, lng: 80.95, count: 4 }, // Lucknow
+    { cropId: 'cotton', label: 'Aphids', lat: 23.02, lng: 72.57, count: 3 }, // Ahmedabad
+  ];
+  const insert = db.prepare(
+    'INSERT INTO detections (id, crop_id, label, confidence, lat, lng, consent_shared, created_at) VALUES (?, ?, ?, ?, ?, ?, 1, ?)'
+  );
+  const now = Date.now();
+  let seq = 1;
+  const tx = db.transaction(() => {
+    for (const c of clusters) {
+      for (let i = 0; i < c.count; i++) {
+        insert.run(
+          `seed-region-${seq++}`,
+          c.cropId,
+          c.label,
+          0.7 + Math.random() * 0.25,
+          c.lat + (Math.random() - 0.5) * 0.2,
+          c.lng + (Math.random() - 0.5) * 0.2,
+          new Date(now - i * 43200000).toISOString()
+        );
+      }
+    }
+  });
+  tx();
 }
 
 module.exports = { db, seedIfEmpty };

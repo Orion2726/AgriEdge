@@ -1,11 +1,15 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/data/offline_repository.dart';
 import '../../../core/db/app_database.dart';
 import '../../../core/db/db_provider.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/settings/farm_setup.dart';
 import '../domain/nearby_alert.dart';
 
 /// Backed by the backend's spatial clustering of crowdsourced disease
@@ -139,4 +143,69 @@ final p2pAlertsProvider = StreamProvider<List<NearbyAlert>>((ref) {
                 ))
             .toList(),
       );
+});
+
+/// An outbreak the central server knows about anywhere — including regions
+/// far beyond Bluetooth range.
+class RegionalOutbreak {
+  const RegionalOutbreak({
+    required this.label,
+    required this.cropId,
+    required this.region,
+    required this.reportCount,
+    required this.latestAt,
+    required this.distanceKm,
+  });
+  final String label;
+  final String? cropId;
+  final String region;
+  final int reportCount;
+  final DateTime latestAt;
+  final int? distanceKm;
+
+  static RegionalOutbreak fromJson(Map<String, dynamic> j) => RegionalOutbreak(
+        label: j['label'] as String,
+        cropId: j['cropId'] as String?,
+        region: j['region'] as String,
+        reportCount: j['reportCount'] as int,
+        latestAt: DateTime.parse(j['latestAt'] as String),
+        distanceKm: j['distanceKm'] as int?,
+      );
+}
+
+class RegionalOutbreaks {
+  const RegionalOutbreaks(this.items, this.fetchedAt, {required this.fromCache});
+  final List<RegionalOutbreak> items;
+  final DateTime fetchedAt;
+  final bool fromCache;
+}
+
+/// Server-only feature: needs the AgriEdge server once; the last result is
+/// kept on the phone so it still shows offline.
+final regionalOutbreaksProvider = FutureProvider<RegionalOutbreaks?>((ref) async {
+  const key = 'regional_outbreaks_v1';
+  final prefs = await SharedPreferences.getInstance();
+  final loc = ref.watch(farmSetupProvider.select((s) => s.location));
+  try {
+    final dio = ref.watch(apiClientProvider);
+    final res = await dio.get('/api/alerts/regions', queryParameters: {
+      if (loc != null) 'lat': loc.lat,
+      if (loc != null) 'lng': loc.lng,
+    });
+    await prefs.setString(key, jsonEncode({'at': DateTime.now().toIso8601String(), 'items': res.data}));
+    return RegionalOutbreaks(
+      [for (final j in (res.data as List).cast<Map<String, dynamic>>()) RegionalOutbreak.fromJson(j)],
+      DateTime.now(),
+      fromCache: false,
+    );
+  } catch (_) {
+    final saved = prefs.getString(key);
+    if (saved == null) return null;
+    final m = jsonDecode(saved) as Map<String, dynamic>;
+    return RegionalOutbreaks(
+      [for (final j in (m['items'] as List).cast<Map<String, dynamic>>()) RegionalOutbreak.fromJson(j)],
+      DateTime.parse(m['at'] as String),
+      fromCache: true,
+    );
+  }
 });

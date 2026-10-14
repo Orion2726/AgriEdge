@@ -208,6 +208,7 @@ class _DiseaseAlertsScreenState extends ConsumerState<DiseaseAlertsScreen> {
                   ...p2pClusters.value?.map((a) => _AlertTile(alert: a)) ?? const <Widget>[],
                 ],
               ),
+              const _OtherRegionsSection(),
               ..._section(
                 context,
                 'Reports shared between phones',
@@ -610,5 +611,59 @@ class _SharedDataCard extends ConsumerWidget {
         ],
       ),
     );
+  }
+}
+
+/// Outbreaks far away, from the central server (beyond Bluetooth range).
+class _OtherRegionsSection extends ConsumerWidget {
+  const _OtherRegionsSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final regions = ref.watch(regionalOutbreaksProvider);
+    final theme = Theme.of(context);
+    final data = regions.value;
+    final far = data?.items.where((r) => (r.distanceKm ?? 999) > 25).toList() ?? const <RegionalOutbreak>[];
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(4, 16, 4, 4),
+        child: Row(children: [
+          Expanded(child: Text('Other regions', style: theme.textTheme.titleSmall)),
+          if (data != null)
+            Text(data.fromCache ? 'saved copy' : 'from AgriEdge server', style: theme.textTheme.labelSmall),
+          IconButton(
+            tooltip: 'Refresh',
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.refresh, size: 20),
+            onPressed: () => ref.invalidate(regionalOutbreaksProvider),
+          ),
+        ]),
+      ),
+      if (regions.isLoading && data == null)
+        const Padding(padding: EdgeInsets.all(12), child: LinearProgressIndicator())
+      else if (data == null)
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.public_off),
+            title: const Text('Connect to the AgriEdge server'),
+            subtitle: const Text('See outbreaks in other districts and states, beyond Bluetooth range.'),
+          ),
+        )
+      else if (far.isEmpty)
+        const Card(child: ListTile(leading: Icon(Icons.public), title: Text('No outbreaks reported in other regions')))
+      else
+        Card(
+          child: Column(children: [
+            for (final r in far.take(8))
+              ListTile(
+                leading: Icon(Icons.location_on_outlined, color: theme.colorScheme.tertiary),
+                title: Text('${prettyDiseaseLabel(r.label)}${r.cropId == null ? '' : ' · ${r.cropId!.replaceAll('_', ' ')}'}'),
+                subtitle: Text('${r.region}${r.distanceKm == null ? '' : ' · ${r.distanceKm} km away'}\n'
+                    '${r.reportCount} report${r.reportCount == 1 ? '' : 's'} · latest ${DateFormat.MMMd().format(r.latestAt.toLocal())}'),
+                isThreeLine: true,
+              ),
+          ]),
+        ),
+    ]);
   }
 }

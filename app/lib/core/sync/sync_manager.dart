@@ -31,6 +31,7 @@ String describeSyncError(Object error) {
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.connectionError:
+      case DioExceptionType.unknown:
         return 'Server unreachable (${error.requestOptions.uri.origin})';
       case DioExceptionType.receiveTimeout:
       case DioExceptionType.sendTimeout:
