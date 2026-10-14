@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/sync/sync_manager.dart';
 import '../data/cart_controller.dart';
 import '../data/orders_repository.dart';
 import '../domain/order_models.dart';
@@ -15,7 +16,7 @@ class OrdersScreen extends ConsumerWidget {
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Orders'),
+          title: const Text('Farm supplies'),
           bottom: const TabBar(tabs: [
             Tab(text: 'Catalog'),
             Tab(text: 'Cart'),
@@ -145,9 +146,11 @@ class _CartTab extends ConsumerWidget {
                   onPressed: () async {
                     await ref.read(ordersRepositoryProvider).placeOrder(lines);
                     ref.read(cartControllerProvider.notifier).clear();
+                    // Upload right away when online; otherwise it stays queued.
+                    ref.read(syncManagerProvider).syncDomain('orders');
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Order placed. It will sync when you\'re online.')),
+                        const SnackBar(content: Text('Order placed. It is sent to the supplier as soon as you are online.')),
                       );
                       DefaultTabController.of(context).animateTo(2);
                     }
@@ -186,7 +189,8 @@ class _HistoryTab extends ConsumerWidget {
                   color: order.syncStatus == 'synced' ? Colors.green : Colors.grey,
                 ),
                 title: Text('${DateFormat.yMMMd().add_jm().format(order.createdAt)} · ${currency.format(order.totalAmount)}'),
-                subtitle: Text('${order.items.length} item(s) · ${order.status}'),
+                subtitle: Text('${order.items.length} item${order.items.length == 1 ? '' : 's'} · '
+                    '${order.syncStatus == 'synced' ? 'Received by supplier (demo)' : 'Waiting to send'}'),
                 children: order.items
                     .map((i) => ListTile(
                           title: Text(i.productName),

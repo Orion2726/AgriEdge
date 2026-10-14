@@ -33,7 +33,7 @@ final _diseaseLabelsProvider = FutureProvider.family<List<String>, String>((ref,
 
 /// Shrinks a photo to a small JPEG thumbnail that fits in one quick BLE
 /// transfer (≤ DiseaseAlertPayload.maxPhotoBytes).
-Uint8List? _thumbnail(Uint8List bytes) {
+Uint8List? makeShareThumbnail(Uint8List bytes) {
   final decoded = img.decodeImage(bytes);
   if (decoded == null) return null;
   for (final (width, quality) in [(240, 60), (200, 50), (160, 45), (120, 40)]) {
@@ -67,7 +67,7 @@ class _ShareReportSheetState extends ConsumerState<_ShareReportSheet> {
   Future<void> _pick(ImageSource source) async {
     final picked = await ImagePicker().pickImage(source: source, maxWidth: 1024);
     if (picked == null) return;
-    final thumb = _thumbnail(await picked.readAsBytes());
+    final thumb = makeShareThumbnail(await picked.readAsBytes());
     setState(() {
       _photo = thumb;
       _error = thumb == null ? 'Could not use that photo. Try another one.' : null;

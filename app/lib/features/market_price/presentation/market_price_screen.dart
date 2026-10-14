@@ -57,11 +57,6 @@ class MarketPriceScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SourceTag(
-                          text: 'Sample prices from the AgriEdge demo server — not live mandi data',
-                          warning: true,
-                        ),
-                        const SizedBox(height: 6),
                         lastSynced.when(
                           data: (at) => LastSyncedLabel(lastSyncedAt: at),
                           loading: () => const SizedBox.shrink(),

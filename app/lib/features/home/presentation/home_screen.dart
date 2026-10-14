@@ -17,7 +17,7 @@ import '../../../shared/widgets/ui.dart';
 import '../../market_price/data/market_price_repository.dart';
 import '../../msp/data/msp_repository.dart';
 
-final _recentReportsProvider = StreamProvider.autoDispose<List<P2pPacket>>(
+final _recentReportsProvider = StreamProvider<List<P2pPacket>>(
     (ref) => ref.watch(p2pPacketStoreProvider).watchRecent(limit: 20));
 
 /// Dashboard: weather, nearby alerts, quick actions, prices and news —
@@ -39,13 +39,7 @@ class HomeScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(weatherProvider);
-          ref.invalidate(newsProvider);
-          await ref.read(syncManagerProvider).syncAll();
-        },
-        child: ListView(
+      body: ListView(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
           children: [
             if (setup.loaded && !setup.setupDone) const _SetupCard(),
@@ -58,7 +52,6 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: 8),
             const _SyncLine(),
           ],
-        ),
       ),
     );
   }
@@ -211,11 +204,10 @@ class _WeatherCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final weather = ref.watch(weatherProvider);
     final loc = ref.watch(farmSetupProvider).location;
-    final scheme = Theme.of(context).colorScheme;
     if (loc == null) {
       return Card(
         child: ListTile(
-          leading: const Icon(Icons.cloud_outlined),
+          leading: const Icon(Icons.wb_sunny_outlined),
           title: const Text('Local weather'),
           subtitle: const Text('Set your farm location to see rain and heat warnings.'),
           trailing: const Icon(Icons.chevron_right),
@@ -223,64 +215,97 @@ class _WeatherCard extends ConsumerWidget {
         ),
       );
     }
-    return Card(
-      color: scheme.secondaryContainer,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: weather.when(
-          loading: () => const SizedBox(height: 96, child: Center(child: CircularProgressIndicator())),
-          error: (_, _) => StateMessage(
-            compact: true,
-            icon: Icons.cloud_off,
-            text: 'Weather unavailable — no internet and no saved forecast yet.',
-            onRetry: () => ref.invalidate(weatherProvider),
+    return weather.when(
+      loading: () => const _WeatherShell(child: SizedBox(height: 150, child: Center(child: CircularProgressIndicator(color: Colors.white)))),
+      error: (_, _) => _WeatherShell(
+        child: Row(children: [
+          const Icon(Icons.cloud_off, color: Colors.white70),
+          const SizedBox(width: 12),
+          const Expanded(child: Text('Weather needs internet once.', style: TextStyle(color: Colors.white))),
+          TextButton(
+            onPressed: () => ref.invalidate(weatherProvider),
+            child: const Text('Retry', style: TextStyle(color: Colors.white)),
           ),
-          data: (feed) {
-            final w = feed!.data;
-            final on = scheme.onSecondaryContainer;
-            return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(children: [
-                Text('${w.tempC.round()}°', style: Theme.of(context).textTheme.displaySmall?.copyWith(color: on)),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(weatherLabel(w.code), style: Theme.of(context).textTheme.titleMedium?.copyWith(color: on)),
-                    Text(loc.label, style: TextStyle(color: on), maxLines: 1, overflow: TextOverflow.ellipsis),
-                  ]),
-                ),
-              ]),
-              const SizedBox(height: 10),
-              Row(children: [
-                for (final d in w.days.take(5))
-                  Expanded(
-                    child: Column(children: [
-                      Text(DateFormat.E().format(d.date), style: TextStyle(color: on, fontWeight: FontWeight.w600)),
-                      Text('${d.maxC.round()}°/${d.minC.round()}°', style: TextStyle(color: on)),
-                      Text('💧${d.rainChance}%', style: TextStyle(color: on, fontSize: 12)),
-                    ]),
-                  ),
-              ]),
-              const SizedBox(height: 10),
-              for (final tip in w.advice)
-                Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Icon(Icons.lightbulb_outline, size: 18, color: on),
-                    const SizedBox(width: 6),
-                    Expanded(child: Text(tip, style: TextStyle(color: on))),
-                  ]),
-                ),
-              const SizedBox(height: 8),
-              SourceTag(
-                text: 'Open-Meteo · ${feed.fromCache ? 'saved ' : 'updated '}${timeAgo(feed.fetchedAt)}',
-                warning: feed.fromCache,
-              ),
-            ]);
-          },
-        ),
+        ]),
       ),
+      data: (feed) {
+        final w = feed!.data;
+        final today = w.days.isEmpty ? null : w.days.first;
+        final text = Theme.of(context).textTheme;
+        return _WeatherShell(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(loc.label.split(',').first,
+                      style: text.titleMedium?.copyWith(color: Colors.white), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 2),
+                  Text('${w.tempC.round()}°',
+                      style: text.displayMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w300, height: 1.1)),
+                  Text(
+                    today == null ? weatherLabel(w.code) : '${weatherLabel(w.code)} · H ${today.maxC.round()}° L ${today.minC.round()}°',
+                    style: text.bodyMedium?.copyWith(color: Colors.white.withValues(alpha: 0.85)),
+                  ),
+                ]),
+              ),
+              Icon(weatherIcon(w.code), size: 56, color: Colors.white),
+            ]),
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(14)),
+              child: Row(children: [
+                const Icon(Icons.tips_and_updates_outlined, color: Colors.white, size: 20),
+                const SizedBox(width: 10),
+                Expanded(child: Text(w.advice.first, style: const TextStyle(color: Colors.white))),
+              ]),
+            ),
+            const SizedBox(height: 14),
+            Row(children: [
+              for (final d in w.days.take(5))
+                Expanded(
+                  child: Column(children: [
+                    Text(d == today ? 'Today' : DateFormat.E().format(d.date),
+                        style: text.labelMedium?.copyWith(color: Colors.white.withValues(alpha: 0.8))),
+                    const SizedBox(height: 6),
+                    Icon(weatherIcon(d.code), color: Colors.white, size: 22),
+                    const SizedBox(height: 6),
+                    Text('${d.maxC.round()}°', style: text.labelLarge?.copyWith(color: Colors.white)),
+                    SizedBox(
+                      height: 16,
+                      child: d.rainChance >= 30
+                          ? Text('${d.rainChance}%',
+                              style: text.labelSmall?.copyWith(color: const Color(0xFFB3E5FC)))
+                          : null,
+                    ),
+                  ]),
+                ),
+            ]),
+          ]),
+        );
+      },
     );
   }
+}
+
+class _WeatherShell extends StatelessWidget {
+  const _WeatherShell({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(22),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF2E7D32), Color(0xFF1B5E20), Color(0xFF0F3D2A)],
+          ),
+        ),
+        child: child,
+      );
 }
 
 // ----------------------------------------------------------------- alerts
@@ -379,10 +404,7 @@ class _MarketSnapshot extends ConsumerWidget {
                     Text('MSP ${currency.format(msp[p.commodity]!.pricePerQuintal)}', style: Theme.of(context).textTheme.labelSmall),
                 ]),
               ),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: Align(alignment: Alignment.centerLeft, child: SourceTag(text: 'Sample prices from the AgriEdge demo server — not live mandi data', warning: true)),
-            ),
+            const SizedBox(height: 6),
           ]),
         ),
     ]);

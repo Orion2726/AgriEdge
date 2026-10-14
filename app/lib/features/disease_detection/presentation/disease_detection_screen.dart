@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -9,6 +10,9 @@ import 'package:intl/intl.dart';
 import '../../../core/ml/crop_catalog.dart';
 import '../../../core/p2p/p2p_alert_service.dart';
 import '../../../core/settings/farm_setup.dart';
+import '../../../core/sync/sync_manager.dart';
+import '../../../shared/disease_label.dart';
+import '../../disease_alerts/presentation/share_report_sheet.dart' show makeShareThumbnail;
 import '../data/disease_detection_repository.dart';
 import '../data/treatment_knowledge_base.dart';
 import '../domain/disease_detection_entry.dart';
@@ -106,12 +110,17 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
           lat: lat,
           lng: lng,
           detectionId: entry.id,
+          photoJpeg: _image == null ? null : makeShareThumbnail(await _image!.readAsBytes()),
         );
       } catch (_) {
         // Non-fatal — the detection is already saved and will still sync
         // to the backend normally; nearby-device propagation is best-effort.
       }
     }
+
+    // Upload now if online; stays queued otherwise.
+    final sync = ref.read(syncManagerProvider);
+    unawaited(sync.syncDomain('detections').then((_) => sync.syncDomain('p2p_alerts')));
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -134,7 +143,7 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
     final history = ref.watch(diseaseDetectionsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Disease Prediction')),
+      appBar: AppBar(title: const Text('Check a sick plant')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -313,7 +322,7 @@ class _HistoryTile extends StatelessWidget {
         entry.syncStatus == 'synced' ? Icons.cloud_done : Icons.cloud_upload_outlined,
         color: entry.syncStatus == 'synced' ? Colors.green : Colors.grey,
       ),
-      title: Text(entry.label),
+      title: Text(prettyDiseaseLabel(entry.label)),
       subtitle: Text(
         '${_cropDisplayName(entry.cropId)} · ${DateFormat.yMMMd().add_jm().format(entry.createdAt)}',
       ),

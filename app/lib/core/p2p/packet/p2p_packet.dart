@@ -119,6 +119,19 @@ class DiseaseAlertPayload {
   }
 }
 
+/// CBOR byte strings decode to a plain `List<int>`, which would re-encode as a
+/// CBOR *array* — changing the bytes the packet id and signature cover, so
+/// a received photo report or data snapshot would never verify. Restore the
+/// known byte-string payload fields to Uint8List so re-encoding is exact.
+const _byteFields = {'photo', 'z'};
+
+Map<String, Object?> _restoreByteFields(Map<String, Object?> payload) => {
+      for (final e in payload.entries)
+        e.key: _byteFields.contains(e.key) && e.value is List
+            ? Uint8List.fromList((e.value as List).cast<int>())
+            : e.value,
+    };
+
 String? _limitedNote(Object? v) {
   if (v is! String) return null;
   return v.length > DiseaseAlertPayload.maxNoteLength ? v.substring(0, DiseaseAlertPayload.maxNoteLength) : v;
@@ -235,7 +248,7 @@ class P2pAlertPacket {
       createdAt: DateTime.fromMillisecondsSinceEpoch(decoded['c'] as int, isUtc: true),
       nonce: Uint8List.fromList((decoded['n'] as List).cast<int>()),
       packetId: Uint8List.fromList((decoded['i'] as List).cast<int>()),
-      payload: (decoded['p'] as Map<Object?, Object?>).cast<String, Object?>(),
+      payload: _restoreByteFields((decoded['p'] as Map<Object?, Object?>).cast<String, Object?>()),
       signature:
           decoded['s'] != null ? Uint8List.fromList((decoded['s'] as List).cast<int>()) : null,
       signerPublicKey:

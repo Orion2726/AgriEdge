@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/data/live_feeds.dart';
+import '../../../core/db/app_database.dart';
 import '../../../core/db/db_provider.dart';
 import '../../../core/p2p/relevance/farmer_profile.dart';
 import '../../../core/p2p/store/p2p_packet_store.dart';
@@ -16,11 +17,16 @@ import '../domain/chat_message.dart';
 
 /// One retrievable fact with the source it came from.
 class _Doc {
-  _Doc(this.kind, this.text, this.source, String keywords) : tokens = _tokens('$keywords $text');
+  _Doc(this.kind, this.text, this.source, String keywords, {String crop = ''})
+      : tokens = _tokens('$keywords $text'),
+        crops = crop.isEmpty ? const {} : _tokens(crop);
   final String kind; // price | msp | report | weather | treatment | calendar | faq | detection
   final String text;
   final String source;
   final Set<String> tokens;
+
+  /// The crop(s) this fact is about, so "wheat price" doesn't list rice.
+  final Set<String> crops;
 }
 
 const _stop = {
@@ -79,14 +85,23 @@ class AiAssistantService {
       'calendar': q.contains('sowing'),
     };
 
+    // If the question names a crop, answer about that crop only.
+    final crops = docs.expand((d) => d.crops).toSet();
+    final asked = q.intersection(crops);
+    final candidates = asked.isEmpty ? docs : docs.where((d) => d.crops.isEmpty || d.crops.any(asked.contains)).toList();
+
     final scored = <(_Doc, double)>[];
-    for (final d in docs) {
+    for (final d in candidates) {
       var s = q.intersection(d.tokens).length.toDouble();
       if (s == 0) continue;
       if (intents[d.kind] == true) s += 2;
       scored.add((d, s));
     }
     scored.sort((a, b) => b.$2.compareTo(a.$2));
+    // "Any disease near me?" is about reports, not the treatment guide.
+    if (intents['report'] == true && scored.any((e) => e.$1.kind == 'report')) {
+      scored.removeWhere((e) => e.$1.kind != 'report' && e.$1.kind != 'detection');
+    }
 
     // Keep only facts about the strongest topic(s), up to five.
     final top = scored.isEmpty ? 0.0 : scored.first.$2;
@@ -117,39 +132,49 @@ class AiAssistantService {
     final db = _ref.read(appDatabaseProvider);
     final docs = <_Doc>[];
     final money = NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 0);
-    final day = DateFormat.MMMd();
+    String day(DateTime d) => DateFormat.MMMd().format(d);
+    String dayTime(DateTime d) => DateFormat.MMMd().add_jm().format(d);
 
     // Prices & MSP (synced from the AgriEdge server — sample data).
     final synced = await _ref.read(syncManagerProvider).lastSyncedAt('market_price');
-    final priceSource = 'Mandi prices (sample data${synced == null ? '' : ', synced ${day.format(synced)}'})';
+    final priceSource = 'Mandi prices${synced == null ? '' : ' (updated ${day(synced)})'}';
     for (final p in await db.select(db.marketPrices).get()) {
       docs.add(_Doc('price',
-          '${p.commodity}: ${money.format(p.pricePerQuintal)}/quintal at ${p.mandi} (price date ${day.format(p.priceDate)}).',
-          priceSource, '${p.commodity} price'));
+          '${p.commodity}: ${money.format(p.pricePerQuintal)}/quintal at ${p.mandi} (price date ${day(p.priceDate)}).',
+          priceSource, '${p.commodity} price', crop: p.commodity));
     }
     for (final m in await db.select(db.mspRates).get()) {
       docs.add(_Doc('msp', '${m.crop} MSP (${m.season} ${m.year}): ${money.format(m.pricePerQuintal)}/quintal.',
-          'MSP table (sample data)', '${m.crop} msp price'));
+          'MSP table', '${m.crop} msp price', crop: m.crop));
     }
 
     // Disease reports: phone-to-phone and from the server.
     final mine = _ref.read(farmerProfileProvider).value?.myCropIds.toSet() ?? {};
+    final groups = <String, List<P2pPacket>>{};
     for (final r in await _ref.read(p2pPacketStoreProvider).allUnexpiredRows()) {
+      groups.putIfAbsent('${r.cropId}|${r.label}', () => []).add(r);
+    }
+    for (final g in groups.values) {
+      g.sort((a, b) => b.observedAt.compareTo(a.observedAt));
+      final r = g.first;
       final note = P2pPacketStore.payloadOf(r).note;
       docs.add(_Doc(
           'report',
-          '${prettyDiseaseLabel(r.label)} on ${r.cropId.replaceAll('_', ' ')} reported ${day.add_jm().format(r.observedAt.toLocal())}'
-              '${mine.contains(r.cropId) ? ' — a crop you grow' : ''}${note == null ? '' : ': "$note"'}',
+          '${prettyDiseaseLabel(r.label)} on ${r.cropId.replaceAll('_', ' ')}: ${g.length} farmer report${g.length == 1 ? '' : 's'}, '
+              'latest ${dayTime(r.observedAt.toLocal())}${mine.contains(r.cropId) ? ' — a crop you grow' : ''}'
+              '${note == null ? '' : '. Latest note: "$note"'}',
           'Farmer reports from nearby phones',
-          '${r.cropId} ${r.label} disease report'));
+          '${r.cropId} ${r.label} disease report',
+          crop: r.cropId));
     }
     for (final a in await db.select(db.diseaseAlerts).get()) {
       docs.add(_Doc('report', '${prettyDiseaseLabel(a.label)}: ${a.detectionCount} reports within ${a.radiusKm.round()} km.',
           'Server disease clusters', '${a.label} disease report'));
     }
     for (final d in await (db.select(db.diseaseDetections)..limit(20)).get()) {
-      docs.add(_Doc('detection', 'Your check on ${day.format(d.createdAt)}: ${prettyDiseaseLabel(d.label)} '
-          '(${(d.confidence * 100).round()}% model confidence).', 'Your disease checks', '${d.cropId} ${d.label} disease'));
+      docs.add(_Doc('detection', 'Your check on ${day(d.createdAt)}: ${prettyDiseaseLabel(d.label)} '
+          '(${(d.confidence * 100).round()}% model confidence).', 'Your disease checks', '${d.cropId} ${d.label} disease',
+          crop: d.cropId));
     }
 
     // Weather (last forecast fetched on this phone).
@@ -174,13 +199,13 @@ class AiAssistantService {
         if ((t['disease'] as String).toLowerCase().contains('healthy')) return;
         docs.add(_Doc('treatment',
             '${t['disease']} (${t['crop']}): ${t['symptoms']} Treat: ${t['treatment']} Prevent: ${t['prevention']}',
-            'AgriEdge treatment guide', '$crop $label ${t['disease']} treat disease'));
+            'AgriEdge treatment guide', '$crop $label ${t['disease']} treat disease', crop: '${t['crop']}'));
       });
     });
     for (final c in (jsonDecode(await rootBundle.loadString(AppConstants.cropCalendarAssetPath)) as List)) {
       docs.add(_Doc('calendar',
           '${c['crop']} (${c['season']}): sow ${c['sowingWindow']}, harvest ${c['harvestWindow']}.',
-          'Crop calendar', '${c['crop']} sowing'));
+          'Crop calendar', '${c['crop']} sowing', crop: '${c['crop']}'));
     }
     for (final f in (jsonDecode(await rootBundle.loadString(AppConstants.offlineFaqAssetPath)) as List)) {
       docs.add(_Doc('faq', f['answer'] as String, 'Farming FAQ', '${(f['keywords'] as List).join(' ')} ${f['question']}'));

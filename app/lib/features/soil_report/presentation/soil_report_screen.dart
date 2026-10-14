@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../../core/sync/sync_manager.dart';
 import 'package:intl/intl.dart';
 
 import '../data/soil_report_repository.dart';
@@ -62,6 +64,7 @@ class _SoilReportScreenState extends ConsumerState<SoilReportScreen> {
           temperatureC: double.parse(_temperature.text),
           humidityPct: double.parse(_humidity.text),
         );
+    ref.read(syncManagerProvider).syncDomain('soil_report'); // upload now if online
     if (!mounted) return;
     setState(() => _submitting = false);
     ScaffoldMessenger.of(context).showSnackBar(

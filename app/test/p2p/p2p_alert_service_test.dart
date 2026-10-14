@@ -176,6 +176,24 @@ void main() {
     expect(P2pPacketStore.decodeRow(rowC).ttlHops, 9);
   });
 
+  test('a report with a note and photo arrives verified with the photo intact', () async {
+    // Regression: CBOR byte strings decoded to List<int> and re-encoded as an
+    // array, so photo reports (and data snapshots) never verified.
+    final a = await _node('A');
+    final b = await _node('B');
+    a.transport.connect(b.transport);
+    final photo = Uint8List.fromList(List.generate(9000, (i) => i * 7 & 0xFF));
+    await a.service.broadcastDetection(
+        cropId: 'potato', label: 'Potato___Late_blight', confidence: 0, severity: 'high',
+        lat: 12.8, lng: 80.1, note: 'Black patches after rain', photoJpeg: photo);
+    await _settle();
+    final row = (await b.store.allUnexpiredRows()).single;
+    expect(row.verified, isTrue);
+    final payload = P2pPacketStore.payloadOf(row);
+    expect(payload.photoJpeg, photo);
+    expect(payload.note, 'Black patches after rain');
+  });
+
   test('undecodable datagrams are acknowledged and dropped', () async {
     final b = await _node('B');
     final a = _MemoryTransport('A')..localId = '0102030405060708';

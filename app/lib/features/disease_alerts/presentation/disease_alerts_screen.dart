@@ -69,12 +69,9 @@ final p2pReportsProvider = StreamProvider.autoDispose<List<P2pPacket>>((ref) {
 });
 
 /// The P2P mesh (§1 of docs/P2P_ALERT_PROTOCOL.md) runs as a foreground
-/// session tied to this screen being open — not an always-on background
-/// service. BLE background scanning is restricted on both platforms anyway
-/// (see the plan doc's §1), and starting/stopping radio + location use
-/// only while a farmer is actively looking at this screen is the more
-/// honest, battery- and permission-respectful default until a real
-/// multi-device pilot says otherwise.
+/// session for as long as the app is open (started by the tab shell), so
+/// reports and shared data move between phones whichever tab is showing.
+/// It is not an always-on background service.
 class DiseaseAlertsScreen extends ConsumerStatefulWidget {
   const DiseaseAlertsScreen({super.key});
 
@@ -99,7 +96,10 @@ class _DiseaseAlertsScreenState extends ConsumerState<DiseaseAlertsScreen> {
       final P2pAlertService service =
           _service ?? await ref.read(p2pAlertServiceFutureProvider.future);
       _service = service;
-      await service.stop(); // no-op unless retrying after a failed start
+      // The session normally runs app-wide (see _TabShell); this is the
+      // "Try again" path after a failed start, or the first start.
+      if (service.transportManager.state == P2pTransportState.running) return;
+      await service.stop();
       await service.start();
     } catch (_) {
       // The status card shows the transport's own explanation (permission
@@ -123,14 +123,6 @@ class _DiseaseAlertsScreenState extends ConsumerState<DiseaseAlertsScreen> {
     }
   }
 
-  @override
-  void dispose() {
-    // Fire-and-forget — the service tolerates being stopped after the
-    // widget is gone, and awaiting here would need a BuildContext we no
-    // longer have.
-    _service?.stop();
-    super.dispose();
-  }
 
   Future<void> _sendDebugTestAlert() async {
     final service = _service;
@@ -331,8 +323,8 @@ class _P2pStatusCard extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
-                  'Keep this screen open on both phones. Alerts are exchanged automatically '
-                  'when another phone with AgriEdge is within Bluetooth range.',
+                  'Reports and data are swapped automatically with any phone that has '
+                  'AgriEdge open within Bluetooth range — no internet needed.',
                   style: TextStyle(color: foreground),
                 ),
               ),

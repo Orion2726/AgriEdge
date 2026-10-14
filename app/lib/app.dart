@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'core/p2p/p2p_alert_service.dart';
 import 'core/theme/app_theme.dart';
 import 'features/ai_assistant/presentation/ai_assistant_screen.dart';
 import 'features/crop_recommendation/presentation/crop_recommendation_screen.dart';
@@ -50,12 +51,27 @@ final _router = GoRouter(
   ],
 );
 
-class _TabShell extends StatelessWidget {
+class _TabShell extends ConsumerStatefulWidget {
   const _TabShell({required this.shell});
   final StatefulNavigationShell shell;
 
   @override
+  ConsumerState<_TabShell> createState() => _TabShellState();
+}
+
+class _TabShellState extends ConsumerState<_TabShell> {
+  @override
+  void initState() {
+    super.initState();
+    // Share with nearby phones whenever the app is open, not only on the
+    // Nearby tab. Failures (Bluetooth off, permission denied) are shown and
+    // retried from the Nearby tab.
+    ref.read(p2pAlertServiceFutureProvider.future).then((s) => s.start()).catchError((_) {});
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final shell = widget.shell;
     return Scaffold(
       body: shell,
       // Tab labels are capped at 1.15× so five tabs still fit when the phone

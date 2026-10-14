@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart' show IconData, Icons;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -96,6 +97,15 @@ String _dayName(DateTime d) {
   return 'on ${DateFormat.EEEE().format(d)}';
 }
 
+IconData weatherIcon(int code) => switch (code) {
+      0 => Icons.wb_sunny_rounded,
+      1 || 2 => Icons.wb_cloudy_outlined,
+      3 || 45 || 48 => Icons.cloud_rounded,
+      >= 51 && <= 67 || >= 80 && <= 82 => Icons.water_drop_rounded,
+      >= 95 => Icons.thunderstorm_rounded,
+      _ => Icons.cloud_queue_rounded,
+    };
+
 String weatherLabel(int code) => switch (code) {
       0 => 'Clear sky',
       1 || 2 => 'Partly cloudy',
@@ -109,7 +119,9 @@ String weatherLabel(int code) => switch (code) {
     };
 
 /// Open-Meteo: free, no API key (https://open-meteo.com, CC BY 4.0).
-final weatherProvider = FutureProvider.autoDispose<Feed<Weather>?>((ref) async {
+// Not autoDispose: kept for the app session so scrolling the dashboard
+// doesn't drop and re-fetch it.
+final weatherProvider = FutureProvider<Feed<Weather>?>((ref) async {
   final loc = ref.watch(farmSetupProvider.select((s) => s.location));
   if (loc == null) return null;
   return _cached<Weather>(
@@ -160,7 +172,7 @@ const newsSources = {
   'Krishi Jagran': 'https://krishijagran.com/feeds/rss',
 };
 
-final newsProvider = FutureProvider.autoDispose<Feed<List<NewsItem>>>((ref) async {
+final newsProvider = FutureProvider<Feed<List<NewsItem>>>((ref) async {
   return _cached<List<NewsItem>>(
     newsCacheKey,
     () async {
@@ -217,9 +229,7 @@ List<NewsItem> _parseRss(String xml, String source) {
 }
 
 DateTime? _parseRssDate(String s) {
-  try {
-    return DateFormat('EEE, dd MMM yyyy HH:mm:ss Z', 'en_US').parse(s.trim(), true).toLocal();
-  } catch (_) {
+  {
     try {
       // "Wed, 14 Oct 2026 14:28:49 +0530" — intl can't parse numeric zones.
       final m = RegExp(r'(\d{1,2}) (\w{3}) (\d{4}) (\d{2}):(\d{2}):(\d{2}) ([+-])(\d{2})(\d{2})').firstMatch(s);
