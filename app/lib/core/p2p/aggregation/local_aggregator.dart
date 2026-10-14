@@ -27,7 +27,9 @@ class LocalAggregator {
   /// packet receive and on a periodic timer — this device's packet cache is
   /// small (TTL-bounded, see P2pPacketStore.sweepExpired).
   Future<void> recompute() async {
-    final rows = await _store.allUnexpiredRows();
+    // Only signature-verified reports count towards a cluster (docs §8) —
+    // unverified ones stay visible individually, flagged as such.
+    final rows = (await _store.allUnexpiredRows()).where((r) => r.verified).toList();
 
     final buckets = <String, List<P2pPacket>>{};
     for (final row in rows) {

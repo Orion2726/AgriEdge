@@ -46,6 +46,10 @@ class BleTransport implements P2pTransport {
   static const _connectTimeout = Duration(seconds: 12);
   static const _operationTimeout = Duration(seconds: 10);
 
+  /// A message's last chunk is answered only once the receiving app stored
+  /// it, so allow close to the 30 s ATT transaction limit.
+  static const _ackTimeout = Duration(seconds: 25);
+
   /// Links are dropped after this long without traffic — Android allows only
   /// a handful of simultaneous GATT connections.
   static const _idleDisconnectAfter = Duration(seconds: 20);
@@ -469,7 +473,7 @@ class BleTransport implements P2pTransport {
                   value: chunk,
                   type: GATTCharacteristicWriteType.withResponse,
                 )
-                .timeout(_operationTimeout);
+                .timeout(identical(chunk, chunks.last) ? _ackTimeout : _operationTimeout);
           }
           link.status
             ..sent += 1

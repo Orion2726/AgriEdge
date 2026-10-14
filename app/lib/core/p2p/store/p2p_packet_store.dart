@@ -70,6 +70,18 @@ class P2pPacketStore {
         .watch();
   }
 
+  Future<void> setVerified(String packetId, bool verified) async {
+    await (_db.update(_db.p2pPackets)..where((t) => t.packetId.equals(packetId)))
+        .write(P2pPacketsCompanion(verified: Value(verified)));
+  }
+
+  Future<List<P2pPacket>> unverifiedSignedRows() async {
+    final rows = await (_db.select(_db.p2pPackets)
+          ..where((t) => t.verified.equals(false) & t.expiresAt.isBiggerThanValue(DateTime.now())))
+        .get();
+    return rows.where((r) => decodeRow(r).isSigned).toList();
+  }
+
   Future<bool> hasForwardedTo(String packetId, String peerId) async {
     final row = await (_db.select(_db.p2pPackets)..where((t) => t.packetId.equals(packetId)))
         .getSingleOrNull();

@@ -93,6 +93,7 @@ class P2pAlertService {
     _resyncTimer = Timer.periodic(resyncInterval, (_) => unawaited(_resyncAll()));
 
     await _packetStore.sweepExpired();
+    unawaited(_reverifyPending());
     await _transportManager.start(localDeviceId: _deviceIdentity.shortIdBytes);
   }
 
@@ -187,20 +188,42 @@ class P2pAlertService {
       return;
     }
 
-    final verified = await _verify(packet);
+    // Store (as unverified) and acknowledge first; verify afterwards.
+    // Ed25519 verification is pure Dart and measured 0.7 s unlocked and
+    // 2.4–10 s on a dozing, screen-locked phone, which outran the sender's
+    // write timeout and caused needless retries. Relays don't need the
+    // result (docs §8 relay-trust asymmetry); clusters only count verified
+    // reports, and unverified ones are re-checked on the next session start.
+    final clock = Stopwatch()..start();
     final isNew = await _packetStore.insertIfNew(
       packet,
       receivedFromPeerId: peerDeviceKey(from),
-      verified: verified,
+      verified: false,
     );
     // Never offer a packet back to the phone that just gave it to us.
     await _packetStore.markForwardedTo(packet.packetIdHex, peerDeviceKey(from));
-    p2pLog('rx packet=${packet.packetIdHex} from=$from new=$isNew verified=$verified ttl=${packet.ttlHops}');
+    p2pLog('rx packet=${packet.packetIdHex} from=$from new=$isNew ttl=${packet.ttlHops} '
+        'storeMs=${clock.elapsedMilliseconds}');
     if (!isNew) return;
+    unawaited(_verifyStored(packet));
+  }
 
+  Future<void> _verifyStored(P2pAlertPacket packet) async {
+    final clock = Stopwatch()..start();
+    final verified = await _verify(packet);
+    await _packetStore.setVerified(packet.packetIdHex, verified);
+    p2pLog('verify packet=${packet.packetIdHex} ok=$verified ms=${clock.elapsedMilliseconds}');
     await _aggregator.recompute();
-    // Relay onward without holding up this peer's acknowledgment.
+    // Relay onward.
     unawaited(_resyncAll());
+  }
+
+  /// Re-checks signed packets left unverified (e.g. the app was killed
+  /// between storing and verifying).
+  Future<void> _reverifyPending() async {
+    for (final row in await _packetStore.unverifiedSignedRows()) {
+      await _verifyStored(P2pPacketStore.decodeRow(row));
+    }
   }
 
   Future<bool> _verify(P2pAlertPacket packet) async {

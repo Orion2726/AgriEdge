@@ -126,4 +126,26 @@ void main() {
       expect(medium, greaterThan(low));
     });
   });
+
+  test('a phone without a location fix still forwards a relevant alert', () {
+    final observedAt = DateTime.now().toUtc();
+    final payload = DiseaseAlertPayload(
+      cropId: 'potato',
+      label: 'Potato___Late_blight',
+      confidence: 0.9,
+      severity: 'high',
+      latE6: 28613900,
+      lngE6: 77209000,
+      observedAt: observedAt,
+      expiresAt: observedAt.add(const Duration(hours: 72)),
+      sourceDeviceId: 'x',
+    );
+    const engine = RelevanceEngine();
+    final b = engine.score(
+        payload: payload, deviceLat: null, deviceLng: null, myCropIds: const [], alreadyForwardedToThisPeer: false);
+    expect(b.geographic, RelevanceEngine.unknownLocationGeographic);
+    expect(engine.shouldForward(
+        payload: payload, deviceLat: null, deviceLng: null, myCropIds: const [], alreadyForwardedToThisPeer: false),
+        isTrue);
+  });
 }
