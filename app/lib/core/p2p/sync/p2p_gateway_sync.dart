@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../network/api_client.dart';
+import '../../sync/sync_manager.dart';
+import '../packet/p2p_packet.dart';
 import '../store/p2p_packet_store.dart';
 
 /// Opportunistic gateway synchronization — docs/P2P_ALERT_PROTOCOL.md §7.
@@ -17,10 +19,15 @@ class P2pGatewaySync {
   final P2pPacketStore _store;
   final Dio _dio;
 
+  /// Throws after attempting every row if any upload failed, so the
+  /// SyncManager doesn't report this domain as synced when it wasn't.
   Future<void> refresh() async {
     final unsynced = await _store.unsyncedToBackend();
+    Object? firstError;
+    var failed = 0;
     for (final row in unsynced) {
       try {
+        final payload = DiseaseAlertPayload.fromMap(P2pPacketStore.decodeRow(row).payload);
         await _dio.post('/api/p2p-events', data: {
           'packetId': row.packetId,
           'cropId': row.cropId,
@@ -32,12 +39,18 @@ class P2pGatewaySync {
           'observedAt': row.observedAt.toUtc().toIso8601String(),
           'expiresAt': row.expiresAt.toUtc().toIso8601String(),
           'sourceDeviceId': row.sourceDeviceId,
+          'detectionId': payload.detectionId,
           'verified': row.verified,
         });
         await _store.markSyncedToBackend(row.packetId);
-      } catch (_) {
+      } catch (e) {
         // Stays unsynced — retried on the next sync pass.
+        failed++;
+        firstError ??= e;
       }
+    }
+    if (firstError != null) {
+      throw SyncIncompleteException('$failed of ${unsynced.length} nearby-device alerts', firstError);
     }
   }
 }

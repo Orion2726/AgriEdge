@@ -1,10 +1,14 @@
 /// Central place for values that would otherwise be magic strings/numbers
-/// scattered across features. Backend base URL points at the local Node
-/// dev server described in backend/README.md — there is no deployment yet.
+/// scattered across features.
 class AppConstants {
   AppConstants._();
 
-  static const String backendBaseUrl = 'http://localhost:4001';
+  /// The local Node dev server described in backend/README.md — there is no
+  /// deployment. Phones must be given the dev machine's LAN address at build
+  /// time (`--dart-define=AGRIEDGE_BACKEND_URL=http://192.168.x.y:4001`) or in
+  /// Sync & Data; `localhost` only works for desktop/simulator runs.
+  static const String defaultBackendBaseUrl =
+      String.fromEnvironment('AGRIEDGE_BACKEND_URL', defaultValue: 'http://localhost:4001');
 
   static const String treatmentsAssetPath =
       'assets/knowledge_base/treatments.json';

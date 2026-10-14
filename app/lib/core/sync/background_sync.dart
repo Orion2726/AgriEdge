@@ -5,6 +5,8 @@ import 'package:workmanager/workmanager.dart';
 
 import '../constants/app_constants.dart';
 import '../db/app_database.dart';
+import '../network/api_client.dart';
+import '../network/backend_config.dart';
 
 const String backgroundSyncTaskName = 'agriedge.periodic_sync';
 
@@ -19,7 +21,8 @@ void backgroundSyncCallbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     if (task != backgroundSyncTaskName) return true;
     final db = AppDatabase();
-    final dio = Dio(BaseOptions(baseUrl: AppConstants.backendBaseUrl));
+    final dio = createApiClient(
+        await readPersistedBackendUrl() ?? AppConstants.defaultBackendBaseUrl);
     try {
       await _refreshPrices(db, dio);
       await _refreshMsp(db, dio);

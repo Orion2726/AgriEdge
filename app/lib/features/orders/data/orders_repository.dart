@@ -7,6 +7,7 @@ import '../../../core/data/offline_repository.dart';
 import '../../../core/db/app_database.dart';
 import '../../../core/db/db_provider.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/sync/sync_manager.dart';
 import '../domain/order_models.dart';
 
 class OrdersRepository implements OfflineRepository<FarmOrder> {
@@ -122,12 +123,14 @@ class OrdersRepository implements OfflineRepository<FarmOrder> {
           ..where((t) => t.type.equals('order') & t.status.equals('pending')))
         .get();
 
+    Object? firstError;
+    var failed = 0;
     for (final queueItem in pending) {
       final order = await (_db.select(_db.orders)..where((t) => t.id.equals(queueItem.refId))).getSingleOrNull();
       if (order == null) continue;
       final items = await (_db.select(_db.orderItems)..where((t) => t.orderId.equals(order.id))).get();
       try {
-        await _dio.post('/api/orders', data: {
+        final res = await _dio.post('/api/orders', data: {
           'id': order.id,
           'createdAt': order.createdAt.toIso8601String(),
           'totalAmount': order.totalAmount,
@@ -142,13 +145,23 @@ class OrdersRepository implements OfflineRepository<FarmOrder> {
         });
         await (_db.update(_db.syncQueueItems)..where((t) => t.id.equals(queueItem.id)))
             .write(const SyncQueueItemsCompanion(status: Value('synced')));
-        await (_db.update(_db.orders)..where((t) => t.id.equals(order.id)))
-            .write(const OrdersCompanion(syncStatus: Value('synced')));
-      } catch (_) {
+        // Reflect the server's acknowledgment ("received") instead of
+        // leaving the locally-assumed "placed" forever.
+        final serverStatus = (res.data is Map ? res.data['status'] : null) as String?;
+        await (_db.update(_db.orders)..where((t) => t.id.equals(order.id))).write(OrdersCompanion(
+          syncStatus: const Value('synced'),
+          status: serverStatus == null ? const Value.absent() : Value(serverStatus),
+        ));
+      } catch (e) {
+        failed++;
+        firstError ??= e;
         await (_db.update(_db.syncQueueItems)..where((t) => t.id.equals(queueItem.id))).write(
           SyncQueueItemsCompanion(attempts: Value(queueItem.attempts + 1)),
         );
       }
+    }
+    if (firstError != null) {
+      throw SyncIncompleteException('$failed of ${pending.length} orders', firstError);
     }
   }
 }

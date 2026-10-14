@@ -68,7 +68,7 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
         // Location unavailable — still save the detection, just without a geotag.
       }
     }
-    await ref.read(diseaseDetectionRepositoryProvider).recordDetection(
+    final entry = await ref.read(diseaseDetectionRepositoryProvider).recordDetection(
           cropId: _cropId,
           label: prediction.label,
           confidence: prediction.confidence,
@@ -101,6 +101,7 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
                   : 'low',
           lat: lat,
           lng: lng,
+          detectionId: entry.id,
         );
       } catch (_) {
         // Non-fatal — the detection is already saved and will still sync

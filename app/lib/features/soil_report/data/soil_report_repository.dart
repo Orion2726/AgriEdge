@@ -9,6 +9,7 @@ import '../../../core/data/offline_repository.dart';
 import '../../../core/db/app_database.dart';
 import '../../../core/db/db_provider.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/sync/sync_manager.dart';
 import '../../crop_recommendation/ml/crop_recommendation_ml_service.dart';
 import '../domain/soil_report_entry.dart';
 
@@ -86,8 +87,7 @@ class SoilReportRepository implements OfflineRepository<SoilReportEntry> {
   Future<void> _submitToBackend(String soilReportId) async {
     final report = await (_db.select(_db.soilReports)..where((t) => t.id.equals(soilReportId)))
         .getSingle();
-    try {
-      await _dio.post('/api/soil-reports', data: {
+    await _dio.post('/api/soil-reports', data: {
         'id': report.id,
         'nitrogen': report.nitrogen,
         'phosphorus': report.phosphorus,
@@ -100,9 +100,6 @@ class SoilReportRepository implements OfflineRepository<SoilReportEntry> {
       });
       await (_db.update(_db.soilReports)..where((t) => t.id.equals(soilReportId)))
           .write(const SoilReportsCompanion(syncStatus: Value('synced')));
-    } catch (_) {
-      // Stays 'pending' — refresh() (SyncManager's soil_report job) retries later.
-    }
   }
 
   Future<void> _cacheRecommendations(String soilReportId, CropRecommendationResult result) async {
@@ -130,8 +127,19 @@ class SoilReportRepository implements OfflineRepository<SoilReportEntry> {
   Future<void> refresh() async {
     final pending = await (_db.select(_db.soilReports)..where((t) => t.syncStatus.equals('pending')))
         .get();
+    Object? firstError;
+    var failed = 0;
     for (final report in pending) {
-      await _submitToBackend(report.id);
+      try {
+        await _submitToBackend(report.id);
+      } catch (e) {
+        // Stays 'pending' — retried on the next soil_report sync.
+        failed++;
+        firstError ??= e;
+      }
+    }
+    if (firstError != null) {
+      throw SyncIncompleteException('$failed of ${pending.length} soil reports', firstError);
     }
   }
 

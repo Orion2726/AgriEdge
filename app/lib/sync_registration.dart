@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/network/backend_config.dart';
 import 'core/p2p/sync/p2p_gateway_sync.dart';
 import 'core/sync/sync_manager.dart';
 import 'features/disease_alerts/data/disease_alerts_repository.dart';
@@ -34,6 +35,11 @@ final syncRegistrationProvider = Provider<void>((ref) {
   // this there leaves a real pending Timer and fails the test binding's
   // "no pending timers" invariant check.
   if (Platform.environment['FLUTTER_TEST'] != 'true') {
-    Future.microtask(manager.syncAll);
+    Future.microtask(() async {
+      // Wait for a persisted backend address so the first sync doesn't go
+      // to the compiled-in default.
+      await ref.read(backendUrlProvider.notifier).loaded;
+      await manager.syncAll();
+    });
   }
 });

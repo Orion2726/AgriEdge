@@ -53,6 +53,23 @@ class P2pPacketStore {
     return true;
   }
 
+  /// Peers (see peerDeviceKey) this packet has been delivered to.
+  List<String> forwardedTo(P2pPacket row) =>
+      (jsonDecode(row.forwardedToPeerIdsJson) as List).cast<String>();
+
+  static P2pAlertPacket decodeRow(P2pPacket row) =>
+      P2pAlertPacket.decode(Uint8List.fromList(row.rawBytes));
+
+  /// Newest first — both alerts this phone originated and ones received
+  /// from nearby phones, for the alerts screen's per-report list.
+  Stream<List<P2pPacket>> watchRecent({int limit = 50}) {
+    return (_db.select(_db.p2pPackets)
+          ..where((t) => t.expiresAt.isBiggerThanValue(DateTime.now()))
+          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)])
+          ..limit(limit))
+        .watch();
+  }
+
   Future<bool> hasForwardedTo(String packetId, String peerId) async {
     final row = await (_db.select(_db.p2pPackets)..where((t) => t.packetId.equals(packetId)))
         .getSingleOrNull();

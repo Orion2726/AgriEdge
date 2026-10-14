@@ -73,18 +73,30 @@ class RelevanceEngine {
   final double forwardThreshold;
   final double affectedRadiusKm;
 
+  /// Geographic term used when this device has no location fix (location
+  /// services off, indoors, no permission). Neutral rather than zero: a
+  /// phone that can't tell where it is must still be able to relay alerts —
+  /// previously forwarding was skipped entirely without a fix, which
+  /// silently stopped the mesh on phones with location turned off.
+  static const unknownLocationGeographic = 0.5;
+
   RelevanceBreakdown score({
     required DiseaseAlertPayload payload,
-    required double deviceLat,
-    required double deviceLng,
+    required double? deviceLat,
+    required double? deviceLng,
     required List<String> myCropIds,
     required bool alreadyForwardedToThisPeer,
   }) {
-    final distanceKm = haversineKm(payload.lat, payload.lng, deviceLat, deviceLng);
     // Full relevance inside the affected radius, decaying to zero by 2x the
     // radius — a farmer just outside the drawn boundary still benefits from
     // an early warning, just less urgently than one inside it.
-    final geographic = (1 - (distanceKm / (affectedRadiusKm * 2))).clamp(0.0, 1.0);
+    final double geographic;
+    if (deviceLat == null || deviceLng == null) {
+      geographic = unknownLocationGeographic;
+    } else {
+      final distanceKm = haversineKm(payload.lat, payload.lng, deviceLat, deviceLng);
+      geographic = (1 - (distanceKm / (affectedRadiusKm * 2))).clamp(0.0, 1.0);
+    }
 
     final crop = myCropIds.contains(payload.cropId) ? 1.0 : 0.2;
 
@@ -124,8 +136,8 @@ class RelevanceEngine {
 
   bool shouldForward({
     required DiseaseAlertPayload payload,
-    required double deviceLat,
-    required double deviceLng,
+    required double? deviceLat,
+    required double? deviceLng,
     required List<String> myCropIds,
     required bool alreadyForwardedToThisPeer,
   }) {

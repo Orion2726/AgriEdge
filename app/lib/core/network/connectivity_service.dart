@@ -13,6 +13,10 @@ class ConnectivityService {
       _isOnline = !results.contains(ConnectivityResult.none);
       _controller.add(_isOnline);
     });
+    // onConnectivityChanged only fires on *changes*, so without an initial
+    // check a phone that starts offline is reported online until something
+    // changes.
+    checkNow().then(_controller.add, onError: (_) {});
   }
 
   bool _isOnline = true;

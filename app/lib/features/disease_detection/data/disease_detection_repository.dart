@@ -7,6 +7,7 @@ import '../../../core/data/offline_repository.dart';
 import '../../../core/db/app_database.dart';
 import '../../../core/db/db_provider.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/sync/sync_manager.dart';
 import '../domain/disease_detection_entry.dart';
 
 class DiseaseDetectionRepository implements OfflineRepository<DiseaseDetectionEntry> {
@@ -84,6 +85,8 @@ class DiseaseDetectionRepository implements OfflineRepository<DiseaseDetectionEn
           ..where((t) => t.type.equals('detection') & t.status.equals('pending')))
         .get();
 
+    Object? firstError;
+    var failed = 0;
     for (final item in pending) {
       final detection = await (_db.select(_db.diseaseDetections)
             ..where((t) => t.id.equals(item.refId)))
@@ -104,11 +107,16 @@ class DiseaseDetectionRepository implements OfflineRepository<DiseaseDetectionEn
             .write(const SyncQueueItemsCompanion(status: Value('synced')));
         await (_db.update(_db.diseaseDetections)..where((t) => t.id.equals(detection.id)))
             .write(const DiseaseDetectionsCompanion(syncStatus: Value('synced')));
-      } catch (_) {
+      } catch (e) {
+        failed++;
+        firstError ??= e;
         await (_db.update(_db.syncQueueItems)..where((t) => t.id.equals(item.id))).write(
           SyncQueueItemsCompanion(attempts: Value(item.attempts + 1)),
         );
       }
+    }
+    if (firstError != null) {
+      throw SyncIncompleteException('$failed of ${pending.length} detections', firstError);
     }
   }
 

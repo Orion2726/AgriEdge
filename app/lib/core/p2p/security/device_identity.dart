@@ -22,6 +22,18 @@ class DeviceIdentity {
   String get publicKeyHex =>
       publicKeyBytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
 
+  /// Short, stable P2P address used on the wire by transports (8 bytes) and
+  /// shown in the UI so two farmers can tell whose phone is whose.
+  Uint8List get shortIdBytes => Uint8List.sublistView(publicKeyBytes, 0, shortIdLength);
+  String get shortIdHex => shortIdOfPublicKeyHex(publicKeyHex);
+
+  static const shortIdLength = 8;
+
+  /// The short id that corresponds to a full hex public key (e.g. a packet's
+  /// sourceDeviceId).
+  static String shortIdOfPublicKeyHex(String publicKeyHex) =>
+      publicKeyHex.substring(0, shortIdLength * 2);
+
   static Future<DeviceIdentity> loadOrCreate(FlutterSecureStorage storage) async {
     final existingSeedB64 = await storage.read(key: _seedStorageKey);
     final SimpleKeyPair keyPair;

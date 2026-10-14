@@ -36,6 +36,7 @@ class DiseaseAlertPayload {
     required this.observedAt,
     required this.expiresAt,
     required this.sourceDeviceId,
+    this.detectionId,
   });
 
   final String cropId;
@@ -58,6 +59,13 @@ class DiseaseAlertPayload {
   /// Hex-encoded Ed25519 public key of the originating device.
   final String sourceDeviceId;
 
+  /// Id of the originating phone's local detection record, when the alert
+  /// came from one. Lets the backend recognise that a gateway-synced packet
+  /// and the originator's own /api/detections upload are the same
+  /// observation, so it isn't counted twice. Omitted from the wire when null
+  /// (older packets and their deterministic ids are unaffected).
+  final String? detectionId;
+
   double get lat => latE6 / 1e6;
   double get lng => lngE6 / 1e6;
 
@@ -71,6 +79,7 @@ class DiseaseAlertPayload {
         'observedAt': observedAt.toUtc().millisecondsSinceEpoch,
         'expiresAt': expiresAt.toUtc().millisecondsSinceEpoch,
         'sourceDeviceId': sourceDeviceId,
+        if (detectionId != null) 'detectionId': detectionId,
       };
 
   static DiseaseAlertPayload fromMap(Map<Object?, Object?> map) {
@@ -84,6 +93,7 @@ class DiseaseAlertPayload {
       observedAt: DateTime.fromMillisecondsSinceEpoch(map['observedAt'] as int, isUtc: true),
       expiresAt: DateTime.fromMillisecondsSinceEpoch(map['expiresAt'] as int, isUtc: true),
       sourceDeviceId: map['sourceDeviceId'] as String,
+      detectionId: map['detectionId'] as String?,
     );
   }
 }
