@@ -3,7 +3,10 @@ import 'dart:io' show Platform;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/network/api_client.dart';
 import 'core/network/backend_config.dart';
+import 'core/network/connectivity_service.dart';
+import 'core/p2p/p2p_alert_service.dart';
 import 'core/p2p/sync/p2p_gateway_sync.dart';
 import 'core/sync/sync_manager.dart';
 import 'features/disease_alerts/data/disease_alerts_repository.dart';
@@ -26,6 +29,14 @@ final syncRegistrationProvider = Provider<void>((ref) {
   manager.register('detections', () => ref.read(diseaseDetectionRepositoryProvider).refresh());
   manager.register('orders', () => ref.read(ordersRepositoryProvider).refresh());
   manager.register('p2p_alerts', () => ref.read(p2pGatewaySyncProvider).refresh());
+  manager.register('server_reports', () async {
+    // Official reports from the server → into the mesh for offline phones.
+    final res = await ref.read(apiClientProvider).get('/api/server-reports');
+    final service = await ref.read(p2pAlertServiceFutureProvider.future);
+    for (final r in (res.data as List).cast<Map<String, dynamic>>()) {
+      await service.importServerReport(r);
+    }
+  });
 
   // Opportunistic first-launch sync so a fresh install isn't stuck showing
   // empty screens until the user finds the manual sync button. Each job
@@ -44,6 +55,19 @@ final syncRegistrationProvider = Provider<void>((ref) {
     });
     // Retry pending uploads while the app is open (failed ones stay queued).
     final timer = Timer.periodic(const Duration(minutes: 5), (_) => manager.syncAll());
-    ref.onDispose(timer.cancel);
+    // Pick up official reports and price changes from the server quickly,
+    // so they can be relayed to phones without internet.
+    final fast = Timer.periodic(const Duration(seconds: 15), (_) async {
+      if (!ref.read(connectivityServiceProvider).isOnline) return;
+      for (final d in ['server_reports', 'market_price', 'msp', 'orders']) {
+        await manager.syncDomain(d);
+      }
+      // Pass fresh server data on to nearby phones right away.
+      (await ref.read(p2pAlertServiceFutureProvider.future)).shareNow();
+    });
+    ref.onDispose(() {
+      timer.cancel();
+      fast.cancel();
+    });
   }
 });

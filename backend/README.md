@@ -8,8 +8,24 @@ Node.js + Express + SQLite (`better-sqlite3`). Runs on your machine only.
 cd backend
 npm install
 npm rebuild better-sqlite3   # npm 11 blocks install scripts; this compiles the native module
-npm start                    # PORT=4001 by default; e.g. PORT=53317 npm start
+npm start                    # PORT=4001 by default; prints the panel URL and the address for phones
 ```
+
+Linux firewall (ufw) — allow phones on the LAN to reach the server once:
+`sudo ufw allow from <lan-subnet>/24 to any port 4001 proto tcp`
+
+## Control panel (for demos)
+
+Open `http://localhost:<port>/` on the laptop. From there you can publish
+**official disease reports**, change **mandi prices / MSP**, change **order
+status**, and watch **reports uploaded by phones** and **which phones are
+connected**. Online phones poll every ~15 s; whatever they receive is passed on
+over Bluetooth to nearby phones that have no internet (and reports made on
+those offline phones travel back the same way and appear in the panel).
+
+Demo with two phones: phone B on the laptop's Wi-Fi/hotspot (server address set),
+phone A with no route to the laptop (mobile data off, or another Wi-Fi), both with
+AgriEdge open within Bluetooth range.
 
 ## Connect phones
 

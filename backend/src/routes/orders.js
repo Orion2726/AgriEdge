@@ -10,7 +10,8 @@ router.post('/', (req, res) => {
   }
 
   const insertOrder = db.prepare(
-    'INSERT OR REPLACE INTO orders (id, created_at, total_amount, status) VALUES (?, ?, ?, ?)'
+    `INSERT INTO orders (id, created_at, total_amount, status) VALUES (?, ?, ?, ?)
+     ON CONFLICT(id) DO UPDATE SET total_amount = excluded.total_amount`
   );
   const insertItem = db.prepare(
     'INSERT INTO order_items (order_id, product_id, product_name, quantity, unit_price) VALUES (?, ?, ?, ?, ?)'
@@ -26,7 +27,19 @@ router.post('/', (req, res) => {
   });
   tx();
 
-  res.status(201).json({ id, status: 'received' });
+  const { status } = db.prepare('SELECT status FROM orders WHERE id = ?').get(id);
+  res.status(201).json({ id, status });
+});
+
+// Phones poll their orders' status so changes made in the control panel
+// (packed, shipped, delivered…) show up in the app.
+router.get('/status', (req, res) => {
+  const ids = String(req.query.ids || '').split(',').filter(Boolean).slice(0, 100);
+  if (ids.length === 0) return res.json([]);
+  const rows = db
+    .prepare(`SELECT id, status FROM orders WHERE id IN (${ids.map(() => '?').join(',')})`)
+    .all(...ids);
+  res.json(rows);
 });
 
 module.exports = router;

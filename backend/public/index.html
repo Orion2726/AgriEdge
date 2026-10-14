@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgriEdge Control Panel</title>
+<style>
+  :root { --bg:#f4f7f0; --card:#fff; --ink:#1d2a1d; --muted:#5d6b5d; --line:#dfe7d8; --green:#2e7d32; --green2:#e3f1df; --red:#b3261e; --red2:#fde7e5; --amber:#8a5a00; --amber2:#fff1d6; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#101510; --card:#182018; --ink:#e6efe2; --muted:#9db09a; --line:#2a352a; --green:#7fd17f; --green2:#1f3a20; --red:#ffb4ab; --red2:#3b1714; --amber:#ffcf7a; --amber2:#3a2c10; } }
+  * { box-sizing: border-box; }
+  body { margin:0; font:15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background:var(--bg); color:var(--ink); }
+  header { display:flex; align-items:center; gap:12px; padding:16px 24px; background:var(--card); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:2; }
+  header h1 { font-size:20px; margin:0; } header .dot { width:10px; height:10px; border-radius:50%; background:var(--green); }
+  header .meta { margin-left:auto; color:var(--muted); font-size:13px; }
+  main { display:grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap:16px; padding:16px 24px 48px; }
+  section { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px 18px; min-width:0; }
+  section.wide { grid-column: 1 / -1; }
+  h2 { font-size:16px; margin:0 0 4px; } .hint { color:var(--muted); font-size:13px; margin:0 0 12px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; } th, td { text-align:left; padding:7px 6px; border-top:1px solid var(--line); vertical-align:top; }
+  th { color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.03em; border-top:none; }
+  input, select, textarea, button { font:inherit; color:inherit; }
+  input, select, textarea { width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:var(--bg); }
+  textarea { min-height:60px; resize:vertical; }
+  button { padding:8px 14px; border-radius:10px; border:1px solid var(--line); background:var(--bg); cursor:pointer; }
+  button.primary { background:var(--green); color:#fff; border-color:transparent; font-weight:600; }
+  @media (prefers-color-scheme: dark) { button.primary { color:#0b1a0b; } }
+  button.danger { color:var(--red); }
+  .grid { display:grid; grid-template-columns: 1fr 1fr; gap:10px; } .grid .full { grid-column: 1 / -1; }
+  label { font-size:12px; color:var(--muted); display:block; margin-bottom:3px; }
+  .pill { display:inline-block; padding:2px 9px; border-radius:20px; font-size:12px; background:var(--green2); color:var(--green); white-space:nowrap; }
+  .pill.high { background:var(--red2); color:var(--red); } .pill.medium { background:var(--amber2); color:var(--amber); }
+  .pill.off { background:var(--line); color:var(--muted); }
+  .row { display:flex; gap:8px; align-items:center; } .num { width:110px; }
+  .empty { color:var(--muted); padding:10px 0; } .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--ink); color:var(--bg); padding:10px 16px; border-radius:12px; opacity:0; transition:.2s; }
+  .toast.show { opacity:1; } .muted { color:var(--muted); font-size:13px; } .scroll { max-height:420px; overflow:auto; }
+</style>
+</head>
+<body>
+<header><span class="dot"></span><h1>AgriEdge Control Panel</h1><span class="meta" id="meta">Connecting…</span></header>
+<main>
+  <section>
+    <h2>Connected phones</h2>
+    <p class="hint">Phones that talked to this server. Phones without internet get server data relayed over Bluetooth by these.</p>
+    <div id="devices"></div>
+  </section>
+
+  <section>
+    <h2>Add official disease report</h2>
+    <p class="hint">Online phones pick it up within ~15 s and pass it to nearby phones over Bluetooth — no internet needed on those.</p>
+    <form id="reportForm" class="grid">
+      <div><label>Crop</label><select name="cropId" id="crop"></select></div>
+      <div><label>Disease / pest</label><input name="label" id="disease" list="diseaseList" required><datalist id="diseaseList"></datalist></div>
+      <div><label>Severity</label><select name="severity"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select></div>
+      <div><label>Active for (hours)</label><input name="hours" type="number" value="72" min="1" max="720"></div>
+      <div class="full"><label>Area</label><select id="place"></select></div>
+      <div><label>Latitude</label><input name="lat" id="lat" required></div>
+      <div><label>Longitude</label><input name="lng" id="lng" required></div>
+      <div class="full"><label>Advice / note for farmers</label><textarea name="note" maxlength="280" placeholder="e.g. Spray mancozeb 2.5 g/L; avoid irrigation for 3 days."></textarea></div>
+      <div class="full row"><button class="primary" type="submit">Publish report</button><button type="button" id="example">Fill example</button></div>
+    </form>
+  </section>
+
+  <section class="wide">
+    <h2>Official reports</h2>
+    <p class="hint">Published from this panel. "End" stops new phones from receiving it; phones that already have it keep it until it expires.</p>
+    <div class="scroll" id="serverReports"></div>
+  </section>
+
+  <section class="wide">
+    <h2>Reports from phones</h2>
+    <p class="hint">Farmer reports uploaded by phones — including ones created on phones without internet and carried here by another phone.</p>
+    <div class="scroll" id="phoneReports"></div>
+  </section>
+
+  <section>
+    <h2>Mandi prices</h2>
+    <p class="hint">Change a price → online phones sync it, offline phones get it over Bluetooth.</p>
+    <div id="prices"></div>
+    <form id="priceForm" class="row" style="margin-top:10px">
+      <input name="commodity" placeholder="Commodity" required><input name="mandi" placeholder="Mandi" required>
+      <input name="pricePerQuintal" type="number" placeholder="₹/qtl" class="num" required><button>Add</button>
+    </form>
+  </section>
+
+  <section>
+    <h2>MSP</h2>
+    <p class="hint">Minimum support price per quintal.</p>
+    <div id="msp"></div>
+  </section>
+
+  <section>
+    <h2>Orders</h2>
+    <p class="hint">Demo orders placed from phones. Change the status — phones show it after their next sync.</p>
+    <div class="scroll" id="orders"></div>
+  </section>
+
+  <section>
+    <h2>Soil reports</h2>
+    <div class="scroll" id="soil"></div>
+  </section>
+</main>
+<div class="toast" id="toast"></div>
+<script>
+const CROPS = {
+  potato: ['Potato___Late_blight', 'Potato___Early_blight'],
+  rice: ['blast', 'brown_spot', 'bacterial_leaf_blight', 'tungro', 'hispa'],
+  wheat: ['Yellow Rust', 'Brown Rust', 'Black Rust', 'Leaf Blight', 'Aphid'],
+  cotton: ['Bacterial Blight', 'Aphids', 'Army worm', 'Powdery Mildew', 'Target spot'],
+  staple_crops: ['Corn___Common_Rust', 'Sugarcane___Red_Rot'],
+};
+const PLACES = [
+  ['Chengalpattu, TN', 12.84, 80.15], ['Chennai, TN', 13.08, 80.27], ['Coimbatore, TN', 11.02, 76.96],
+  ['Madurai, TN', 9.93, 78.12], ['Bengaluru, KA', 12.97, 77.59], ['Hyderabad, TG', 17.39, 78.49],
+  ['Vijayawada, AP', 16.51, 80.65], ['Pune, MH', 18.52, 73.86], ['Nagpur, MH', 21.15, 79.09],
+  ['Indore, MP', 22.72, 75.86], ['Ludhiana, PB', 30.9, 75.85], ['Karnal, HR', 29.69, 76.99],
+  ['New Delhi', 28.61, 77.21], ['Lucknow, UP', 26.85, 80.95], ['Patna, BR', 25.59, 85.14], ['Kolkata, WB', 22.57, 88.36],
+];
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pretty = (l) => { const p = String(l).split('___'); const t = (p.length > 1 ? p.slice(1).join(' ') : l).replace(/_/g, ' ').toLowerCase(); return t.charAt(0).toUpperCase() + t.slice(1); };
+const ago = (iso) => { const s = (Date.now() - new Date(iso)) / 1000; return s < 60 ? `${Math.round(s)}s ago` : s < 3600 ? `${Math.round(s / 60)} min ago` : s < 86400 ? `${Math.round(s / 3600)} h ago` : new Date(iso).toLocaleDateString(); };
+const when = (iso) => new Date(iso).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+const place = (lat, lng) => PLACES.reduce((b, p) => (Math.hypot(p[1] - lat, p[2] - lng) < Math.hypot(b[1] - lat, b[2] - lng) ? p : b))[0];
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); }
+async function api(path, opts = {}) {
+  const r = await fetch('/api' + path, { headers: { 'content-type': 'application/json' }, ...opts });
+  const body = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(body.error || r.statusText);
+  return body;
+}
+const table = (heads, rows) => rows.length ? `<table><tr>${heads.map((h) => `<th>${h}</th>`).join('')}</tr>${rows.join('')}</table>` : '<div class="empty">Nothing yet.</div>';
+
+// form setup
+$('crop').innerHTML = Object.keys(CROPS).map((c) => `<option value="${c}">${c.replace('_', ' ')}</option>`).join('');
+const fillDiseases = () => { $('diseaseList').innerHTML = CROPS[$('crop').value].map((d) => `<option value="${esc(d)}">${esc(pretty(d))}</option>`).join(''); };
+$('crop').onchange = fillDiseases; fillDiseases();
+$('place').innerHTML = PLACES.map((p, i) => `<option value="${i}">${p[0]}</option>`).join('');
+const setPlace = () => { const p = PLACES[$('place').value]; $('lat').value = p[1]; $('lng').value = p[2]; };
+$('place').onchange = setPlace; setPlace();
+$('example').onclick = () => {
+  const f = $('reportForm'); $('crop').value = 'potato'; fillDiseases(); f.label.value = 'Potato___Late_blight'; f.severity.value = 'high';
+  $('place').value = 0; setPlace(); f.note.value = 'Late blight confirmed by KVK in 3 villages. Spray mancozeb 2.5 g/L now; avoid evening irrigation.';
+};
+$('reportForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const f = Object.fromEntries(new FormData(e.target));
+  f.place = PLACES[$('place').value][0];
+  try { await api('/admin/server-reports', { method: 'POST', body: JSON.stringify(f) }); toast('Published — phones will pick it up shortly'); e.target.note.value = ''; refresh(); }
+  catch (err) { toast('Error: ' + err.message); }
+};
+$('priceForm').onsubmit = async (e) => {
+  e.preventDefault();
+  try { await api('/admin/prices', { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(e.target))) }); e.target.reset(); toast('Price added'); refresh(); }
+  catch (err) { toast('Error: ' + err.message); }
+};
+window.endReport = async (id) => { await api('/admin/server-reports/' + id, { method: 'DELETE' }); toast('Report ended'); refresh(); };
+window.savePrice = async (id) => {
+  try { await api('/admin/prices/' + id, { method: 'PUT', body: JSON.stringify({ pricePerQuintal: $('p' + id).value }) }); toast('Price saved'); refresh(); }
+  catch (err) { toast('Error: ' + err.message); }
+};
+window.delPrice = async (id) => { await api('/admin/prices/' + id, { method: 'DELETE' }); refresh(); };
+window.saveMsp = async (id) => {
+  try { await api('/admin/msp/' + id, { method: 'PUT', body: JSON.stringify({ pricePerQuintal: $('m' + id).value }) }); toast('MSP saved'); refresh(); }
+  catch (err) { toast('Error: ' + err.message); }
+};
+window.setOrder = async (id, status) => { await api('/admin/orders/' + id, { method: 'PUT', body: JSON.stringify({ status }) }); toast('Order ' + status); };
+
+let editing = false; // don't redraw inputs while the user types in them
+document.addEventListener('focusin', (e) => { if (e.target.closest('#prices,#msp')) editing = true; });
+document.addEventListener('focusout', (e) => { if (e.target.closest('#prices,#msp')) editing = false; });
+
+async function refresh() {
+  let d;
+  try { d = await api('/admin/overview'); } catch { $('meta').textContent = 'Server not reachable'; return; }
+  const online = d.devices.filter((x) => Date.now() - new Date(x.lastSeen) < 6 * 60000).length;
+  $('meta').textContent = `${online} phone${online === 1 ? '' : 's'} active · updated ${new Date().toLocaleTimeString()}`;
+  $('devices').innerHTML = table(['Phone', 'Address', 'Last seen', 'Requests'], d.devices.map((x) => {
+    const live = Date.now() - new Date(x.lastSeen) < 6 * 60000;
+    return `<tr><td><b>${esc(x.id.slice(0, 4))}-${esc(x.id.slice(4, 8))}</b> <span class="pill ${live ? '' : 'off'}">${live ? 'active' : 'idle'}</span></td><td>${esc(x.ip)}</td><td>${ago(x.lastSeen)}</td><td>${x.requests}</td></tr>`;
+  }));
+  const now = new Date().toISOString();
+  $('serverReports').innerHTML = table(['Disease', 'Crop', 'Severity', 'Area', 'Note', 'Published', 'Status', ''], d.serverReports.map((r) => {
+    const active = r.expires_at > now;
+    return `<tr><td><b>${esc(pretty(r.label))}</b></td><td>${esc(r.crop_id.replace('_', ' '))}</td><td><span class="pill ${esc(r.severity)}">${esc(r.severity)}</span></td><td>${esc(r.place || place(r.lat, r.lng))}</td><td class="muted">${esc(r.note || '')}</td><td>${when(r.created_at)}</td><td><span class="pill ${active ? '' : 'off'}">${active ? 'until ' + when(r.expires_at) : 'ended'}</span></td><td>${active ? `<button class="danger" onclick="endReport('${r.id}')">End</button>` : ''}</td></tr>`;
+  }));
+  $('phoneReports').innerHTML = table(['Disease', 'Crop', 'Severity', 'Area', 'Note', 'From phone', 'Signature', 'Observed', 'Uploaded'], d.phoneReports.map((r) =>
+    `<tr><td><b>${esc(pretty(r.label))}</b></td><td>${esc(r.crop_id.replace('_', ' '))}</td><td><span class="pill ${esc(r.severity)}">${esc(r.severity)}</span></td><td>${esc(place(r.lat, r.lng))}</td><td class="muted">${esc(r.note || '')}</td><td>${esc(r.source_device_id.slice(0, 4))}-${esc(r.source_device_id.slice(4, 8))}</td><td>${r.verified ? '<span class="pill">verified</span>' : '<span class="pill off">unchecked</span>'}</td><td>${when(r.observed_at)}</td><td>${ago(r.received_at)}</td></tr>`));
+  if (!editing) {
+    $('prices').innerHTML = table(['Commodity', '₹ / quintal', ''], d.prices.map((p) =>
+      `<tr><td><b>${esc(p.commodity)}</b><div class="muted">${esc(p.mandi)} · ${esc(p.price_date)}</div></td><td><div class="row"><input id="p${p.id}" class="num" type="number" value="${p.price_per_quintal}"><button onclick="savePrice(${p.id})">Save</button></div></td><td><button class="danger" title="Remove" onclick="delPrice(${p.id})">✕</button></td></tr>`));
+    $('msp').innerHTML = table(['Crop', 'Season', '₹ / quintal'], d.msp.map((m) =>
+      `<tr><td><b>${esc(m.crop)}</b></td><td>${esc(m.season)} ${m.year}</td><td><div class="row"><input id="m${m.id}" class="num" type="number" value="${m.price_per_quintal}"><button onclick="saveMsp(${m.id})">Save</button></div></td></tr>`));
+  }
+  const statuses = ['received', 'packed', 'shipped', 'delivered', 'cancelled'];
+  $('orders').innerHTML = table(['Placed', 'Items', 'Total', 'Status'], d.orders.map((o) =>
+    `<tr><td>${when(o.created_at)}</td><td>${esc(o.items || '')}</td><td>₹${Math.round(o.total_amount)}</td><td><select onchange="setOrder('${o.id}', this.value)">${statuses.map((s) => `<option ${s === o.status ? 'selected' : ''}>${s}</option>`).join('')}</select></td></tr>`));
+  $('soil').innerHTML = table(['When', 'N', 'P', 'K', 'pH', 'OC'], d.soilReports.map((s) =>
+    `<tr><td>${when(s.created_at)}</td><td>${s.nitrogen}</td><td>${s.phosphorus}</td><td>${s.potassium}</td><td>${s.ph}</td><td>${s.organic_carbon}</td></tr>`));
+}
+refresh();
+setInterval(refresh, 4000);
+</script>
+</body>
+</html>

@@ -190,7 +190,7 @@ class _HistoryTab extends ConsumerWidget {
                 ),
                 title: Text('${DateFormat.yMMMd().add_jm().format(order.createdAt)} · ${currency.format(order.totalAmount)}'),
                 subtitle: Text('${order.items.length} item${order.items.length == 1 ? '' : 's'} · '
-                    '${order.syncStatus == 'synced' ? 'Received by supplier (demo)' : 'Waiting to send'}'),
+                    '${order.syncStatus == 'synced' ? _statusText(order.status) : 'Waiting to send'}'),
                 children: order.items
                     .map((i) => ListTile(
                           title: Text(i.productName),
@@ -207,3 +207,12 @@ class _HistoryTab extends ConsumerWidget {
     );
   }
 }
+
+String _statusText(String status) => switch (status) {
+      'received' => 'Received by supplier (demo)',
+      'packed' => 'Packed',
+      'shipped' => 'On the way',
+      'delivered' => 'Delivered',
+      'cancelled' => 'Cancelled',
+      _ => status,
+    };

@@ -31,8 +31,9 @@ class DeviceIdentity {
 
   /// The short id that corresponds to a full hex public key (e.g. a packet's
   /// sourceDeviceId).
-  static String shortIdOfPublicKeyHex(String publicKeyHex) =>
-      publicKeyHex.substring(0, shortIdLength * 2);
+  static String shortIdOfPublicKeyHex(String publicKeyHex) => publicKeyHex.length < shortIdLength * 2
+      ? publicKeyHex // e.g. 'server' for official reports from the AgriEdge server
+      : publicKeyHex.substring(0, shortIdLength * 2);
 
   static Future<DeviceIdentity> loadOrCreate(FlutterSecureStorage storage) async {
     final existingSeedB64 = await storage.read(key: _seedStorageKey);

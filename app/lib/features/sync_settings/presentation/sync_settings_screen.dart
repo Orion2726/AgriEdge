@@ -22,6 +22,7 @@ class SyncSettingsScreen extends ConsumerWidget {
     'detections': 'Disease detection uploads',
     'orders': 'Orders & catalog',
     'p2p_alerts': 'Nearby-device alert uploads',
+    'server_reports': 'Official reports from the server',
   };
 
   @override

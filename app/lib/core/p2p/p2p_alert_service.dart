@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
+
+import 'package:cryptography/cryptography.dart' show Sha256;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
@@ -7,6 +10,7 @@ import 'package:geolocator/geolocator.dart';
 import '../data/live_feeds.dart';
 import '../db/db_provider.dart';
 import '../../features/disease_alerts/data/disease_alerts_repository.dart' show regionalOutbreaksProvider;
+import '../network/api_client.dart';
 import '../network/connectivity_service.dart';
 import '../sync/sync_manager.dart';
 import '../settings/farm_setup.dart';
@@ -24,6 +28,9 @@ import 'transport/transport_manager.dart';
 /// Default disease-alert TTL — see docs/P2P_ALERT_PROTOCOL.md §3/§21.
 /// Matches the 72-hour example in the invention disclosure's §14.
 const defaultAlertTtl = Duration(hours: 72);
+
+/// sourceDeviceId of official reports published from the AgriEdge server.
+const serverSourceId = 'server';
 
 typedef DeviceLocation = ({double lat, double lng});
 typedef LocationLookup = Future<DeviceLocation?> Function();
@@ -174,9 +181,42 @@ class P2pAlertService {
     return packet;
   }
 
+  /// Turns an official report fetched from the AgriEdge server into a mesh
+  /// packet so phones without internet get it over Bluetooth. Its packet id
+  /// is derived only from the server's report (fixed time, nonce from the
+  /// report id, sourceDeviceId 'server'), so every online phone that imports
+  /// it produces the same id and receivers never see duplicates. This phone
+  /// signs it as the relay. Returns true if it was new here.
+  Future<bool> importServerReport(Map<String, dynamic> r) async {
+    final id = r['id'] as String;
+    final createdAt = DateTime.parse(r['createdAt'] as String).toUtc();
+    final payload = DiseaseAlertPayload(
+      cropId: r['cropId'] as String,
+      label: r['label'] as String,
+      confidence: 0,
+      severity: r['severity'] as String? ?? 'medium',
+      latE6: ((r['lat'] as num) * 1e6).round(),
+      lngE6: ((r['lng'] as num) * 1e6).round(),
+      observedAt: createdAt,
+      expiresAt: DateTime.parse(r['expiresAt'] as String).toUtc(),
+      sourceDeviceId: serverSourceId,
+      detectionId: 'server-$id',
+      note: r['note'] as String?,
+    );
+    final nonce = Uint8List.fromList((await Sha256().hash(utf8.encode(id))).bytes.sublist(0, 8));
+    final packet = await _signed(P2pAlertPacketType.diseaseAlert, payload.toMap(), createdAt, ttlHops: 10, nonce: nonce);
+    final isNew = await _packetStore.insertIfNew(packet, receivedFromPeerId: serverSourceId, verified: true);
+    if (!isNew) return false;
+    await _packetStore.markSyncedToBackend(packet.packetIdHex); // it came from there
+    await _aggregator.recompute();
+    p2pLog('imported server report $id as packet=${packet.packetIdHex}');
+    unawaited(_resyncAll());
+    return true;
+  }
+
   Future<P2pAlertPacket> _signed(P2pAlertPacketType type, Map<String, Object?> payloadMap, DateTime now,
-      {required int ttlHops}) async {
-    final nonce = P2pAlertPacket.randomNonce();
+      {required int ttlHops, Uint8List? nonce}) async {
+    nonce ??= P2pAlertPacket.randomNonce();
     final packetId = await P2pAlertPacket.computePacketId(type: type, createdAt: now, nonce: nonce, payload: payloadMap);
     final signature = await _deviceIdentity.sign(P2pAlertPacket.signingInput(
       type: type,
@@ -307,6 +347,10 @@ class P2pAlertService {
     }
   }
 
+  /// Offer anything new to every phone in range now (instead of waiting for
+  /// the periodic resync).
+  void shareNow() => unawaited(_resyncAll());
+
   Future<void> _resyncAll() async {
     if (!_started) return;
     for (final peer in _transportManager.knownPeers) {
@@ -411,6 +455,7 @@ class P2pAlertService {
 /// resolved instance — Riverpod caches it, so repeated reads are free.
 final p2pAlertServiceFutureProvider = FutureProvider<P2pAlertService>((ref) async {
   final deviceIdentity = await ref.watch(deviceIdentityProvider.future);
+  apiDeviceId = deviceIdentity.shortIdHex;
   final farmerProfile = await ref.watch(farmerProfileProvider.future);
   return P2pAlertService(
     transportManager: ref.watch(transportManagerProvider),

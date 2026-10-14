@@ -116,6 +116,18 @@ class OrdersRepository implements OfflineRepository<FarmOrder> {
   Future<void> refresh() async {
     await refreshCatalog();
     await _drainOrderQueue();
+    await _pullOrderStatuses();
+  }
+
+  /// Status changes made on the server (packed, shipped, delivered…).
+  Future<void> _pullOrderStatuses() async {
+    final synced = await (_db.select(_db.orders)..where((t) => t.syncStatus.equals('synced'))).get();
+    if (synced.isEmpty) return;
+    final res = await _dio.get('/api/orders/status', queryParameters: {'ids': synced.map((o) => o.id).join(',')});
+    for (final r in (res.data as List).cast<Map<String, dynamic>>()) {
+      await (_db.update(_db.orders)..where((t) => t.id.equals(r['id'] as String)))
+          .write(OrdersCompanion(status: Value(r['status'] as String)));
+    }
   }
 
   Future<void> _drainOrderQueue() async {

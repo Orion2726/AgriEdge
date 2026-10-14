@@ -48,10 +48,15 @@ router.get('/nearby', (req, res) => {
       db
         .prepare(
           `SELECT label, lat, lng, observed_at AS created_at FROM p2p_events
-           WHERE observed_at >= ? AND expires_at >= ?
+           WHERE observed_at >= ? AND expires_at >= ? AND source_device_id <> 'server'
              AND (detection_id IS NULL OR detection_id NOT IN (SELECT id FROM detections))`
         )
         .all(windowStartIso, new Date().toISOString())
+    )
+    .concat(
+      db
+        .prepare('SELECT label, lat, lng, created_at FROM server_reports WHERE expires_at >= ?')
+        .all(new Date().toISOString())
     )
     .filter((r) => haversineKm(lat, lng, r.lat, r.lng) <= radiusKm);
 
@@ -118,9 +123,15 @@ router.get('/regions', (req, res) => {
       db
         .prepare(
           `SELECT crop_id, label, lat, lng, observed_at AS created_at FROM p2p_events
-           WHERE observed_at >= ? AND (detection_id IS NULL OR detection_id NOT IN (SELECT id FROM detections))`
+           WHERE observed_at >= ? AND source_device_id <> 'server'
+             AND (detection_id IS NULL OR detection_id NOT IN (SELECT id FROM detections))`
         )
         .all(windowStartIso)
+    )
+    .concat(
+      db
+        .prepare('SELECT crop_id, label, lat, lng, created_at FROM server_reports WHERE expires_at >= ?')
+        .all(new Date().toISOString())
     );
 
   const buckets = new Map();

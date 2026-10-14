@@ -500,10 +500,14 @@ class _ReportTile extends StatelessWidget {
     final mine = source == localDeviceId;
     final from = row.receivedFromPeerId?.replaceFirst('dev:', '');
     final reachedPhones = (jsonDecode(row.forwardedToPeerIdsJson) as List).where((k) => k != row.receivedFromPeerId).length;
-    final origin = mine
-        ? 'Your report'
-        : 'Farmer report from phone ${formatDeviceId(source)}'
-            '${from != null && from != source ? ', passed on by ${formatDeviceId(from)}' : ''}';
+    final official = row.sourceDeviceId == serverSourceId;
+    final origin = official
+        ? 'Official report from AgriEdge server'
+            '${from != null && from != serverSourceId ? ', relayed by phone ${formatDeviceId(from)}' : ''}'
+        : mine
+            ? 'Your report'
+            : 'Farmer report from phone ${formatDeviceId(source)}'
+                '${from != null && from != source ? ', passed on by ${formatDeviceId(from)}' : ''}';
     final details = [
       row.cropId.replaceAll('_', ' '),
       '${row.severity} severity',
@@ -511,10 +515,13 @@ class _ReportTile extends StatelessWidget {
       DateFormat.MMMd().add_jm().format(row.observedAt.toLocal()),
     ].join(' · ');
     final states = <(IconData, String)>[
-      if (mine) (Icons.save_outlined, 'Saved on this phone') else (Icons.move_to_inbox_outlined, 'Carried — passed on to phones you meet'),
+      if (official && from == serverSourceId) (Icons.cloud_download_outlined, 'Fetched from server')
+      else if (mine) (Icons.save_outlined, 'Saved on this phone')
+      else (Icons.move_to_inbox_outlined, 'Carried — passed on to phones you meet'),
       if (reachedPhones > 0) (Icons.check_circle_outline, 'Received by $reachedPhones nearby phone${reachedPhones == 1 ? '' : 's'}')
       else (Icons.schedule, 'Waiting for a nearby phone'),
-      if (row.syncedToBackend) (Icons.cloud_done_outlined, 'Uploaded to server') else (Icons.cloud_upload_outlined, 'Uploads when online'),
+      if (!official)
+        if (row.syncedToBackend) (Icons.cloud_done_outlined, 'Uploaded to server') else (Icons.cloud_upload_outlined, 'Uploads when online'),
     ];
     return Card(
       child: Padding(
@@ -532,6 +539,17 @@ class _ReportTile extends StatelessWidget {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(children: [
                 Expanded(child: Text(prettyDiseaseLabel(row.label), style: theme.textTheme.titleMedium)),
+                if (official)
+                  Container(
+                    margin: const EdgeInsets.only(right: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.tertiaryContainer,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text('Official',
+                        style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onTertiaryContainer)),
+                  ),
                 Tooltip(
                   message: row.verified ? 'Signed by the reporting phone' : 'Signature not checked yet or invalid',
                   child: Icon(row.verified ? Icons.verified : Icons.gpp_maybe,

@@ -86,3 +86,19 @@ CREATE TABLE IF NOT EXISTS p2p_events (
   verified INTEGER NOT NULL DEFAULT 0,
   received_at TEXT NOT NULL
 );
+
+-- Official reports added from the server's web control panel (public/index.html).
+-- Online phones fetch them (GET /api/server-reports) and relay them over the
+-- BLE mesh to phones without internet.
+CREATE TABLE IF NOT EXISTS server_reports (
+  id TEXT PRIMARY KEY,
+  crop_id TEXT NOT NULL,
+  label TEXT NOT NULL,
+  severity TEXT NOT NULL DEFAULT 'medium',
+  lat REAL NOT NULL,
+  lng REAL NOT NULL,
+  place TEXT,
+  note TEXT,
+  created_at TEXT NOT NULL,
+  expires_at TEXT NOT NULL
+);
