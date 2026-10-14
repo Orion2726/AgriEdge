@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io' show gzip;
 
+import 'package:drift/drift.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/live_feeds.dart';
@@ -13,7 +14,11 @@ import 'p2p_log.dart';
 /// phone that was offline still gets recent prices, MSP, weather and news
 /// from a neighbour that synced. (Treatment guide, crop calendar and FAQ
 /// are built into every copy of the app, so they are never sent.)
-enum SnapshotKind { prices, msp, weather, news }
+enum SnapshotKind { prices, msp, weather, news, regions, uploaded }
+
+/// SharedPreferences key of the server's regional outbreak list (see
+/// regionalOutbreaksProvider).
+const regionalOutbreaksCacheKey = 'regional_outbreaks_v1';
 
 class DataSnapshot {
   const DataSnapshot(this.kind, this.dataAt, this.data);
@@ -73,6 +78,19 @@ class SnapshotSync {
             {'lat': farm.lat, 'lng': farm.lng, 'raw': m['raw']}));
       }
     }
+    final rg = prefs.getString(regionalOutbreaksCacheKey);
+    if (rg != null) {
+      final m = jsonDecode(rg) as Map<String, dynamic>;
+      out.add(DataSnapshot(SnapshotKind.regions, DateTime.parse(m['at'] as String), m['items']));
+    }
+    // Which reports this phone has delivered to the server, so phones that
+    // handed them over know they arrived. "Version" = how many there are
+    // (only grows), so it's re-sent only when more get uploaded.
+    final uploaded = await (_db.select(_db.p2pPackets)..where((t) => t.syncedToBackend.equals(true))).get();
+    if (uploaded.isNotEmpty) {
+      out.add(DataSnapshot(SnapshotKind.uploaded, DateTime.fromMillisecondsSinceEpoch(uploaded.length, isUtc: true),
+          [for (final r in uploaded.take(300)) r.packetId]));
+    }
     final n = prefs.getString(newsCacheKey);
     if (n != null) {
       final m = jsonDecode(n) as Map<String, dynamic>;
@@ -88,6 +106,13 @@ class SnapshotSync {
     bool newer(DateTime? mine) => mine == null || s.dataAt.isAfter(mine.toUtc());
 
     switch (s.kind) {
+      case SnapshotKind.uploaded:
+        final ids = (s.data as List).cast<String>();
+        final changed = await (_db.update(_db.p2pPackets)
+              ..where((t) => t.packetId.isIn(ids) & t.syncedToBackend.equals(false)))
+            .write(const P2pPacketsCompanion(syncedToBackend: Value(true)));
+        p2pLog('snapshot uploaded-list from=$fromDevice marked=$changed');
+        return changed > 0;
       case SnapshotKind.prices:
         if (!newer(await _db.lastSyncedAt('market_price'))) return _ignored(s);
         await _db.batch((b) {
@@ -131,6 +156,10 @@ class SnapshotSync {
         final key = weatherCacheKey(farm.lat, farm.lng);
         if (!newer(_cachedAt(prefs, key))) return _ignored(s);
         await prefs.setString(key, jsonEncode({'at': s.dataAt.toIso8601String(), 'raw': d['raw'], 'via': via}));
+      case SnapshotKind.regions:
+        if (!newer(_cachedAt(prefs, regionalOutbreaksCacheKey))) return _ignored(s);
+        await prefs.setString(regionalOutbreaksCacheKey,
+            jsonEncode({'at': s.dataAt.toIso8601String(), 'items': s.data, 'via': via}));
       case SnapshotKind.news:
         if (!newer(_cachedAt(prefs, newsCacheKey))) return _ignored(s);
         await prefs.setString(newsCacheKey, jsonEncode({'at': s.dataAt.toIso8601String(), 'raw': s.data, 'via': via}));

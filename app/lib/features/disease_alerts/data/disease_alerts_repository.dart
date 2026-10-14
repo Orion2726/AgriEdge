@@ -9,6 +9,7 @@ import '../../../core/data/offline_repository.dart';
 import '../../../core/db/app_database.dart';
 import '../../../core/db/db_provider.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/p2p/snapshot_sync.dart' show regionalOutbreaksCacheKey;
 import '../../../core/settings/farm_setup.dart';
 import '../domain/nearby_alert.dart';
 
@@ -174,16 +175,19 @@ class RegionalOutbreak {
 }
 
 class RegionalOutbreaks {
-  const RegionalOutbreaks(this.items, this.fetchedAt, {required this.fromCache});
+  const RegionalOutbreaks(this.items, this.fetchedAt, {required this.fromCache, this.via});
   final List<RegionalOutbreak> items;
   final DateTime fetchedAt;
   final bool fromCache;
+
+  /// Set when this copy was received from a nearby phone over Bluetooth.
+  final String? via;
 }
 
 /// Server-only feature: needs the AgriEdge server once; the last result is
 /// kept on the phone so it still shows offline.
 final regionalOutbreaksProvider = FutureProvider<RegionalOutbreaks?>((ref) async {
-  const key = 'regional_outbreaks_v1';
+  const key = regionalOutbreaksCacheKey;
   final prefs = await SharedPreferences.getInstance();
   final loc = ref.watch(farmSetupProvider.select((s) => s.location));
   try {
@@ -206,6 +210,7 @@ final regionalOutbreaksProvider = FutureProvider<RegionalOutbreaks?>((ref) async
       [for (final j in (m['items'] as List).cast<Map<String, dynamic>>()) RegionalOutbreak.fromJson(j)],
       DateTime.parse(m['at'] as String),
       fromCache: true,
+      via: m['via'] as String?,
     );
   }
 });

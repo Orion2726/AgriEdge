@@ -583,6 +583,8 @@ class _SharedDataCard extends ConsumerWidget {
       SnapshotKind.msp: 'MSP',
       SnapshotKind.weather: 'Weather forecast',
       SnapshotKind.news: 'Farm news',
+      SnapshotKind.regions: 'Outbreaks in other regions',
+      SnapshotKind.uploaded: 'Upload confirmations',
     };
     return Card(
       child: ExpansionTile(
@@ -630,7 +632,14 @@ class _OtherRegionsSection extends ConsumerWidget {
         child: Row(children: [
           Expanded(child: Text('Other regions', style: theme.textTheme.titleSmall)),
           if (data != null)
-            Text(data.fromCache ? 'saved copy' : 'from AgriEdge server', style: theme.textTheme.labelSmall),
+            Text(
+              data.via != null
+                  ? 'via ${data.via}'
+                  : data.fromCache
+                      ? 'saved ${DateFormat.MMMd().add_jm().format(data.fetchedAt)}'
+                      : 'from AgriEdge server',
+              style: theme.textTheme.labelSmall,
+            ),
           IconButton(
             tooltip: 'Refresh',
             visualDensity: VisualDensity.compact,

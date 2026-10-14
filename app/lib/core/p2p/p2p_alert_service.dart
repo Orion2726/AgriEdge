@@ -6,6 +6,9 @@ import 'package:geolocator/geolocator.dart';
 
 import '../data/live_feeds.dart';
 import '../db/db_provider.dart';
+import '../../features/disease_alerts/data/disease_alerts_repository.dart' show regionalOutbreaksProvider;
+import '../network/connectivity_service.dart';
+import '../sync/sync_manager.dart';
 import '../settings/farm_setup.dart';
 import 'aggregation/local_aggregator.dart';
 import 'p2p_log.dart';
@@ -53,6 +56,7 @@ class P2pAlertService {
     LocationLookup? locate,
     this.snapshots,
     this.onSnapshotApplied,
+    this.onPacketStored,
     this.resyncInterval = const Duration(seconds: 20),
   })  : _transportManager = transportManager,
         _packetStore = packetStore,
@@ -74,6 +78,11 @@ class P2pAlertService {
   /// Everyday data (prices, MSP, weather, news) shared alongside alerts.
   final SnapshotSync? snapshots;
   final void Function(SnapshotKind kind)? onSnapshotApplied;
+
+  /// Called after a new report is stored (created here or received), so a
+  /// phone with internet uploads it right away — acting as the gateway for
+  /// phones that have none.
+  final void Function()? onPacketStored;
 
   /// Which snapshot version (by dataAt) each peer device already acked.
   final Map<String, Map<SnapshotKind, DateTime>> _snapshotsSent = {};
@@ -160,6 +169,7 @@ class P2pAlertService {
     await _packetStore.insertIfNew(packet, verified: true);
     await _aggregator.recompute();
     p2pLog('originated packet=${packet.packetIdHex} label="$label" crop=$cropId');
+    onPacketStored?.call();
     unawaited(_resyncAll());
     return packet;
   }
@@ -265,6 +275,7 @@ class P2pAlertService {
     await _packetStore.setVerified(packet.packetIdHex, verified);
     p2pLog('verify packet=${packet.packetIdHex} ok=$verified ms=${clock.elapsedMilliseconds}');
     await _aggregator.recompute();
+    onPacketStored?.call();
     // Relay onward.
     unawaited(_resyncAll());
   }
@@ -415,8 +426,16 @@ final p2pAlertServiceFutureProvider = FutureProvider<P2pAlertService>((ref) asyn
           ref.invalidate(weatherProvider);
         case SnapshotKind.news:
           ref.invalidate(newsProvider);
-        case SnapshotKind.prices || SnapshotKind.msp:
+        case SnapshotKind.regions:
+          ref.invalidate(regionalOutbreaksProvider);
+        case SnapshotKind.prices || SnapshotKind.msp || SnapshotKind.uploaded:
           break; // Drift streams update the screens by themselves.
+      }
+    },
+    onPacketStored: () {
+      final sync = ref.read(syncManagerProvider);
+      if (ref.read(connectivityServiceProvider).isOnline) {
+        sync.syncDomain('p2p_alerts').then((ok) => p2pLog('gateway upload ${ok ? 'OK' : 'pending (server unreachable)'}'));
       }
     },
   );

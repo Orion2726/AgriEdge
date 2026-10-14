@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -41,5 +42,8 @@ final syncRegistrationProvider = Provider<void>((ref) {
       await ref.read(backendUrlProvider.notifier).loaded;
       await manager.syncAll();
     });
+    // Retry pending uploads while the app is open (failed ones stay queued).
+    final timer = Timer.periodic(const Duration(minutes: 5), (_) => manager.syncAll());
+    ref.onDispose(timer.cancel);
   }
 });
