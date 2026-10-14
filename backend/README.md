@@ -28,6 +28,7 @@ Agmarknet/CACP/crowdsourced data, just enough to exercise every screen).
 | POST   | `/api/soil-reports`               | Submit a soil report, get ranked crop recommendations back |
 | GET    | `/api/crop-recommendation/:id`    | Recompute recommendations for a stored report |
 | POST   | `/api/detections`                 | Upload a crowdsourced disease-detection event |
+| POST   | `/api/p2p-events`                 | Gateway-sync a disease-alert packet carried over the BLE mesh (see docs/P2P_ALERT_PROTOCOL.md) |
 | GET    | `/api/alerts/nearby`              | Clustered nearby-disease alerts (`?lat=&lng=&radiusKm=`) |
 | POST   | `/api/assistant/query`            | Mock-RAG FAQ answer |
 | GET    | `/api/models/disease/:cropId`             | Downloadable `.tflite` for that crop (404 until you drop one in) |

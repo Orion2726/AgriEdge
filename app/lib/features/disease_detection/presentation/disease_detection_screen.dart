@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/ml/crop_catalog.dart';
+import '../../../core/p2p/p2p_alert_service.dart';
 import '../data/disease_detection_repository.dart';
 import '../data/treatment_knowledge_base.dart';
 import '../domain/disease_detection_entry.dart';
@@ -77,6 +78,36 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
           lng: lng,
           consentShared: _consentShared,
         );
+
+    // Best-effort P2P broadcast — see docs/P2P_ALERT_PROTOCOL.md. Requires
+    // consent + a geotag + a real (non-mock) result, and skips "healthy"
+    // results since there's nothing to alert neighbors about. Swallows
+    // failures (e.g. the P2P session isn't running because the farmer
+    // hasn't opened the nearby-alerts screen this session) — this must
+    // never block saving the detection itself.
+    final isHealthy =
+        prediction.label.toLowerCase().contains('healthy') || prediction.label.toLowerCase() == 'normal';
+    if (_consentShared && !prediction.isMock && !isHealthy && lat != null && lng != null) {
+      try {
+        final p2pService = await ref.read(p2pAlertServiceFutureProvider.future);
+        await p2pService.broadcastDetection(
+          cropId: _cropId,
+          label: prediction.label,
+          confidence: prediction.confidence,
+          severity: prediction.confidence >= 0.75
+              ? 'high'
+              : prediction.confidence >= 0.5
+                  ? 'medium'
+                  : 'low',
+          lat: lat,
+          lng: lng,
+        );
+      } catch (_) {
+        // Non-fatal — the detection is already saved and will still sync
+        // to the backend normally; nearby-device propagation is best-effort.
+      }
+    }
+
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Detection saved. It will sync when you\'re online.')),

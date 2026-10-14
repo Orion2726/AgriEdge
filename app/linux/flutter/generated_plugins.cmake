@@ -3,7 +3,9 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  bluetooth_low_energy_linux
   file_selector_linux
+  flutter_secure_storage_linux
   sqlite3_flutter_libs
 )
 

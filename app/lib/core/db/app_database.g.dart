@@ -4352,6 +4352,1613 @@ class DiseaseAlertsCompanion extends UpdateCompanion<DiseaseAlert> {
   }
 }
 
+class $P2pPacketsTable extends P2pPackets
+    with TableInfo<$P2pPacketsTable, P2pPacket> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $P2pPacketsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _packetIdMeta = const VerificationMeta(
+    'packetId',
+  );
+  @override
+  late final GeneratedColumn<String> packetId = GeneratedColumn<String>(
+    'packet_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _rawBytesMeta = const VerificationMeta(
+    'rawBytes',
+  );
+  @override
+  late final GeneratedColumn<Uint8List> rawBytes = GeneratedColumn<Uint8List>(
+    'raw_bytes',
+    aliasedName,
+    false,
+    type: DriftSqlType.blob,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<int> type = GeneratedColumn<int>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _cropIdMeta = const VerificationMeta('cropId');
+  @override
+  late final GeneratedColumn<String> cropId = GeneratedColumn<String>(
+    'crop_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _labelMeta = const VerificationMeta('label');
+  @override
+  late final GeneratedColumn<String> label = GeneratedColumn<String>(
+    'label',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _confidenceMeta = const VerificationMeta(
+    'confidence',
+  );
+  @override
+  late final GeneratedColumn<double> confidence = GeneratedColumn<double>(
+    'confidence',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _severityMeta = const VerificationMeta(
+    'severity',
+  );
+  @override
+  late final GeneratedColumn<String> severity = GeneratedColumn<String>(
+    'severity',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _latMeta = const VerificationMeta('lat');
+  @override
+  late final GeneratedColumn<double> lat = GeneratedColumn<double>(
+    'lat',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lngMeta = const VerificationMeta('lng');
+  @override
+  late final GeneratedColumn<double> lng = GeneratedColumn<double>(
+    'lng',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _observedAtMeta = const VerificationMeta(
+    'observedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> observedAt = GeneratedColumn<DateTime>(
+    'observed_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _expiresAtMeta = const VerificationMeta(
+    'expiresAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> expiresAt = GeneratedColumn<DateTime>(
+    'expires_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sourceDeviceIdMeta = const VerificationMeta(
+    'sourceDeviceId',
+  );
+  @override
+  late final GeneratedColumn<String> sourceDeviceId = GeneratedColumn<String>(
+    'source_device_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _receivedFromPeerIdMeta =
+      const VerificationMeta('receivedFromPeerId');
+  @override
+  late final GeneratedColumn<String> receivedFromPeerId =
+      GeneratedColumn<String>(
+        'received_from_peer_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _forwardedToPeerIdsJsonMeta =
+      const VerificationMeta('forwardedToPeerIdsJson');
+  @override
+  late final GeneratedColumn<String> forwardedToPeerIdsJson =
+      GeneratedColumn<String>(
+        'forwarded_to_peer_ids_json',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('[]'),
+      );
+  static const VerificationMeta _aggregationGroupIdMeta =
+      const VerificationMeta('aggregationGroupId');
+  @override
+  late final GeneratedColumn<String> aggregationGroupId =
+      GeneratedColumn<String>(
+        'aggregation_group_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _verifiedMeta = const VerificationMeta(
+    'verified',
+  );
+  @override
+  late final GeneratedColumn<bool> verified = GeneratedColumn<bool>(
+    'verified',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("verified" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _syncedToBackendMeta = const VerificationMeta(
+    'syncedToBackend',
+  );
+  @override
+  late final GeneratedColumn<bool> syncedToBackend = GeneratedColumn<bool>(
+    'synced_to_backend',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("synced_to_backend" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    packetId,
+    rawBytes,
+    type,
+    cropId,
+    label,
+    confidence,
+    severity,
+    lat,
+    lng,
+    observedAt,
+    expiresAt,
+    sourceDeviceId,
+    receivedFromPeerId,
+    forwardedToPeerIdsJson,
+    aggregationGroupId,
+    verified,
+    syncedToBackend,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'p2p_packets';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<P2pPacket> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('packet_id')) {
+      context.handle(
+        _packetIdMeta,
+        packetId.isAcceptableOrUnknown(data['packet_id']!, _packetIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_packetIdMeta);
+    }
+    if (data.containsKey('raw_bytes')) {
+      context.handle(
+        _rawBytesMeta,
+        rawBytes.isAcceptableOrUnknown(data['raw_bytes']!, _rawBytesMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_rawBytesMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('crop_id')) {
+      context.handle(
+        _cropIdMeta,
+        cropId.isAcceptableOrUnknown(data['crop_id']!, _cropIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_cropIdMeta);
+    }
+    if (data.containsKey('label')) {
+      context.handle(
+        _labelMeta,
+        label.isAcceptableOrUnknown(data['label']!, _labelMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_labelMeta);
+    }
+    if (data.containsKey('confidence')) {
+      context.handle(
+        _confidenceMeta,
+        confidence.isAcceptableOrUnknown(data['confidence']!, _confidenceMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_confidenceMeta);
+    }
+    if (data.containsKey('severity')) {
+      context.handle(
+        _severityMeta,
+        severity.isAcceptableOrUnknown(data['severity']!, _severityMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_severityMeta);
+    }
+    if (data.containsKey('lat')) {
+      context.handle(
+        _latMeta,
+        lat.isAcceptableOrUnknown(data['lat']!, _latMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_latMeta);
+    }
+    if (data.containsKey('lng')) {
+      context.handle(
+        _lngMeta,
+        lng.isAcceptableOrUnknown(data['lng']!, _lngMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_lngMeta);
+    }
+    if (data.containsKey('observed_at')) {
+      context.handle(
+        _observedAtMeta,
+        observedAt.isAcceptableOrUnknown(data['observed_at']!, _observedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_observedAtMeta);
+    }
+    if (data.containsKey('expires_at')) {
+      context.handle(
+        _expiresAtMeta,
+        expiresAt.isAcceptableOrUnknown(data['expires_at']!, _expiresAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_expiresAtMeta);
+    }
+    if (data.containsKey('source_device_id')) {
+      context.handle(
+        _sourceDeviceIdMeta,
+        sourceDeviceId.isAcceptableOrUnknown(
+          data['source_device_id']!,
+          _sourceDeviceIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_sourceDeviceIdMeta);
+    }
+    if (data.containsKey('received_from_peer_id')) {
+      context.handle(
+        _receivedFromPeerIdMeta,
+        receivedFromPeerId.isAcceptableOrUnknown(
+          data['received_from_peer_id']!,
+          _receivedFromPeerIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('forwarded_to_peer_ids_json')) {
+      context.handle(
+        _forwardedToPeerIdsJsonMeta,
+        forwardedToPeerIdsJson.isAcceptableOrUnknown(
+          data['forwarded_to_peer_ids_json']!,
+          _forwardedToPeerIdsJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('aggregation_group_id')) {
+      context.handle(
+        _aggregationGroupIdMeta,
+        aggregationGroupId.isAcceptableOrUnknown(
+          data['aggregation_group_id']!,
+          _aggregationGroupIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('verified')) {
+      context.handle(
+        _verifiedMeta,
+        verified.isAcceptableOrUnknown(data['verified']!, _verifiedMeta),
+      );
+    }
+    if (data.containsKey('synced_to_backend')) {
+      context.handle(
+        _syncedToBackendMeta,
+        syncedToBackend.isAcceptableOrUnknown(
+          data['synced_to_backend']!,
+          _syncedToBackendMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {packetId};
+  @override
+  P2pPacket map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return P2pPacket(
+      packetId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}packet_id'],
+      )!,
+      rawBytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}raw_bytes'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}type'],
+      )!,
+      cropId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}crop_id'],
+      )!,
+      label: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}label'],
+      )!,
+      confidence: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}confidence'],
+      )!,
+      severity: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}severity'],
+      )!,
+      lat: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}lat'],
+      )!,
+      lng: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}lng'],
+      )!,
+      observedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}observed_at'],
+      )!,
+      expiresAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}expires_at'],
+      )!,
+      sourceDeviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_device_id'],
+      )!,
+      receivedFromPeerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}received_from_peer_id'],
+      ),
+      forwardedToPeerIdsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}forwarded_to_peer_ids_json'],
+      )!,
+      aggregationGroupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}aggregation_group_id'],
+      ),
+      verified: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}verified'],
+      )!,
+      syncedToBackend: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}synced_to_backend'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $P2pPacketsTable createAlias(String alias) {
+    return $P2pPacketsTable(attachedDatabase, alias);
+  }
+}
+
+class P2pPacket extends DataClass implements Insertable<P2pPacket> {
+  final String packetId;
+
+  /// Full encoded wire packet (CBOR, signature intact) — needed to forward
+  /// this packet on to another peer unchanged. The columns below are a
+  /// flattened projection of its payload for querying (relevance filtering,
+  /// aggregation) without decoding the blob on every read.
+  final Uint8List rawBytes;
+  final int type;
+  final String cropId;
+  final String label;
+  final double confidence;
+  final String severity;
+  final double lat;
+  final double lng;
+  final DateTime observedAt;
+  final DateTime expiresAt;
+  final String sourceDeviceId;
+  final String? receivedFromPeerId;
+  final String forwardedToPeerIdsJson;
+  final String? aggregationGroupId;
+  final bool verified;
+  final bool syncedToBackend;
+  final DateTime createdAt;
+  const P2pPacket({
+    required this.packetId,
+    required this.rawBytes,
+    required this.type,
+    required this.cropId,
+    required this.label,
+    required this.confidence,
+    required this.severity,
+    required this.lat,
+    required this.lng,
+    required this.observedAt,
+    required this.expiresAt,
+    required this.sourceDeviceId,
+    this.receivedFromPeerId,
+    required this.forwardedToPeerIdsJson,
+    this.aggregationGroupId,
+    required this.verified,
+    required this.syncedToBackend,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['packet_id'] = Variable<String>(packetId);
+    map['raw_bytes'] = Variable<Uint8List>(rawBytes);
+    map['type'] = Variable<int>(type);
+    map['crop_id'] = Variable<String>(cropId);
+    map['label'] = Variable<String>(label);
+    map['confidence'] = Variable<double>(confidence);
+    map['severity'] = Variable<String>(severity);
+    map['lat'] = Variable<double>(lat);
+    map['lng'] = Variable<double>(lng);
+    map['observed_at'] = Variable<DateTime>(observedAt);
+    map['expires_at'] = Variable<DateTime>(expiresAt);
+    map['source_device_id'] = Variable<String>(sourceDeviceId);
+    if (!nullToAbsent || receivedFromPeerId != null) {
+      map['received_from_peer_id'] = Variable<String>(receivedFromPeerId);
+    }
+    map['forwarded_to_peer_ids_json'] = Variable<String>(
+      forwardedToPeerIdsJson,
+    );
+    if (!nullToAbsent || aggregationGroupId != null) {
+      map['aggregation_group_id'] = Variable<String>(aggregationGroupId);
+    }
+    map['verified'] = Variable<bool>(verified);
+    map['synced_to_backend'] = Variable<bool>(syncedToBackend);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  P2pPacketsCompanion toCompanion(bool nullToAbsent) {
+    return P2pPacketsCompanion(
+      packetId: Value(packetId),
+      rawBytes: Value(rawBytes),
+      type: Value(type),
+      cropId: Value(cropId),
+      label: Value(label),
+      confidence: Value(confidence),
+      severity: Value(severity),
+      lat: Value(lat),
+      lng: Value(lng),
+      observedAt: Value(observedAt),
+      expiresAt: Value(expiresAt),
+      sourceDeviceId: Value(sourceDeviceId),
+      receivedFromPeerId: receivedFromPeerId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(receivedFromPeerId),
+      forwardedToPeerIdsJson: Value(forwardedToPeerIdsJson),
+      aggregationGroupId: aggregationGroupId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(aggregationGroupId),
+      verified: Value(verified),
+      syncedToBackend: Value(syncedToBackend),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory P2pPacket.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return P2pPacket(
+      packetId: serializer.fromJson<String>(json['packetId']),
+      rawBytes: serializer.fromJson<Uint8List>(json['rawBytes']),
+      type: serializer.fromJson<int>(json['type']),
+      cropId: serializer.fromJson<String>(json['cropId']),
+      label: serializer.fromJson<String>(json['label']),
+      confidence: serializer.fromJson<double>(json['confidence']),
+      severity: serializer.fromJson<String>(json['severity']),
+      lat: serializer.fromJson<double>(json['lat']),
+      lng: serializer.fromJson<double>(json['lng']),
+      observedAt: serializer.fromJson<DateTime>(json['observedAt']),
+      expiresAt: serializer.fromJson<DateTime>(json['expiresAt']),
+      sourceDeviceId: serializer.fromJson<String>(json['sourceDeviceId']),
+      receivedFromPeerId: serializer.fromJson<String?>(
+        json['receivedFromPeerId'],
+      ),
+      forwardedToPeerIdsJson: serializer.fromJson<String>(
+        json['forwardedToPeerIdsJson'],
+      ),
+      aggregationGroupId: serializer.fromJson<String?>(
+        json['aggregationGroupId'],
+      ),
+      verified: serializer.fromJson<bool>(json['verified']),
+      syncedToBackend: serializer.fromJson<bool>(json['syncedToBackend']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'packetId': serializer.toJson<String>(packetId),
+      'rawBytes': serializer.toJson<Uint8List>(rawBytes),
+      'type': serializer.toJson<int>(type),
+      'cropId': serializer.toJson<String>(cropId),
+      'label': serializer.toJson<String>(label),
+      'confidence': serializer.toJson<double>(confidence),
+      'severity': serializer.toJson<String>(severity),
+      'lat': serializer.toJson<double>(lat),
+      'lng': serializer.toJson<double>(lng),
+      'observedAt': serializer.toJson<DateTime>(observedAt),
+      'expiresAt': serializer.toJson<DateTime>(expiresAt),
+      'sourceDeviceId': serializer.toJson<String>(sourceDeviceId),
+      'receivedFromPeerId': serializer.toJson<String?>(receivedFromPeerId),
+      'forwardedToPeerIdsJson': serializer.toJson<String>(
+        forwardedToPeerIdsJson,
+      ),
+      'aggregationGroupId': serializer.toJson<String?>(aggregationGroupId),
+      'verified': serializer.toJson<bool>(verified),
+      'syncedToBackend': serializer.toJson<bool>(syncedToBackend),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  P2pPacket copyWith({
+    String? packetId,
+    Uint8List? rawBytes,
+    int? type,
+    String? cropId,
+    String? label,
+    double? confidence,
+    String? severity,
+    double? lat,
+    double? lng,
+    DateTime? observedAt,
+    DateTime? expiresAt,
+    String? sourceDeviceId,
+    Value<String?> receivedFromPeerId = const Value.absent(),
+    String? forwardedToPeerIdsJson,
+    Value<String?> aggregationGroupId = const Value.absent(),
+    bool? verified,
+    bool? syncedToBackend,
+    DateTime? createdAt,
+  }) => P2pPacket(
+    packetId: packetId ?? this.packetId,
+    rawBytes: rawBytes ?? this.rawBytes,
+    type: type ?? this.type,
+    cropId: cropId ?? this.cropId,
+    label: label ?? this.label,
+    confidence: confidence ?? this.confidence,
+    severity: severity ?? this.severity,
+    lat: lat ?? this.lat,
+    lng: lng ?? this.lng,
+    observedAt: observedAt ?? this.observedAt,
+    expiresAt: expiresAt ?? this.expiresAt,
+    sourceDeviceId: sourceDeviceId ?? this.sourceDeviceId,
+    receivedFromPeerId: receivedFromPeerId.present
+        ? receivedFromPeerId.value
+        : this.receivedFromPeerId,
+    forwardedToPeerIdsJson:
+        forwardedToPeerIdsJson ?? this.forwardedToPeerIdsJson,
+    aggregationGroupId: aggregationGroupId.present
+        ? aggregationGroupId.value
+        : this.aggregationGroupId,
+    verified: verified ?? this.verified,
+    syncedToBackend: syncedToBackend ?? this.syncedToBackend,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  P2pPacket copyWithCompanion(P2pPacketsCompanion data) {
+    return P2pPacket(
+      packetId: data.packetId.present ? data.packetId.value : this.packetId,
+      rawBytes: data.rawBytes.present ? data.rawBytes.value : this.rawBytes,
+      type: data.type.present ? data.type.value : this.type,
+      cropId: data.cropId.present ? data.cropId.value : this.cropId,
+      label: data.label.present ? data.label.value : this.label,
+      confidence: data.confidence.present
+          ? data.confidence.value
+          : this.confidence,
+      severity: data.severity.present ? data.severity.value : this.severity,
+      lat: data.lat.present ? data.lat.value : this.lat,
+      lng: data.lng.present ? data.lng.value : this.lng,
+      observedAt: data.observedAt.present
+          ? data.observedAt.value
+          : this.observedAt,
+      expiresAt: data.expiresAt.present ? data.expiresAt.value : this.expiresAt,
+      sourceDeviceId: data.sourceDeviceId.present
+          ? data.sourceDeviceId.value
+          : this.sourceDeviceId,
+      receivedFromPeerId: data.receivedFromPeerId.present
+          ? data.receivedFromPeerId.value
+          : this.receivedFromPeerId,
+      forwardedToPeerIdsJson: data.forwardedToPeerIdsJson.present
+          ? data.forwardedToPeerIdsJson.value
+          : this.forwardedToPeerIdsJson,
+      aggregationGroupId: data.aggregationGroupId.present
+          ? data.aggregationGroupId.value
+          : this.aggregationGroupId,
+      verified: data.verified.present ? data.verified.value : this.verified,
+      syncedToBackend: data.syncedToBackend.present
+          ? data.syncedToBackend.value
+          : this.syncedToBackend,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('P2pPacket(')
+          ..write('packetId: $packetId, ')
+          ..write('rawBytes: $rawBytes, ')
+          ..write('type: $type, ')
+          ..write('cropId: $cropId, ')
+          ..write('label: $label, ')
+          ..write('confidence: $confidence, ')
+          ..write('severity: $severity, ')
+          ..write('lat: $lat, ')
+          ..write('lng: $lng, ')
+          ..write('observedAt: $observedAt, ')
+          ..write('expiresAt: $expiresAt, ')
+          ..write('sourceDeviceId: $sourceDeviceId, ')
+          ..write('receivedFromPeerId: $receivedFromPeerId, ')
+          ..write('forwardedToPeerIdsJson: $forwardedToPeerIdsJson, ')
+          ..write('aggregationGroupId: $aggregationGroupId, ')
+          ..write('verified: $verified, ')
+          ..write('syncedToBackend: $syncedToBackend, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    packetId,
+    $driftBlobEquality.hash(rawBytes),
+    type,
+    cropId,
+    label,
+    confidence,
+    severity,
+    lat,
+    lng,
+    observedAt,
+    expiresAt,
+    sourceDeviceId,
+    receivedFromPeerId,
+    forwardedToPeerIdsJson,
+    aggregationGroupId,
+    verified,
+    syncedToBackend,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is P2pPacket &&
+          other.packetId == this.packetId &&
+          $driftBlobEquality.equals(other.rawBytes, this.rawBytes) &&
+          other.type == this.type &&
+          other.cropId == this.cropId &&
+          other.label == this.label &&
+          other.confidence == this.confidence &&
+          other.severity == this.severity &&
+          other.lat == this.lat &&
+          other.lng == this.lng &&
+          other.observedAt == this.observedAt &&
+          other.expiresAt == this.expiresAt &&
+          other.sourceDeviceId == this.sourceDeviceId &&
+          other.receivedFromPeerId == this.receivedFromPeerId &&
+          other.forwardedToPeerIdsJson == this.forwardedToPeerIdsJson &&
+          other.aggregationGroupId == this.aggregationGroupId &&
+          other.verified == this.verified &&
+          other.syncedToBackend == this.syncedToBackend &&
+          other.createdAt == this.createdAt);
+}
+
+class P2pPacketsCompanion extends UpdateCompanion<P2pPacket> {
+  final Value<String> packetId;
+  final Value<Uint8List> rawBytes;
+  final Value<int> type;
+  final Value<String> cropId;
+  final Value<String> label;
+  final Value<double> confidence;
+  final Value<String> severity;
+  final Value<double> lat;
+  final Value<double> lng;
+  final Value<DateTime> observedAt;
+  final Value<DateTime> expiresAt;
+  final Value<String> sourceDeviceId;
+  final Value<String?> receivedFromPeerId;
+  final Value<String> forwardedToPeerIdsJson;
+  final Value<String?> aggregationGroupId;
+  final Value<bool> verified;
+  final Value<bool> syncedToBackend;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const P2pPacketsCompanion({
+    this.packetId = const Value.absent(),
+    this.rawBytes = const Value.absent(),
+    this.type = const Value.absent(),
+    this.cropId = const Value.absent(),
+    this.label = const Value.absent(),
+    this.confidence = const Value.absent(),
+    this.severity = const Value.absent(),
+    this.lat = const Value.absent(),
+    this.lng = const Value.absent(),
+    this.observedAt = const Value.absent(),
+    this.expiresAt = const Value.absent(),
+    this.sourceDeviceId = const Value.absent(),
+    this.receivedFromPeerId = const Value.absent(),
+    this.forwardedToPeerIdsJson = const Value.absent(),
+    this.aggregationGroupId = const Value.absent(),
+    this.verified = const Value.absent(),
+    this.syncedToBackend = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  P2pPacketsCompanion.insert({
+    required String packetId,
+    required Uint8List rawBytes,
+    required int type,
+    required String cropId,
+    required String label,
+    required double confidence,
+    required String severity,
+    required double lat,
+    required double lng,
+    required DateTime observedAt,
+    required DateTime expiresAt,
+    required String sourceDeviceId,
+    this.receivedFromPeerId = const Value.absent(),
+    this.forwardedToPeerIdsJson = const Value.absent(),
+    this.aggregationGroupId = const Value.absent(),
+    this.verified = const Value.absent(),
+    this.syncedToBackend = const Value.absent(),
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : packetId = Value(packetId),
+       rawBytes = Value(rawBytes),
+       type = Value(type),
+       cropId = Value(cropId),
+       label = Value(label),
+       confidence = Value(confidence),
+       severity = Value(severity),
+       lat = Value(lat),
+       lng = Value(lng),
+       observedAt = Value(observedAt),
+       expiresAt = Value(expiresAt),
+       sourceDeviceId = Value(sourceDeviceId),
+       createdAt = Value(createdAt);
+  static Insertable<P2pPacket> custom({
+    Expression<String>? packetId,
+    Expression<Uint8List>? rawBytes,
+    Expression<int>? type,
+    Expression<String>? cropId,
+    Expression<String>? label,
+    Expression<double>? confidence,
+    Expression<String>? severity,
+    Expression<double>? lat,
+    Expression<double>? lng,
+    Expression<DateTime>? observedAt,
+    Expression<DateTime>? expiresAt,
+    Expression<String>? sourceDeviceId,
+    Expression<String>? receivedFromPeerId,
+    Expression<String>? forwardedToPeerIdsJson,
+    Expression<String>? aggregationGroupId,
+    Expression<bool>? verified,
+    Expression<bool>? syncedToBackend,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (packetId != null) 'packet_id': packetId,
+      if (rawBytes != null) 'raw_bytes': rawBytes,
+      if (type != null) 'type': type,
+      if (cropId != null) 'crop_id': cropId,
+      if (label != null) 'label': label,
+      if (confidence != null) 'confidence': confidence,
+      if (severity != null) 'severity': severity,
+      if (lat != null) 'lat': lat,
+      if (lng != null) 'lng': lng,
+      if (observedAt != null) 'observed_at': observedAt,
+      if (expiresAt != null) 'expires_at': expiresAt,
+      if (sourceDeviceId != null) 'source_device_id': sourceDeviceId,
+      if (receivedFromPeerId != null)
+        'received_from_peer_id': receivedFromPeerId,
+      if (forwardedToPeerIdsJson != null)
+        'forwarded_to_peer_ids_json': forwardedToPeerIdsJson,
+      if (aggregationGroupId != null)
+        'aggregation_group_id': aggregationGroupId,
+      if (verified != null) 'verified': verified,
+      if (syncedToBackend != null) 'synced_to_backend': syncedToBackend,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  P2pPacketsCompanion copyWith({
+    Value<String>? packetId,
+    Value<Uint8List>? rawBytes,
+    Value<int>? type,
+    Value<String>? cropId,
+    Value<String>? label,
+    Value<double>? confidence,
+    Value<String>? severity,
+    Value<double>? lat,
+    Value<double>? lng,
+    Value<DateTime>? observedAt,
+    Value<DateTime>? expiresAt,
+    Value<String>? sourceDeviceId,
+    Value<String?>? receivedFromPeerId,
+    Value<String>? forwardedToPeerIdsJson,
+    Value<String?>? aggregationGroupId,
+    Value<bool>? verified,
+    Value<bool>? syncedToBackend,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return P2pPacketsCompanion(
+      packetId: packetId ?? this.packetId,
+      rawBytes: rawBytes ?? this.rawBytes,
+      type: type ?? this.type,
+      cropId: cropId ?? this.cropId,
+      label: label ?? this.label,
+      confidence: confidence ?? this.confidence,
+      severity: severity ?? this.severity,
+      lat: lat ?? this.lat,
+      lng: lng ?? this.lng,
+      observedAt: observedAt ?? this.observedAt,
+      expiresAt: expiresAt ?? this.expiresAt,
+      sourceDeviceId: sourceDeviceId ?? this.sourceDeviceId,
+      receivedFromPeerId: receivedFromPeerId ?? this.receivedFromPeerId,
+      forwardedToPeerIdsJson:
+          forwardedToPeerIdsJson ?? this.forwardedToPeerIdsJson,
+      aggregationGroupId: aggregationGroupId ?? this.aggregationGroupId,
+      verified: verified ?? this.verified,
+      syncedToBackend: syncedToBackend ?? this.syncedToBackend,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (packetId.present) {
+      map['packet_id'] = Variable<String>(packetId.value);
+    }
+    if (rawBytes.present) {
+      map['raw_bytes'] = Variable<Uint8List>(rawBytes.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<int>(type.value);
+    }
+    if (cropId.present) {
+      map['crop_id'] = Variable<String>(cropId.value);
+    }
+    if (label.present) {
+      map['label'] = Variable<String>(label.value);
+    }
+    if (confidence.present) {
+      map['confidence'] = Variable<double>(confidence.value);
+    }
+    if (severity.present) {
+      map['severity'] = Variable<String>(severity.value);
+    }
+    if (lat.present) {
+      map['lat'] = Variable<double>(lat.value);
+    }
+    if (lng.present) {
+      map['lng'] = Variable<double>(lng.value);
+    }
+    if (observedAt.present) {
+      map['observed_at'] = Variable<DateTime>(observedAt.value);
+    }
+    if (expiresAt.present) {
+      map['expires_at'] = Variable<DateTime>(expiresAt.value);
+    }
+    if (sourceDeviceId.present) {
+      map['source_device_id'] = Variable<String>(sourceDeviceId.value);
+    }
+    if (receivedFromPeerId.present) {
+      map['received_from_peer_id'] = Variable<String>(receivedFromPeerId.value);
+    }
+    if (forwardedToPeerIdsJson.present) {
+      map['forwarded_to_peer_ids_json'] = Variable<String>(
+        forwardedToPeerIdsJson.value,
+      );
+    }
+    if (aggregationGroupId.present) {
+      map['aggregation_group_id'] = Variable<String>(aggregationGroupId.value);
+    }
+    if (verified.present) {
+      map['verified'] = Variable<bool>(verified.value);
+    }
+    if (syncedToBackend.present) {
+      map['synced_to_backend'] = Variable<bool>(syncedToBackend.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('P2pPacketsCompanion(')
+          ..write('packetId: $packetId, ')
+          ..write('rawBytes: $rawBytes, ')
+          ..write('type: $type, ')
+          ..write('cropId: $cropId, ')
+          ..write('label: $label, ')
+          ..write('confidence: $confidence, ')
+          ..write('severity: $severity, ')
+          ..write('lat: $lat, ')
+          ..write('lng: $lng, ')
+          ..write('observedAt: $observedAt, ')
+          ..write('expiresAt: $expiresAt, ')
+          ..write('sourceDeviceId: $sourceDeviceId, ')
+          ..write('receivedFromPeerId: $receivedFromPeerId, ')
+          ..write('forwardedToPeerIdsJson: $forwardedToPeerIdsJson, ')
+          ..write('aggregationGroupId: $aggregationGroupId, ')
+          ..write('verified: $verified, ')
+          ..write('syncedToBackend: $syncedToBackend, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $P2pAggregatedAlertsTable extends P2pAggregatedAlerts
+    with TableInfo<$P2pAggregatedAlertsTable, P2pAggregatedAlert> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $P2pAggregatedAlertsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _labelMeta = const VerificationMeta('label');
+  @override
+  late final GeneratedColumn<String> label = GeneratedColumn<String>(
+    'label',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _cropIdMeta = const VerificationMeta('cropId');
+  @override
+  late final GeneratedColumn<String> cropId = GeneratedColumn<String>(
+    'crop_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _latMeta = const VerificationMeta('lat');
+  @override
+  late final GeneratedColumn<double> lat = GeneratedColumn<double>(
+    'lat',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lngMeta = const VerificationMeta('lng');
+  @override
+  late final GeneratedColumn<double> lng = GeneratedColumn<double>(
+    'lng',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _detectionCountMeta = const VerificationMeta(
+    'detectionCount',
+  );
+  @override
+  late final GeneratedColumn<int> detectionCount = GeneratedColumn<int>(
+    'detection_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _radiusKmMeta = const VerificationMeta(
+    'radiusKm',
+  );
+  @override
+  late final GeneratedColumn<double> radiusKm = GeneratedColumn<double>(
+    'radius_km',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _windowStartMeta = const VerificationMeta(
+    'windowStart',
+  );
+  @override
+  late final GeneratedColumn<DateTime> windowStart = GeneratedColumn<DateTime>(
+    'window_start',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fetchedAtMeta = const VerificationMeta(
+    'fetchedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> fetchedAt = GeneratedColumn<DateTime>(
+    'fetched_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    label,
+    cropId,
+    lat,
+    lng,
+    detectionCount,
+    radiusKm,
+    windowStart,
+    fetchedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'p2p_aggregated_alerts';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<P2pAggregatedAlert> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('label')) {
+      context.handle(
+        _labelMeta,
+        label.isAcceptableOrUnknown(data['label']!, _labelMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_labelMeta);
+    }
+    if (data.containsKey('crop_id')) {
+      context.handle(
+        _cropIdMeta,
+        cropId.isAcceptableOrUnknown(data['crop_id']!, _cropIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_cropIdMeta);
+    }
+    if (data.containsKey('lat')) {
+      context.handle(
+        _latMeta,
+        lat.isAcceptableOrUnknown(data['lat']!, _latMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_latMeta);
+    }
+    if (data.containsKey('lng')) {
+      context.handle(
+        _lngMeta,
+        lng.isAcceptableOrUnknown(data['lng']!, _lngMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_lngMeta);
+    }
+    if (data.containsKey('detection_count')) {
+      context.handle(
+        _detectionCountMeta,
+        detectionCount.isAcceptableOrUnknown(
+          data['detection_count']!,
+          _detectionCountMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_detectionCountMeta);
+    }
+    if (data.containsKey('radius_km')) {
+      context.handle(
+        _radiusKmMeta,
+        radiusKm.isAcceptableOrUnknown(data['radius_km']!, _radiusKmMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_radiusKmMeta);
+    }
+    if (data.containsKey('window_start')) {
+      context.handle(
+        _windowStartMeta,
+        windowStart.isAcceptableOrUnknown(
+          data['window_start']!,
+          _windowStartMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_windowStartMeta);
+    }
+    if (data.containsKey('fetched_at')) {
+      context.handle(
+        _fetchedAtMeta,
+        fetchedAt.isAcceptableOrUnknown(data['fetched_at']!, _fetchedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fetchedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  P2pAggregatedAlert map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return P2pAggregatedAlert(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      label: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}label'],
+      )!,
+      cropId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}crop_id'],
+      )!,
+      lat: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}lat'],
+      )!,
+      lng: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}lng'],
+      )!,
+      detectionCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}detection_count'],
+      )!,
+      radiusKm: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}radius_km'],
+      )!,
+      windowStart: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}window_start'],
+      )!,
+      fetchedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}fetched_at'],
+      )!,
+    );
+  }
+
+  @override
+  $P2pAggregatedAlertsTable createAlias(String alias) {
+    return $P2pAggregatedAlertsTable(attachedDatabase, alias);
+  }
+}
+
+class P2pAggregatedAlert extends DataClass
+    implements Insertable<P2pAggregatedAlert> {
+  final String id;
+  final String label;
+  final String cropId;
+  final double lat;
+  final double lng;
+  final int detectionCount;
+  final double radiusKm;
+  final DateTime windowStart;
+  final DateTime fetchedAt;
+  const P2pAggregatedAlert({
+    required this.id,
+    required this.label,
+    required this.cropId,
+    required this.lat,
+    required this.lng,
+    required this.detectionCount,
+    required this.radiusKm,
+    required this.windowStart,
+    required this.fetchedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['label'] = Variable<String>(label);
+    map['crop_id'] = Variable<String>(cropId);
+    map['lat'] = Variable<double>(lat);
+    map['lng'] = Variable<double>(lng);
+    map['detection_count'] = Variable<int>(detectionCount);
+    map['radius_km'] = Variable<double>(radiusKm);
+    map['window_start'] = Variable<DateTime>(windowStart);
+    map['fetched_at'] = Variable<DateTime>(fetchedAt);
+    return map;
+  }
+
+  P2pAggregatedAlertsCompanion toCompanion(bool nullToAbsent) {
+    return P2pAggregatedAlertsCompanion(
+      id: Value(id),
+      label: Value(label),
+      cropId: Value(cropId),
+      lat: Value(lat),
+      lng: Value(lng),
+      detectionCount: Value(detectionCount),
+      radiusKm: Value(radiusKm),
+      windowStart: Value(windowStart),
+      fetchedAt: Value(fetchedAt),
+    );
+  }
+
+  factory P2pAggregatedAlert.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return P2pAggregatedAlert(
+      id: serializer.fromJson<String>(json['id']),
+      label: serializer.fromJson<String>(json['label']),
+      cropId: serializer.fromJson<String>(json['cropId']),
+      lat: serializer.fromJson<double>(json['lat']),
+      lng: serializer.fromJson<double>(json['lng']),
+      detectionCount: serializer.fromJson<int>(json['detectionCount']),
+      radiusKm: serializer.fromJson<double>(json['radiusKm']),
+      windowStart: serializer.fromJson<DateTime>(json['windowStart']),
+      fetchedAt: serializer.fromJson<DateTime>(json['fetchedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'label': serializer.toJson<String>(label),
+      'cropId': serializer.toJson<String>(cropId),
+      'lat': serializer.toJson<double>(lat),
+      'lng': serializer.toJson<double>(lng),
+      'detectionCount': serializer.toJson<int>(detectionCount),
+      'radiusKm': serializer.toJson<double>(radiusKm),
+      'windowStart': serializer.toJson<DateTime>(windowStart),
+      'fetchedAt': serializer.toJson<DateTime>(fetchedAt),
+    };
+  }
+
+  P2pAggregatedAlert copyWith({
+    String? id,
+    String? label,
+    String? cropId,
+    double? lat,
+    double? lng,
+    int? detectionCount,
+    double? radiusKm,
+    DateTime? windowStart,
+    DateTime? fetchedAt,
+  }) => P2pAggregatedAlert(
+    id: id ?? this.id,
+    label: label ?? this.label,
+    cropId: cropId ?? this.cropId,
+    lat: lat ?? this.lat,
+    lng: lng ?? this.lng,
+    detectionCount: detectionCount ?? this.detectionCount,
+    radiusKm: radiusKm ?? this.radiusKm,
+    windowStart: windowStart ?? this.windowStart,
+    fetchedAt: fetchedAt ?? this.fetchedAt,
+  );
+  P2pAggregatedAlert copyWithCompanion(P2pAggregatedAlertsCompanion data) {
+    return P2pAggregatedAlert(
+      id: data.id.present ? data.id.value : this.id,
+      label: data.label.present ? data.label.value : this.label,
+      cropId: data.cropId.present ? data.cropId.value : this.cropId,
+      lat: data.lat.present ? data.lat.value : this.lat,
+      lng: data.lng.present ? data.lng.value : this.lng,
+      detectionCount: data.detectionCount.present
+          ? data.detectionCount.value
+          : this.detectionCount,
+      radiusKm: data.radiusKm.present ? data.radiusKm.value : this.radiusKm,
+      windowStart: data.windowStart.present
+          ? data.windowStart.value
+          : this.windowStart,
+      fetchedAt: data.fetchedAt.present ? data.fetchedAt.value : this.fetchedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('P2pAggregatedAlert(')
+          ..write('id: $id, ')
+          ..write('label: $label, ')
+          ..write('cropId: $cropId, ')
+          ..write('lat: $lat, ')
+          ..write('lng: $lng, ')
+          ..write('detectionCount: $detectionCount, ')
+          ..write('radiusKm: $radiusKm, ')
+          ..write('windowStart: $windowStart, ')
+          ..write('fetchedAt: $fetchedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    label,
+    cropId,
+    lat,
+    lng,
+    detectionCount,
+    radiusKm,
+    windowStart,
+    fetchedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is P2pAggregatedAlert &&
+          other.id == this.id &&
+          other.label == this.label &&
+          other.cropId == this.cropId &&
+          other.lat == this.lat &&
+          other.lng == this.lng &&
+          other.detectionCount == this.detectionCount &&
+          other.radiusKm == this.radiusKm &&
+          other.windowStart == this.windowStart &&
+          other.fetchedAt == this.fetchedAt);
+}
+
+class P2pAggregatedAlertsCompanion extends UpdateCompanion<P2pAggregatedAlert> {
+  final Value<String> id;
+  final Value<String> label;
+  final Value<String> cropId;
+  final Value<double> lat;
+  final Value<double> lng;
+  final Value<int> detectionCount;
+  final Value<double> radiusKm;
+  final Value<DateTime> windowStart;
+  final Value<DateTime> fetchedAt;
+  final Value<int> rowid;
+  const P2pAggregatedAlertsCompanion({
+    this.id = const Value.absent(),
+    this.label = const Value.absent(),
+    this.cropId = const Value.absent(),
+    this.lat = const Value.absent(),
+    this.lng = const Value.absent(),
+    this.detectionCount = const Value.absent(),
+    this.radiusKm = const Value.absent(),
+    this.windowStart = const Value.absent(),
+    this.fetchedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  P2pAggregatedAlertsCompanion.insert({
+    required String id,
+    required String label,
+    required String cropId,
+    required double lat,
+    required double lng,
+    required int detectionCount,
+    required double radiusKm,
+    required DateTime windowStart,
+    required DateTime fetchedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       label = Value(label),
+       cropId = Value(cropId),
+       lat = Value(lat),
+       lng = Value(lng),
+       detectionCount = Value(detectionCount),
+       radiusKm = Value(radiusKm),
+       windowStart = Value(windowStart),
+       fetchedAt = Value(fetchedAt);
+  static Insertable<P2pAggregatedAlert> custom({
+    Expression<String>? id,
+    Expression<String>? label,
+    Expression<String>? cropId,
+    Expression<double>? lat,
+    Expression<double>? lng,
+    Expression<int>? detectionCount,
+    Expression<double>? radiusKm,
+    Expression<DateTime>? windowStart,
+    Expression<DateTime>? fetchedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (label != null) 'label': label,
+      if (cropId != null) 'crop_id': cropId,
+      if (lat != null) 'lat': lat,
+      if (lng != null) 'lng': lng,
+      if (detectionCount != null) 'detection_count': detectionCount,
+      if (radiusKm != null) 'radius_km': radiusKm,
+      if (windowStart != null) 'window_start': windowStart,
+      if (fetchedAt != null) 'fetched_at': fetchedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  P2pAggregatedAlertsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? label,
+    Value<String>? cropId,
+    Value<double>? lat,
+    Value<double>? lng,
+    Value<int>? detectionCount,
+    Value<double>? radiusKm,
+    Value<DateTime>? windowStart,
+    Value<DateTime>? fetchedAt,
+    Value<int>? rowid,
+  }) {
+    return P2pAggregatedAlertsCompanion(
+      id: id ?? this.id,
+      label: label ?? this.label,
+      cropId: cropId ?? this.cropId,
+      lat: lat ?? this.lat,
+      lng: lng ?? this.lng,
+      detectionCount: detectionCount ?? this.detectionCount,
+      radiusKm: radiusKm ?? this.radiusKm,
+      windowStart: windowStart ?? this.windowStart,
+      fetchedAt: fetchedAt ?? this.fetchedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (label.present) {
+      map['label'] = Variable<String>(label.value);
+    }
+    if (cropId.present) {
+      map['crop_id'] = Variable<String>(cropId.value);
+    }
+    if (lat.present) {
+      map['lat'] = Variable<double>(lat.value);
+    }
+    if (lng.present) {
+      map['lng'] = Variable<double>(lng.value);
+    }
+    if (detectionCount.present) {
+      map['detection_count'] = Variable<int>(detectionCount.value);
+    }
+    if (radiusKm.present) {
+      map['radius_km'] = Variable<double>(radiusKm.value);
+    }
+    if (windowStart.present) {
+      map['window_start'] = Variable<DateTime>(windowStart.value);
+    }
+    if (fetchedAt.present) {
+      map['fetched_at'] = Variable<DateTime>(fetchedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('P2pAggregatedAlertsCompanion(')
+          ..write('id: $id, ')
+          ..write('label: $label, ')
+          ..write('cropId: $cropId, ')
+          ..write('lat: $lat, ')
+          ..write('lng: $lng, ')
+          ..write('detectionCount: $detectionCount, ')
+          ..write('radiusKm: $radiusKm, ')
+          ..write('windowStart: $windowStart, ')
+          ..write('fetchedAt: $fetchedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $SyncQueueItemsTable extends SyncQueueItems
     with TableInfo<$SyncQueueItemsTable, SyncQueueItem> {
   @override
@@ -4979,6 +6586,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $OrdersTable orders = $OrdersTable(this);
   late final $OrderItemsTable orderItems = $OrderItemsTable(this);
   late final $DiseaseAlertsTable diseaseAlerts = $DiseaseAlertsTable(this);
+  late final $P2pPacketsTable p2pPackets = $P2pPacketsTable(this);
+  late final $P2pAggregatedAlertsTable p2pAggregatedAlerts =
+      $P2pAggregatedAlertsTable(this);
   late final $SyncQueueItemsTable syncQueueItems = $SyncQueueItemsTable(this);
   late final $SyncMetaTable syncMeta = $SyncMetaTable(this);
   @override
@@ -4995,6 +6605,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     orders,
     orderItems,
     diseaseAlerts,
+    p2pPackets,
+    p2pAggregatedAlerts,
     syncQueueItems,
     syncMeta,
   ];
@@ -7246,6 +8858,760 @@ typedef $$DiseaseAlertsTableProcessedTableManager =
       DiseaseAlert,
       PrefetchHooks Function()
     >;
+typedef $$P2pPacketsTableCreateCompanionBuilder =
+    P2pPacketsCompanion Function({
+      required String packetId,
+      required Uint8List rawBytes,
+      required int type,
+      required String cropId,
+      required String label,
+      required double confidence,
+      required String severity,
+      required double lat,
+      required double lng,
+      required DateTime observedAt,
+      required DateTime expiresAt,
+      required String sourceDeviceId,
+      Value<String?> receivedFromPeerId,
+      Value<String> forwardedToPeerIdsJson,
+      Value<String?> aggregationGroupId,
+      Value<bool> verified,
+      Value<bool> syncedToBackend,
+      required DateTime createdAt,
+      Value<int> rowid,
+    });
+typedef $$P2pPacketsTableUpdateCompanionBuilder =
+    P2pPacketsCompanion Function({
+      Value<String> packetId,
+      Value<Uint8List> rawBytes,
+      Value<int> type,
+      Value<String> cropId,
+      Value<String> label,
+      Value<double> confidence,
+      Value<String> severity,
+      Value<double> lat,
+      Value<double> lng,
+      Value<DateTime> observedAt,
+      Value<DateTime> expiresAt,
+      Value<String> sourceDeviceId,
+      Value<String?> receivedFromPeerId,
+      Value<String> forwardedToPeerIdsJson,
+      Value<String?> aggregationGroupId,
+      Value<bool> verified,
+      Value<bool> syncedToBackend,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$P2pPacketsTableFilterComposer
+    extends Composer<_$AppDatabase, $P2pPacketsTable> {
+  $$P2pPacketsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get packetId => $composableBuilder(
+    column: $table.packetId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<Uint8List> get rawBytes => $composableBuilder(
+    column: $table.rawBytes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cropId => $composableBuilder(
+    column: $table.cropId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get confidence => $composableBuilder(
+    column: $table.confidence,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get severity => $composableBuilder(
+    column: $table.severity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get lat => $composableBuilder(
+    column: $table.lat,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get lng => $composableBuilder(
+    column: $table.lng,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get observedAt => $composableBuilder(
+    column: $table.observedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get expiresAt => $composableBuilder(
+    column: $table.expiresAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceDeviceId => $composableBuilder(
+    column: $table.sourceDeviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get receivedFromPeerId => $composableBuilder(
+    column: $table.receivedFromPeerId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get forwardedToPeerIdsJson => $composableBuilder(
+    column: $table.forwardedToPeerIdsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get aggregationGroupId => $composableBuilder(
+    column: $table.aggregationGroupId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get verified => $composableBuilder(
+    column: $table.verified,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get syncedToBackend => $composableBuilder(
+    column: $table.syncedToBackend,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$P2pPacketsTableOrderingComposer
+    extends Composer<_$AppDatabase, $P2pPacketsTable> {
+  $$P2pPacketsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get packetId => $composableBuilder(
+    column: $table.packetId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<Uint8List> get rawBytes => $composableBuilder(
+    column: $table.rawBytes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cropId => $composableBuilder(
+    column: $table.cropId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get confidence => $composableBuilder(
+    column: $table.confidence,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get severity => $composableBuilder(
+    column: $table.severity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get lat => $composableBuilder(
+    column: $table.lat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get lng => $composableBuilder(
+    column: $table.lng,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get observedAt => $composableBuilder(
+    column: $table.observedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get expiresAt => $composableBuilder(
+    column: $table.expiresAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceDeviceId => $composableBuilder(
+    column: $table.sourceDeviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get receivedFromPeerId => $composableBuilder(
+    column: $table.receivedFromPeerId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get forwardedToPeerIdsJson => $composableBuilder(
+    column: $table.forwardedToPeerIdsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get aggregationGroupId => $composableBuilder(
+    column: $table.aggregationGroupId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get verified => $composableBuilder(
+    column: $table.verified,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get syncedToBackend => $composableBuilder(
+    column: $table.syncedToBackend,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$P2pPacketsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $P2pPacketsTable> {
+  $$P2pPacketsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get packetId =>
+      $composableBuilder(column: $table.packetId, builder: (column) => column);
+
+  GeneratedColumn<Uint8List> get rawBytes =>
+      $composableBuilder(column: $table.rawBytes, builder: (column) => column);
+
+  GeneratedColumn<int> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get cropId =>
+      $composableBuilder(column: $table.cropId, builder: (column) => column);
+
+  GeneratedColumn<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => column);
+
+  GeneratedColumn<double> get confidence => $composableBuilder(
+    column: $table.confidence,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get severity =>
+      $composableBuilder(column: $table.severity, builder: (column) => column);
+
+  GeneratedColumn<double> get lat =>
+      $composableBuilder(column: $table.lat, builder: (column) => column);
+
+  GeneratedColumn<double> get lng =>
+      $composableBuilder(column: $table.lng, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get observedAt => $composableBuilder(
+    column: $table.observedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get expiresAt =>
+      $composableBuilder(column: $table.expiresAt, builder: (column) => column);
+
+  GeneratedColumn<String> get sourceDeviceId => $composableBuilder(
+    column: $table.sourceDeviceId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get receivedFromPeerId => $composableBuilder(
+    column: $table.receivedFromPeerId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get forwardedToPeerIdsJson => $composableBuilder(
+    column: $table.forwardedToPeerIdsJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get aggregationGroupId => $composableBuilder(
+    column: $table.aggregationGroupId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get verified =>
+      $composableBuilder(column: $table.verified, builder: (column) => column);
+
+  GeneratedColumn<bool> get syncedToBackend => $composableBuilder(
+    column: $table.syncedToBackend,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$P2pPacketsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $P2pPacketsTable,
+          P2pPacket,
+          $$P2pPacketsTableFilterComposer,
+          $$P2pPacketsTableOrderingComposer,
+          $$P2pPacketsTableAnnotationComposer,
+          $$P2pPacketsTableCreateCompanionBuilder,
+          $$P2pPacketsTableUpdateCompanionBuilder,
+          (
+            P2pPacket,
+            BaseReferences<_$AppDatabase, $P2pPacketsTable, P2pPacket>,
+          ),
+          P2pPacket,
+          PrefetchHooks Function()
+        > {
+  $$P2pPacketsTableTableManager(_$AppDatabase db, $P2pPacketsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$P2pPacketsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$P2pPacketsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$P2pPacketsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> packetId = const Value.absent(),
+                Value<Uint8List> rawBytes = const Value.absent(),
+                Value<int> type = const Value.absent(),
+                Value<String> cropId = const Value.absent(),
+                Value<String> label = const Value.absent(),
+                Value<double> confidence = const Value.absent(),
+                Value<String> severity = const Value.absent(),
+                Value<double> lat = const Value.absent(),
+                Value<double> lng = const Value.absent(),
+                Value<DateTime> observedAt = const Value.absent(),
+                Value<DateTime> expiresAt = const Value.absent(),
+                Value<String> sourceDeviceId = const Value.absent(),
+                Value<String?> receivedFromPeerId = const Value.absent(),
+                Value<String> forwardedToPeerIdsJson = const Value.absent(),
+                Value<String?> aggregationGroupId = const Value.absent(),
+                Value<bool> verified = const Value.absent(),
+                Value<bool> syncedToBackend = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => P2pPacketsCompanion(
+                packetId: packetId,
+                rawBytes: rawBytes,
+                type: type,
+                cropId: cropId,
+                label: label,
+                confidence: confidence,
+                severity: severity,
+                lat: lat,
+                lng: lng,
+                observedAt: observedAt,
+                expiresAt: expiresAt,
+                sourceDeviceId: sourceDeviceId,
+                receivedFromPeerId: receivedFromPeerId,
+                forwardedToPeerIdsJson: forwardedToPeerIdsJson,
+                aggregationGroupId: aggregationGroupId,
+                verified: verified,
+                syncedToBackend: syncedToBackend,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String packetId,
+                required Uint8List rawBytes,
+                required int type,
+                required String cropId,
+                required String label,
+                required double confidence,
+                required String severity,
+                required double lat,
+                required double lng,
+                required DateTime observedAt,
+                required DateTime expiresAt,
+                required String sourceDeviceId,
+                Value<String?> receivedFromPeerId = const Value.absent(),
+                Value<String> forwardedToPeerIdsJson = const Value.absent(),
+                Value<String?> aggregationGroupId = const Value.absent(),
+                Value<bool> verified = const Value.absent(),
+                Value<bool> syncedToBackend = const Value.absent(),
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => P2pPacketsCompanion.insert(
+                packetId: packetId,
+                rawBytes: rawBytes,
+                type: type,
+                cropId: cropId,
+                label: label,
+                confidence: confidence,
+                severity: severity,
+                lat: lat,
+                lng: lng,
+                observedAt: observedAt,
+                expiresAt: expiresAt,
+                sourceDeviceId: sourceDeviceId,
+                receivedFromPeerId: receivedFromPeerId,
+                forwardedToPeerIdsJson: forwardedToPeerIdsJson,
+                aggregationGroupId: aggregationGroupId,
+                verified: verified,
+                syncedToBackend: syncedToBackend,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$P2pPacketsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $P2pPacketsTable,
+      P2pPacket,
+      $$P2pPacketsTableFilterComposer,
+      $$P2pPacketsTableOrderingComposer,
+      $$P2pPacketsTableAnnotationComposer,
+      $$P2pPacketsTableCreateCompanionBuilder,
+      $$P2pPacketsTableUpdateCompanionBuilder,
+      (P2pPacket, BaseReferences<_$AppDatabase, $P2pPacketsTable, P2pPacket>),
+      P2pPacket,
+      PrefetchHooks Function()
+    >;
+typedef $$P2pAggregatedAlertsTableCreateCompanionBuilder =
+    P2pAggregatedAlertsCompanion Function({
+      required String id,
+      required String label,
+      required String cropId,
+      required double lat,
+      required double lng,
+      required int detectionCount,
+      required double radiusKm,
+      required DateTime windowStart,
+      required DateTime fetchedAt,
+      Value<int> rowid,
+    });
+typedef $$P2pAggregatedAlertsTableUpdateCompanionBuilder =
+    P2pAggregatedAlertsCompanion Function({
+      Value<String> id,
+      Value<String> label,
+      Value<String> cropId,
+      Value<double> lat,
+      Value<double> lng,
+      Value<int> detectionCount,
+      Value<double> radiusKm,
+      Value<DateTime> windowStart,
+      Value<DateTime> fetchedAt,
+      Value<int> rowid,
+    });
+
+class $$P2pAggregatedAlertsTableFilterComposer
+    extends Composer<_$AppDatabase, $P2pAggregatedAlertsTable> {
+  $$P2pAggregatedAlertsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cropId => $composableBuilder(
+    column: $table.cropId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get lat => $composableBuilder(
+    column: $table.lat,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get lng => $composableBuilder(
+    column: $table.lng,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get detectionCount => $composableBuilder(
+    column: $table.detectionCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get radiusKm => $composableBuilder(
+    column: $table.radiusKm,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get windowStart => $composableBuilder(
+    column: $table.windowStart,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get fetchedAt => $composableBuilder(
+    column: $table.fetchedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$P2pAggregatedAlertsTableOrderingComposer
+    extends Composer<_$AppDatabase, $P2pAggregatedAlertsTable> {
+  $$P2pAggregatedAlertsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cropId => $composableBuilder(
+    column: $table.cropId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get lat => $composableBuilder(
+    column: $table.lat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get lng => $composableBuilder(
+    column: $table.lng,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get detectionCount => $composableBuilder(
+    column: $table.detectionCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get radiusKm => $composableBuilder(
+    column: $table.radiusKm,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get windowStart => $composableBuilder(
+    column: $table.windowStart,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get fetchedAt => $composableBuilder(
+    column: $table.fetchedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$P2pAggregatedAlertsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $P2pAggregatedAlertsTable> {
+  $$P2pAggregatedAlertsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => column);
+
+  GeneratedColumn<String> get cropId =>
+      $composableBuilder(column: $table.cropId, builder: (column) => column);
+
+  GeneratedColumn<double> get lat =>
+      $composableBuilder(column: $table.lat, builder: (column) => column);
+
+  GeneratedColumn<double> get lng =>
+      $composableBuilder(column: $table.lng, builder: (column) => column);
+
+  GeneratedColumn<int> get detectionCount => $composableBuilder(
+    column: $table.detectionCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get radiusKm =>
+      $composableBuilder(column: $table.radiusKm, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get windowStart => $composableBuilder(
+    column: $table.windowStart,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get fetchedAt =>
+      $composableBuilder(column: $table.fetchedAt, builder: (column) => column);
+}
+
+class $$P2pAggregatedAlertsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $P2pAggregatedAlertsTable,
+          P2pAggregatedAlert,
+          $$P2pAggregatedAlertsTableFilterComposer,
+          $$P2pAggregatedAlertsTableOrderingComposer,
+          $$P2pAggregatedAlertsTableAnnotationComposer,
+          $$P2pAggregatedAlertsTableCreateCompanionBuilder,
+          $$P2pAggregatedAlertsTableUpdateCompanionBuilder,
+          (
+            P2pAggregatedAlert,
+            BaseReferences<
+              _$AppDatabase,
+              $P2pAggregatedAlertsTable,
+              P2pAggregatedAlert
+            >,
+          ),
+          P2pAggregatedAlert,
+          PrefetchHooks Function()
+        > {
+  $$P2pAggregatedAlertsTableTableManager(
+    _$AppDatabase db,
+    $P2pAggregatedAlertsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$P2pAggregatedAlertsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$P2pAggregatedAlertsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$P2pAggregatedAlertsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> label = const Value.absent(),
+                Value<String> cropId = const Value.absent(),
+                Value<double> lat = const Value.absent(),
+                Value<double> lng = const Value.absent(),
+                Value<int> detectionCount = const Value.absent(),
+                Value<double> radiusKm = const Value.absent(),
+                Value<DateTime> windowStart = const Value.absent(),
+                Value<DateTime> fetchedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => P2pAggregatedAlertsCompanion(
+                id: id,
+                label: label,
+                cropId: cropId,
+                lat: lat,
+                lng: lng,
+                detectionCount: detectionCount,
+                radiusKm: radiusKm,
+                windowStart: windowStart,
+                fetchedAt: fetchedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String label,
+                required String cropId,
+                required double lat,
+                required double lng,
+                required int detectionCount,
+                required double radiusKm,
+                required DateTime windowStart,
+                required DateTime fetchedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => P2pAggregatedAlertsCompanion.insert(
+                id: id,
+                label: label,
+                cropId: cropId,
+                lat: lat,
+                lng: lng,
+                detectionCount: detectionCount,
+                radiusKm: radiusKm,
+                windowStart: windowStart,
+                fetchedAt: fetchedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$P2pAggregatedAlertsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $P2pAggregatedAlertsTable,
+      P2pAggregatedAlert,
+      $$P2pAggregatedAlertsTableFilterComposer,
+      $$P2pAggregatedAlertsTableOrderingComposer,
+      $$P2pAggregatedAlertsTableAnnotationComposer,
+      $$P2pAggregatedAlertsTableCreateCompanionBuilder,
+      $$P2pAggregatedAlertsTableUpdateCompanionBuilder,
+      (
+        P2pAggregatedAlert,
+        BaseReferences<
+          _$AppDatabase,
+          $P2pAggregatedAlertsTable,
+          P2pAggregatedAlert
+        >,
+      ),
+      P2pAggregatedAlert,
+      PrefetchHooks Function()
+    >;
 typedef $$SyncQueueItemsTableCreateCompanionBuilder =
     SyncQueueItemsCompanion Function({
       Value<int> id,
@@ -7628,6 +9994,10 @@ class $AppDatabaseManager {
       $$OrderItemsTableTableManager(_db, _db.orderItems);
   $$DiseaseAlertsTableTableManager get diseaseAlerts =>
       $$DiseaseAlertsTableTableManager(_db, _db.diseaseAlerts);
+  $$P2pPacketsTableTableManager get p2pPackets =>
+      $$P2pPacketsTableTableManager(_db, _db.p2pPackets);
+  $$P2pAggregatedAlertsTableTableManager get p2pAggregatedAlerts =>
+      $$P2pAggregatedAlertsTableTableManager(_db, _db.p2pAggregatedAlerts);
   $$SyncQueueItemsTableTableManager get syncQueueItems =>
       $$SyncQueueItemsTableTableManager(_db, _db.syncQueueItems);
   $$SyncMetaTableTableManager get syncMeta =>

@@ -63,3 +63,26 @@ CREATE TABLE IF NOT EXISTS detections (
   consent_shared INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL
 );
+
+-- Disease-alert packets uploaded via the P2P mesh's opportunistic gateway
+-- sync (see docs/P2P_ALERT_PROTOCOL.md §7) — distinct from `detections`
+-- (this device's own ML classifications): a p2p_event may have originated
+-- on a different farmer's phone and only reached the backend because this
+-- device happened to carry it and get online first. packet_id is the
+-- P2P layer's deterministic dedup key (see P2pAlertPacket.computePacketId),
+-- so re-uploading an already-seen packet from a different gateway device
+-- is a harmless no-op.
+CREATE TABLE IF NOT EXISTS p2p_events (
+  packet_id TEXT PRIMARY KEY,
+  crop_id TEXT NOT NULL,
+  label TEXT NOT NULL,
+  confidence REAL NOT NULL,
+  severity TEXT NOT NULL,
+  lat REAL NOT NULL,
+  lng REAL NOT NULL,
+  observed_at TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  source_device_id TEXT NOT NULL,
+  verified INTEGER NOT NULL DEFAULT 0,
+  received_at TEXT NOT NULL
+);

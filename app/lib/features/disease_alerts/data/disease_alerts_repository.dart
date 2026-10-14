@@ -90,3 +90,27 @@ final diseaseAlertsRepositoryProvider = Provider<DiseaseAlertsRepository>((ref) 
 final nearbyAlertsProvider = StreamProvider<List<NearbyAlert>>((ref) {
   return ref.watch(diseaseAlertsRepositoryProvider).watchAll();
 });
+
+/// Locally-fused alerts from this device's own P2P packet cache — see
+/// docs/P2P_ALERT_PROTOCOL.md §6. Independent of nearbyAlertsProvider (and
+/// never wiped by it) since P2pAggregatedAlerts is its own table, not
+/// comingled with the backend-mirrored DiseaseAlerts table — see the
+/// P2pAggregatedAlerts class doc in app_database.dart for why.
+final p2pAlertsProvider = StreamProvider<List<NearbyAlert>>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return db.select(db.p2pAggregatedAlerts).watch().map(
+        (rows) => rows
+            .map((r) => NearbyAlert(
+                  id: r.id,
+                  label: r.label,
+                  lat: r.lat,
+                  lng: r.lng,
+                  detectionCount: r.detectionCount,
+                  radiusKm: r.radiusKm,
+                  windowStart: r.windowStart,
+                  fetchedAt: r.fetchedAt,
+                  source: NearbyAlertSource.p2pNearby,
+                ))
+            .toList(),
+      );
+});

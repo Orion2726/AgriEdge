@@ -21,6 +21,7 @@ app.use('/api/orders', require('./routes/orders'));
 app.use('/api/soil-reports', require('./routes/soil'));
 app.use('/api/crop-recommendation', require('./routes/crop-recommendation'));
 app.use('/api/detections', require('./routes/detections'));
+app.use('/api/p2p-events', require('./routes/p2p-events'));
 app.use('/api/alerts', require('./routes/alerts'));
 app.use('/api/assistant', require('./routes/assistant'));
 app.use('/api/models', require('./routes/models'));

@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/p2p/sync/p2p_gateway_sync.dart';
 import 'core/sync/sync_manager.dart';
 import 'features/disease_alerts/data/disease_alerts_repository.dart';
 import 'features/disease_detection/data/disease_detection_repository.dart';
@@ -22,6 +23,7 @@ final syncRegistrationProvider = Provider<void>((ref) {
   manager.register('disease_alerts', () => ref.read(diseaseAlertsRepositoryProvider).refresh());
   manager.register('detections', () => ref.read(diseaseDetectionRepositoryProvider).refresh());
   manager.register('orders', () => ref.read(ordersRepositoryProvider).refresh());
+  manager.register('p2p_alerts', () => ref.read(p2pGatewaySyncProvider).refresh());
 
   // Opportunistic first-launch sync so a fresh install isn't stuck showing
   // empty screens until the user finds the manual sync button. Each job

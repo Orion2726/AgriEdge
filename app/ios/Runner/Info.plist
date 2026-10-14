@@ -51,5 +51,9 @@
 	<string>AgriEdge lets you pick an existing photo of a crop leaf for disease detection.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>AgriEdge uses your location to tag disease detections (only if you opt in) and to show nearby disease alerts.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>AgriEdge uses Bluetooth to exchange disease alerts directly with nearby farmers' phones when the internet is unavailable.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>AgriEdge uses Bluetooth to exchange disease alerts directly with nearby farmers' phones when the internet is unavailable.</string>
 </dict>
 </plist>
