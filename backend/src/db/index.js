@@ -2,7 +2,11 @@ const path = require('path');
 const fs = require('fs');
 const Database = require('better-sqlite3');
 
-const DB_PATH = path.join(__dirname, '..', '..', 'data', 'agriedge.sqlite');
+// AGRIEDGE_DB_PATH lets a test run use a throwaway database instead of the
+// shared dev one. data/ is gitignored, so it won't exist on a fresh clone.
+const DB_PATH =
+  process.env.AGRIEDGE_DB_PATH || path.join(__dirname, '..', '..', 'data', 'agriedge.sqlite');
+fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 const db = new Database(DB_PATH);
 db.pragma('journal_mode = WAL');
 

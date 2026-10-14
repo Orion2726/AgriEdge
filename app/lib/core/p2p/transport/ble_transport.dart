@@ -146,8 +146,13 @@ class BleTransport implements P2pTransport {
       includedServices: [],
       characteristics: [inbox],
     ));
+    // No `name` on Android: bluetooth_low_energy_android implements an
+    // advertised name by calling BluetoothAdapter.setName(), which
+    // permanently renames the phone's Bluetooth adapter system-wide (e.g.
+    // "OnePlus Nord" → "AgriEdge") — a side effect on an unrelated setting.
+    // Discovery filters on the service UUID, so the name isn't needed.
     await _peripheral.startAdvertising(Advertisement(
-      name: 'AgriEdge',
+      name: Platform.isAndroid ? null : 'AgriEdge',
       serviceUUIDs: [_serviceUuid],
     ));
   }
