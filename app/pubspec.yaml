@@ -12,10 +12,16 @@ environment:
 # the sqlite3 package's own build hook tries to *additionally* download a
 # separate precompiled binary from GitHub release assets at build time —
 # unnecessary here, and fails hard on networks that block that CDN host.
+#
+# `source: system` (dlopen("libsqlite3.so"/".dylib")) rather than `process`:
+# on Android, sqlite3_flutter_libs ships libsqlite3.so inside the APK but it
+# is never loaded into the process before Dart looks up symbols, so
+# `process` fails at the first query with "undefined symbol:
+# sqlite3_initialize". dlopen by name resolves the APK's own copy on Android.
 hooks:
   user_defines:
     sqlite3:
-      source: process
+      source: system
 
 dependencies:
   flutter:
@@ -40,7 +46,7 @@ dependencies:
   connectivity_plus: ^6.1.1
 
   # Background sync
-  workmanager: ^0.5.2
+  workmanager: ^0.9.0+3
 
   # On-device ML (disease detection)
   tflite_flutter: ^0.11.0
