@@ -58,7 +58,13 @@ class _TabShell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: shell,
-      bottomNavigationBar: NavigationBar(
+      // Tab labels are capped at 1.15× so five tabs still fit when the phone
+      // uses a large system font; screen content keeps the user's full size.
+      bottomNavigationBar: MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+          textScaler: MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.15),
+        ),
+        child: NavigationBar(
         selectedIndex: shell.currentIndex,
         onDestinationSelected: (i) => shell.goBranch(i, initialLocation: i == shell.currentIndex),
         destinations: const [
@@ -68,6 +74,7 @@ class _TabShell extends StatelessWidget {
           NavigationDestination(icon: Icon(Icons.wifi_tethering), selectedIcon: Icon(Icons.wifi_tethering), label: 'Nearby'),
           NavigationDestination(icon: Icon(Icons.more_horiz), label: 'More'),
         ],
+        ),
       ),
     );
   }

@@ -56,7 +56,6 @@ class AppTheme {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        height: 68,
         indicatorColor: scheme.primaryContainer,
         labelTextStyle: WidgetStateProperty.all(
           base.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),

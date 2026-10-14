@@ -30,22 +30,25 @@ class SyncSettingsScreen extends ConsumerWidget {
     final isOnline = ref.watch(isOnlineProvider).value ?? true;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Sync & Data')),
+      appBar: AppBar(title: const Text('Sync & server')),
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [
           Card(
-            color: isOnline ? Colors.green.shade50 : Colors.orange.shade50,
+            color: isOnline ? Theme.of(context).colorScheme.primaryContainer : Theme.of(context).colorScheme.errorContainer,
             child: ListTile(
               leading: Icon(isOnline ? Icons.wifi : Icons.wifi_off),
               title: Text(isOnline ? 'Online' : 'Offline'),
-              subtitle: const Text('Background sync runs automatically when online.'),
+              subtitle: Text(isOnline
+                  ? 'Data syncs with the AgriEdge server automatically.'
+                  : 'Everything is saved on this phone and uploads when you are back online.'),
               trailing: FilledButton(
                 onPressed: isOnline ? () => manager.syncAll() : null,
                 child: const Text('Sync all'),
               ),
             ),
           ),
+          const SizedBox(height: 12),
           const _BackendServerCard(),
           const SizedBox(height: 12),
           for (final domain in manager.domains) _SyncRow(domain: domain, label: _domainLabels[domain] ?? domain),
@@ -157,6 +160,7 @@ class _BackendServerCardState extends ConsumerState<_BackendServerCard> {
       _controller.text = url;
       await createApiClient(url).get('/health');
       setState(() => _result = 'Connected to $url');
+      ref.read(syncManagerProvider).syncAll(); // pull fresh data right away
     } on FormatException catch (e) {
       setState(() => _error = e.message);
     } catch (e) {
