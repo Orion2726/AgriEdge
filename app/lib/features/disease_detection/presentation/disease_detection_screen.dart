@@ -44,16 +44,27 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
       _isRunning = true;
     });
 
-    final service = ref.read(tfliteDiseaseServiceProvider);
-    final prediction = await service.predict(_cropId, _image!);
-    final advice = await ref.read(treatmentKnowledgeBaseProvider).lookup(_cropId, prediction.label);
-
-    if (!mounted) return;
-    setState(() {
-      _prediction = prediction;
-      _advice = advice;
-      _isRunning = false;
-    });
+    try {
+      final service = ref.read(tfliteDiseaseServiceProvider);
+      final prediction = await service.predict(_cropId, _image!);
+      final advice = await ref.read(treatmentKnowledgeBaseProvider).lookup(_cropId, prediction.label);
+      if (!mounted) return;
+      setState(() {
+        _prediction = prediction;
+        _advice = advice;
+        _isRunning = false;
+      });
+    } catch (e, st) {
+      debugPrint('disease check failed for $_cropId: $e\n$st');
+      // Never leave the spinner running: say what happened instead.
+      if (!mounted) return;
+      setState(() => _isRunning = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(e is FormatException
+            ? 'That photo could not be read. Try another one.'
+            : 'Could not check this photo: $e'),
+      ));
+    }
   }
 
   Future<void> _saveDetection() async {
@@ -271,10 +282,26 @@ class _ResultCard extends StatelessWidget {
               ),
             const SizedBox(height: 8),
             Text(
-              advice?.disease ?? prediction.label,
+              advice?.disease ?? prettyDiseaseLabel(prediction.label),
               style: Theme.of(context).textTheme.titleLarge,
             ),
             Text('Confidence: ${(prediction.confidence * 100).toStringAsFixed(1)}%'),
+            if (!prediction.isMock && !prediction.isConfident)
+              Container(
+                margin: const EdgeInsets.only(top: 10),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.tertiaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'Not sure. It could be ${prettyDiseaseLabel(prediction.label)} '
+                  '(${(prediction.confidence * 100).round()}%)'
+                  '${prediction.runnerUpLabel == null ? '' : ' or ${prettyDiseaseLabel(prediction.runnerUpLabel!)} (${(prediction.runnerUpConfidence! * 100).round()}%)'}. '
+                  'For a better answer, take a close, sharp photo of one affected leaf in daylight.',
+                  style: TextStyle(color: Theme.of(context).colorScheme.onTertiaryContainer),
+                ),
+              ),
             if (advice != null) ...[
               const SizedBox(height: 12),
               Text('Symptoms', style: Theme.of(context).textTheme.labelLarge),

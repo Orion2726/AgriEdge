@@ -9,10 +9,24 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/ml/model_manager.dart';
 
 class DiseasePrediction {
-  const DiseasePrediction({required this.label, required this.confidence, required this.isMock});
+  const DiseasePrediction({
+    required this.label,
+    required this.confidence,
+    required this.isMock,
+    this.runnerUpLabel,
+    this.runnerUpConfidence,
+  });
   final String label;
   final double confidence;
   final bool isMock;
+
+  /// Second most likely class — shown when the model isn't sure.
+  final String? runnerUpLabel;
+  final double? runnerUpConfidence;
+
+  /// Below this the app says "not sure" instead of presenting a diagnosis.
+  static const confidentAbove = 0.6;
+  bool get isConfident => confidence >= confidentAbove;
 }
 
 class _LoadedCropModel {
@@ -72,14 +86,15 @@ class TFLiteDiseaseService {
     loaded.interpreter.run(input, output);
 
     final scores = output[0];
-    var bestIndex = 0;
-    for (var i = 1; i < scores.length; i++) {
-      if (scores[i] > scores[bestIndex]) bestIndex = i;
-    }
+    final order = List.generate(scores.length, (i) => i)..sort((a, b) => scores[b].compareTo(scores[a]));
+    final best = order.first;
+    final second = order.length > 1 ? order[1] : null;
     return DiseasePrediction(
-      label: loaded.labels[bestIndex],
-      confidence: scores[bestIndex],
+      label: loaded.labels[best],
+      confidence: scores[best],
       isMock: false,
+      runnerUpLabel: second == null ? null : loaded.labels[second],
+      runnerUpConfidence: second == null ? null : scores[second],
     );
   }
 

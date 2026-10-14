@@ -13,6 +13,7 @@ import '../../../core/p2p/store/p2p_packet_store.dart';
 import '../../../core/settings/farm_setup.dart';
 import '../../../core/sync/sync_manager.dart';
 import '../../../shared/disease_label.dart';
+import '../../../shared/widgets/ae_logo.dart';
 import '../../../shared/widgets/ui.dart';
 import '../../market_price/data/market_price_repository.dart';
 import '../../msp/data/msp_repository.dart';
@@ -30,7 +31,8 @@ class HomeScreen extends ConsumerWidget {
     final setup = ref.watch(farmSetupProvider);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AgriEdge'),
+        centerTitle: true,
+        title: const AeWordmark(),
         actions: [
           IconButton(
             tooltip: 'My farm',
