@@ -1,16 +1,31 @@
 # AgriEdge backend (local dev only — no deployment)
 
-Node.js + Express + SQLite (`better-sqlite3`). Runs on your machine only; the
-Flutter app points at `http://localhost:4001` (see
-`app/lib/core/constants/app_constants.dart`).
+Node.js + Express + SQLite (`better-sqlite3`). Runs on your machine only.
 
 ## Run it
 
 ```bash
 cd backend
 npm install
-npm start
+npm rebuild better-sqlite3   # npm 11 blocks install scripts; this compiles the native module
+npm start                    # PORT=4001 by default; e.g. PORT=53317 npm start
 ```
+
+## Connect phones
+
+Phones can't use your computer's `localhost`. Put the phones and the computer on
+the same Wi-Fi/hotspot, make sure the port is allowed by the computer's firewall,
+then in the app open **More → Sync & server**, enter `http://<computer-LAN-IP>:<port>`
+and tap **Save & test**. The app works without a server too (on-device disease
+checks, crop advice, Bluetooth sharing, weather/news from the internet); only
+prices/MSP/catalogue/uploads need it. A phone on a different network cannot reach
+this local server.
+
+## Install the app on another phone
+
+`app/build/app/outputs/flutter-apk/app-release.apk` — build with
+`cd app && flutter build apk --release --target-platform android-arm,android-arm64`,
+copy to the phone and open it (allow "install unknown apps").
 
 First run seeds sample market prices, MSP rates, a product catalog, and a
 handful of demo disease detections (see `src/db/index.js` — clearly not real
