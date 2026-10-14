@@ -37,11 +37,20 @@ app.use('/api/assistant', require('./routes/assistant'));
 app.use('/api/models', require('./routes/models'));
 
 const PORT = process.env.PORT || 4001;
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   const lan = Object.values(require('os').networkInterfaces())
     .flat()
     .filter((i) => i && i.family === 'IPv4' && !i.internal)
     .map((i) => `http://${i.address}:${PORT}`);
   console.log(`AgriEdge server running.\n  Control panel: http://localhost:${PORT}/`);
   for (const url of lan) console.log(`  Phones: enter ${url} in More → Sync & server`);
+});
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} is already in use — another AgriEdge server is probably running.`);
+    console.error(`Stop it (e.g. \`fuser -k ${PORT}/tcp\`) or start on another port: PORT=4002 npm start`);
+    process.exit(1);
+  }
+  throw err;
 });
