@@ -19,6 +19,9 @@ for (const ddl of [
   'ALTER TABLE detections ADD COLUMN crop_id TEXT',
   'ALTER TABLE p2p_events ADD COLUMN detection_id TEXT',
   'ALTER TABLE p2p_events ADD COLUMN note TEXT',
+  // Which phone uploaded it; differs from source_device_id when a report was
+  // carried to the server by another phone over the mesh.
+  'ALTER TABLE p2p_events ADD COLUMN uploaded_by TEXT',
 ]) {
   try {
     db.exec(ddl);

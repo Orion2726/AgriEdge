@@ -6,16 +6,16 @@ const router = express.Router();
 
 // Phones identify themselves with the X-AgriEdge-Device header (their short
 // P2P id); kept in memory so the control panel can show who is connected.
-const devices = new Map();
+const DEVICE_RE = /^[0-9a-f]{16}$/;
+const upsertDevice = db.prepare(
+  `INSERT INTO devices (id, ip, first_seen, last_seen, requests) VALUES (?, ?, ?, ?, 1)
+   ON CONFLICT(id) DO UPDATE SET ip = excluded.ip, last_seen = excluded.last_seen, requests = requests + 1`
+);
 function trackDevices(req, _res, next) {
   const id = req.get('X-AgriEdge-Device');
-  if (id) {
-    const d = devices.get(id) ?? { id, firstSeen: new Date().toISOString(), requests: 0 };
-    d.lastSeen = new Date().toISOString();
-    d.ip = req.ip.replace('::ffff:', '');
-    d.lastPath = req.path;
-    d.requests += 1;
-    devices.set(id, d);
+  if (id && DEVICE_RE.test(id)) {
+    const now = new Date().toISOString();
+    upsertDevice.run(id, req.ip.replace('::ffff:', ''), now, now);
   }
   next();
 }
@@ -51,12 +51,18 @@ router.get('/server-reports', (req, res) => {
 
 router.get('/admin/overview', (req, res) => {
   const all = (sql, ...a) => db.prepare(sql).all(...a);
+  const port = req.socket.localPort;
   res.json({
     serverTime: new Date().toISOString(),
-    devices: [...devices.values()].sort((a, b) => (a.lastSeen < b.lastSeen ? 1 : -1)),
+    // Addresses phones should enter in More → Sync & server.
+    phoneUrls: Object.values(require('os').networkInterfaces())
+      .flat()
+      .filter((i) => i && i.family === 'IPv4' && !i.internal)
+      .map((i) => `http://${i.address}:${port}`),
+    devices: all('SELECT id, ip, first_seen AS firstSeen, last_seen AS lastSeen, requests FROM devices ORDER BY last_seen DESC'),
     serverReports: all('SELECT * FROM server_reports ORDER BY created_at DESC LIMIT 100'),
     phoneReports: all(
-      `SELECT packet_id, crop_id, label, severity, lat, lng, note, source_device_id, verified, observed_at, received_at
+      `SELECT packet_id, crop_id, label, severity, lat, lng, note, source_device_id, uploaded_by, verified, observed_at, received_at
        FROM p2p_events WHERE source_device_id <> 'server' ORDER BY received_at DESC LIMIT 100`
     ),
     detections: all(

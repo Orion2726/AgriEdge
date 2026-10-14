@@ -3,110 +3,253 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AgriEdge Control Panel</title>
+<title>Æ AgriEdge — Field Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <style>
-  :root { --bg:#f4f7f0; --card:#fff; --ink:#1d2a1d; --muted:#5d6b5d; --line:#dfe7d8; --green:#2e7d32; --green2:#e3f1df; --red:#b3261e; --red2:#fde7e5; --amber:#8a5a00; --amber2:#fff1d6; }
-  @media (prefers-color-scheme: dark) { :root { --bg:#101510; --card:#182018; --ink:#e6efe2; --muted:#9db09a; --line:#2a352a; --green:#7fd17f; --green2:#1f3a20; --red:#ffb4ab; --red2:#3b1714; --amber:#ffcf7a; --amber2:#3a2c10; } }
+  /* One hue, many values: a field ledger printed in green ink on black soil. */
+  :root {
+    --soil: #0b0e0b;
+    --soil-2: #111611;
+    --rule: #1f281f;
+    --rule-2: #2c382c;
+    --ink: #d9e6d3;
+    --ink-2: #9fb39a;
+    --ink-3: #5f725b;
+    --leaf: #8fdc8f;       /* live / active only */
+    --leaf-dim: #2e7d32;
+    --serif: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
   * { box-sizing: border-box; }
-  body { margin:0; font:15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background:var(--bg); color:var(--ink); }
-  header { display:flex; align-items:center; gap:12px; padding:16px 24px; background:var(--card); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:2; }
-  header h1 { font-size:20px; margin:0; } header .dot { width:10px; height:10px; border-radius:50%; background:var(--green); }
-  header .meta { margin-left:auto; color:var(--muted); font-size:13px; }
-  main { display:grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap:16px; padding:16px 24px 48px; }
-  section { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px 18px; min-width:0; }
-  section.wide { grid-column: 1 / -1; }
-  h2 { font-size:16px; margin:0 0 4px; } .hint { color:var(--muted); font-size:13px; margin:0 0 12px; }
-  table { width:100%; border-collapse:collapse; font-size:14px; } th, td { text-align:left; padding:7px 6px; border-top:1px solid var(--line); vertical-align:top; }
-  th { color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.03em; border-top:none; }
-  input, select, textarea, button { font:inherit; color:inherit; }
-  input, select, textarea { width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:var(--bg); }
-  textarea { min-height:60px; resize:vertical; }
-  button { padding:8px 14px; border-radius:10px; border:1px solid var(--line); background:var(--bg); cursor:pointer; }
-  button.primary { background:var(--green); color:#fff; border-color:transparent; font-weight:600; }
-  @media (prefers-color-scheme: dark) { button.primary { color:#0b1a0b; } }
-  button.danger { color:var(--red); }
-  .grid { display:grid; grid-template-columns: 1fr 1fr; gap:10px; } .grid .full { grid-column: 1 / -1; }
-  label { font-size:12px; color:var(--muted); display:block; margin-bottom:3px; }
-  .pill { display:inline-block; padding:2px 9px; border-radius:20px; font-size:12px; background:var(--green2); color:var(--green); white-space:nowrap; }
-  .pill.high { background:var(--red2); color:var(--red); } .pill.medium { background:var(--amber2); color:var(--amber); }
-  .pill.off { background:var(--line); color:var(--muted); }
-  .row { display:flex; gap:8px; align-items:center; } .num { width:110px; }
-  .empty { color:var(--muted); padding:10px 0; } .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--ink); color:var(--bg); padding:10px 16px; border-radius:12px; opacity:0; transition:.2s; }
-  .toast.show { opacity:1; } .muted { color:var(--muted); font-size:13px; } .scroll { max-height:420px; overflow:auto; }
+  html { background: var(--soil); }
+  body { margin: 0; color: var(--ink); font: 13px/1.55 var(--mono); letter-spacing: .01em;
+         -webkit-font-smoothing: antialiased; }
+  ::selection { background: var(--leaf); color: var(--soil); }
+  a { color: inherit; }
+
+  /* ---------- frame ---------- */
+  .frame { display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: 100vh; }
+  aside { border-right: 1px solid var(--rule); padding: 28px 22px; position: sticky; top: 0; height: 100vh;
+          display: flex; flex-direction: column; gap: 28px; background: var(--soil); }
+  .mark { font-family: var(--serif); font-size: 112px; line-height: .8; color: var(--ink); letter-spacing: -.04em; }
+  .mark small { display: block; font-family: var(--mono); font-size: 11px; letter-spacing: .28em; text-transform: uppercase;
+                color: var(--ink-3); margin-top: 14px; }
+  nav a { display: flex; gap: 10px; padding: 5px 0; color: var(--ink-3); text-decoration: none; font-size: 12px; }
+  nav a span { color: var(--rule-2); } nav a:hover { color: var(--ink); } nav a:hover span { color: var(--leaf); }
+  .connect { margin-top: auto; font-size: 11px; color: var(--ink-3); border-top: 1px solid var(--rule); padding-top: 14px; }
+  .connect b { display: block; color: var(--ink); font-weight: 500; font-size: 12px; word-break: break-all; margin-top: 4px; }
+
+  main { min-width: 0; }
+  .strip { display: flex; flex-wrap: wrap; gap: 0; border-bottom: 1px solid var(--rule); position: sticky; top: 0;
+           background: color-mix(in srgb, var(--soil) 92%, transparent); backdrop-filter: blur(6px); z-index: 3; }
+  .strip div { padding: 12px 20px; border-right: 1px solid var(--rule); font-size: 11px; color: var(--ink-3);
+               text-transform: uppercase; letter-spacing: .14em; white-space: nowrap; }
+  .strip b { color: var(--ink); font-weight: 500; letter-spacing: .04em; margin-left: 8px; }
+  .live { display: inline-block; width: 7px; height: 7px; background: var(--leaf); margin-right: 8px; vertical-align: 1px;
+          animation: pulse 2.4s ease-in-out infinite; }
+  .live.off { background: var(--ink-3); animation: none; }
+  @keyframes pulse { 50% { opacity: .25; } }
+
+  section { border-bottom: 1px solid var(--rule); padding: 34px 40px 38px; }
+  .head { display: flex; align-items: baseline; gap: 18px; margin-bottom: 6px; }
+  .num { color: var(--ink-3); font-size: 11px; letter-spacing: .2em; }
+  h2 { font-family: var(--serif); font-weight: 400; font-size: 34px; line-height: 1; margin: 0; letter-spacing: -.01em; }
+  h2 em { color: var(--ink-2); }
+  .lede { color: var(--ink-3); max-width: 68ch; margin: 8px 0 22px; }
+
+  /* ---------- network line ---------- */
+  .net { display: grid; grid-template-columns: auto 1fr auto 1fr auto; align-items: center; gap: 0; margin: 10px 0 4px; }
+  .node { border: 1px solid var(--rule-2); padding: 14px 16px; min-width: 150px; }
+  .node .k { font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-3); }
+  .node .v { font-family: var(--serif); font-size: 30px; line-height: 1.1; }
+  .wire { height: 1px; background: var(--rule-2); position: relative; }
+  .wire.dash { background: repeating-linear-gradient(90deg, var(--ink-3) 0 6px, transparent 6px 12px); }
+  .wire label { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 10px; color: var(--ink-3);
+                letter-spacing: .14em; text-transform: uppercase; white-space: nowrap; }
+  .figures { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--rule); margin-top: 26px; }
+  .figures div { padding: 16px 0 0; border-right: 1px solid var(--rule); padding-left: 18px; }
+  .figures div:first-child { padding-left: 0; } .figures div:last-child { border-right: none; }
+  .figures .v { font-family: var(--serif); font-size: 46px; line-height: 1; }
+  .figures .k { font-size: 10px; color: var(--ink-3); letter-spacing: .18em; text-transform: uppercase; margin-top: 6px; }
+
+  /* ---------- tables: ledgers, not cards ---------- */
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-weight: 500; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-3);
+       padding: 0 14px 10px 0; border-bottom: 1px solid var(--rule-2); }
+  td { padding: 11px 14px 11px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  tr:hover td { background: var(--soil-2); }
+  .serif { font-family: var(--serif); font-size: 19px; line-height: 1.2; color: var(--ink); }
+  .dim { color: var(--ink-3); } .ink2 { color: var(--ink-2); }
+  .note { color: var(--ink-2); max-width: 46ch; }
+  .empty { color: var(--ink-3); padding: 14px 0; border-bottom: 1px solid var(--rule); }
+  .scroll { max-height: 460px; overflow: auto; }
+
+  /* severity as ink density, not traffic-light colour */
+  .sev { display: inline-flex; gap: 3px; vertical-align: -1px; }
+  .sev i { width: 9px; height: 9px; border: 1px solid var(--ink-2); }
+  .sev i.f { background: var(--ink); border-color: var(--ink); }
+  .tag { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; border: 1px solid var(--rule-2); padding: 1px 6px; color: var(--ink-2); white-space: nowrap; }
+  .tag.leaf { border-color: var(--leaf-dim); color: var(--leaf); }
+
+  /* ---------- forms: ruled lines on a ledger page ---------- */
+  .form { display: grid; grid-template-columns: repeat(6, 1fr); gap: 18px 24px; max-width: 980px; }
+  .f { display: flex; flex-direction: column; gap: 4px; } .f.s2 { grid-column: span 2; } .f.s3 { grid-column: span 3; } .f.s6 { grid-column: span 6; }
+  .f label { font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-3); }
+  input, select, textarea { font: inherit; color: var(--ink); background: transparent; border: none; border-bottom: 1px solid var(--rule-2);
+                            padding: 6px 0; border-radius: 0; outline: none; }
+  select option { background: var(--soil-2); }
+  input:focus, select:focus, textarea:focus { border-bottom-color: var(--leaf); }
+  textarea { resize: vertical; min-height: 44px; }
+  .seg { display: flex; border: 1px solid var(--rule-2); width: max-content; }
+  .seg button { border: none; border-right: 1px solid var(--rule-2); padding: 6px 12px; }
+  .seg button:last-child { border-right: none; }
+  .seg button.on { background: var(--ink); color: var(--soil); }
+  button { font: 500 11px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--ink); background: transparent;
+           border: 1px solid var(--rule-2); padding: 9px 16px; cursor: pointer; border-radius: 0; }
+  button:hover { border-color: var(--ink); }
+  button.go { background: var(--ink); color: var(--soil); border-color: var(--ink); }
+  button.go:hover { background: var(--leaf); border-color: var(--leaf); }
+  button.quiet { border-color: transparent; color: var(--ink-3); padding: 4px 6px; }
+  button.quiet:hover { color: var(--ink); border-color: var(--rule-2); }
+  .actions { grid-column: span 6; display: flex; gap: 10px; align-items: center; }
+  .inline { display: flex; gap: 10px; align-items: center; }
+  .inline input { width: 96px; }
+
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+  .two > section:first-child { border-right: 1px solid var(--rule); }
+
+  .toast { position: fixed; right: 24px; bottom: 24px; background: var(--ink); color: var(--soil); padding: 10px 16px;
+           font-size: 12px; letter-spacing: .04em; transform: translateY(12px); opacity: 0; transition: .18s ease; pointer-events: none; }
+  .toast.show { transform: none; opacity: 1; }
+
+  @media (max-width: 1080px) {
+    .frame { grid-template-columns: 1fr; }
+    aside { position: static; height: auto; flex-direction: row; align-items: flex-end; border-right: none; border-bottom: 1px solid var(--rule); }
+    .mark { font-size: 72px; } nav, .connect { display: none; }
+    .two { grid-template-columns: 1fr; } .two > section:first-child { border-right: none; }
+    section { padding: 26px 20px; } .form { grid-template-columns: repeat(2, 1fr); }
+    .f.s3, .f.s6, .actions { grid-column: span 2; } .net { grid-template-columns: 1fr; gap: 10px; } .wire { height: 20px; width: 1px; margin: 0 auto; }
+    .wire label { left: 14px; top: 2px; transform: none; } .figures { grid-template-columns: repeat(2, 1fr); }
+  }
 </style>
 </head>
 <body>
-<header><span class="dot"></span><h1>AgriEdge Control Panel</h1><span class="meta" id="meta">Connecting…</span></header>
-<main>
-  <section>
-    <h2>Connected phones</h2>
-    <p class="hint">Phones that talked to this server. Phones without internet get server data relayed over Bluetooth by these.</p>
-    <div id="devices"></div>
-  </section>
+<div class="frame">
+  <aside>
+    <div class="mark">Æ<small>AgriEdge<br>field control</small></div>
+    <nav>
+      <a href="#network"><span>01</span>Network</a>
+      <a href="#publish"><span>02</span>Publish a report</a>
+      <a href="#official"><span>03</span>Official reports</a>
+      <a href="#field"><span>04</span>Field reports</a>
+      <a href="#market"><span>05</span>Market</a>
+      <a href="#orders"><span>06</span>Orders &amp; soil</a>
+    </nav>
+    <div class="connect">Phones connect to<b id="phoneUrl">—</b><span style="display:block;margin-top:6px">More → Sync &amp; server</span></div>
+  </aside>
 
-  <section>
-    <h2>Add official disease report</h2>
-    <p class="hint">Online phones pick it up within ~15 s and pass it to nearby phones over Bluetooth — no internet needed on those.</p>
-    <form id="reportForm" class="grid">
-      <div><label>Crop</label><select name="cropId" id="crop"></select></div>
-      <div><label>Disease / pest</label><input name="label" id="disease" list="diseaseList" required><datalist id="diseaseList"></datalist></div>
-      <div><label>Severity</label><select name="severity"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select></div>
-      <div><label>Active for (hours)</label><input name="hours" type="number" value="72" min="1" max="720"></div>
-      <div class="full"><label>Area</label><select id="place"></select></div>
-      <div><label>Latitude</label><input name="lat" id="lat" required></div>
-      <div><label>Longitude</label><input name="lng" id="lng" required></div>
-      <div class="full"><label>Advice / note for farmers</label><textarea name="note" maxlength="280" placeholder="e.g. Spray mancozeb 2.5 g/L; avoid irrigation for 3 days."></textarea></div>
-      <div class="full row"><button class="primary" type="submit">Publish report</button><button type="button" id="example">Fill example</button></div>
-    </form>
-  </section>
+  <main>
+    <div class="strip">
+      <div><span class="live off" id="liveDot"></span>Server<b id="srvState">connecting</b></div>
+      <div>Phones online<b id="sPhones">0</b></div>
+      <div>Official<b id="sOfficial">0</b></div>
+      <div>Field reports<b id="sField">0</b></div>
+      <div>Clock<b id="sClock">—</b></div>
+    </div>
 
-  <section class="wide">
-    <h2>Official reports</h2>
-    <p class="hint">Published from this panel. "End" stops new phones from receiving it; phones that already have it keep it until it expires.</p>
-    <div class="scroll" id="serverReports"></div>
-  </section>
+    <section id="network">
+      <div class="head"><span class="num">01</span><h2>Network <em>— how a report travels</em></h2></div>
+      <p class="lede">Phones with a route to this server sync every ~15 s. Whatever they hold is passed on over Bluetooth to phones that have no internet — and reports made on those phones come back the same way.</p>
+      <div class="net">
+        <div class="node"><div class="k">This server</div><div class="v">Æ</div></div>
+        <div class="wire"><label>Wi-Fi / LAN</label></div>
+        <div class="node"><div class="k">Phones online</div><div class="v" id="nOnline">0</div></div>
+        <div class="wire dash"><label>Bluetooth mesh</label></div>
+        <div class="node"><div class="k">Reached via mesh</div><div class="v" id="nMesh">0</div></div>
+      </div>
+      <div class="figures">
+        <div><div class="v" id="fOfficial">0</div><div class="k">Official reports live</div></div>
+        <div><div class="v" id="fField">0</div><div class="k">Field reports received</div></div>
+        <div><div class="v" id="fMesh">0</div><div class="k">Carried in by the mesh</div></div>
+        <div><div class="v" id="fOrders">0</div><div class="k">Orders</div></div>
+      </div>
+      <div style="margin-top:28px" id="devices"></div>
+    </section>
 
-  <section class="wide">
-    <h2>Reports from phones</h2>
-    <p class="hint">Farmer reports uploaded by phones — including ones created on phones without internet and carried here by another phone.</p>
-    <div class="scroll" id="phoneReports"></div>
-  </section>
+    <section id="publish">
+      <div class="head"><span class="num">02</span><h2>Publish <em>an official report</em></h2></div>
+      <p class="lede">Goes to every phone within ~15 s of a connected phone syncing, then hop by hop over Bluetooth to phones without internet. Shown on phones with an “Official” mark.</p>
+      <form id="reportForm" class="form" autocomplete="off">
+        <div class="f s2"><label>Crop</label><select name="cropId" id="crop"></select></div>
+        <div class="f s2"><label>Disease / pest</label><input name="label" id="disease" list="diseaseList" required><datalist id="diseaseList"></datalist></div>
+        <div class="f s2"><label>Severity</label>
+          <div class="seg" id="sev"><button type="button" data-v="low">Low</button><button type="button" data-v="medium" class="on">Medium</button><button type="button" data-v="high">High</button></div>
+        </div>
+        <div class="f s3"><label>Area</label><select id="place"></select></div>
+        <div class="f"><label>Lat</label><input name="lat" id="lat" required></div>
+        <div class="f"><label>Lng</label><input name="lng" id="lng" required></div>
+        <div class="f"><label>Active (h)</label><input name="hours" type="number" value="72" min="1" max="720"></div>
+        <div class="f s6"><label>Advice for farmers</label><textarea name="note" maxlength="280" placeholder="Spray mancozeb 2.5 g/L; avoid evening irrigation for 3 days."></textarea></div>
+        <div class="actions"><button class="go" type="submit">Publish</button><button type="button" id="example">Fill example</button><span class="dim" id="formMsg"></span></div>
+      </form>
+    </section>
 
-  <section>
-    <h2>Mandi prices</h2>
-    <p class="hint">Change a price → online phones sync it, offline phones get it over Bluetooth.</p>
-    <div id="prices"></div>
-    <form id="priceForm" class="row" style="margin-top:10px">
-      <input name="commodity" placeholder="Commodity" required><input name="mandi" placeholder="Mandi" required>
-      <input name="pricePerQuintal" type="number" placeholder="₹/qtl" class="num" required><button>Add</button>
-    </form>
-  </section>
+    <section id="official">
+      <div class="head"><span class="num">03</span><h2>Official <em>reports</em></h2></div>
+      <p class="lede">“End” stops phones from fetching it. Phones that already carry it keep it until it expires — a mesh can’t recall a message.</p>
+      <div class="scroll" id="serverReports"></div>
+    </section>
 
-  <section>
-    <h2>MSP</h2>
-    <p class="hint">Minimum support price per quintal.</p>
-    <div id="msp"></div>
-  </section>
+    <section id="field">
+      <div class="head"><span class="num">04</span><h2>Field <em>reports</em></h2></div>
+      <p class="lede">Farmer reports uploaded by phones. <span class="tag leaf">via mesh</span> marks a report that another phone carried here over Bluetooth. Signatures prove which phone made a report, not that the diagnosis is right.</p>
+      <div class="scroll" id="phoneReports"></div>
+    </section>
 
-  <section>
-    <h2>Orders</h2>
-    <p class="hint">Demo orders placed from phones. Change the status — phones show it after their next sync.</p>
-    <div class="scroll" id="orders"></div>
-  </section>
+    <div class="two" id="market">
+      <section>
+        <div class="head"><span class="num">05</span><h2>Mandi <em>prices</em></h2></div>
+        <p class="lede">Change a price; online phones sync it, offline phones receive it over Bluetooth.</p>
+        <div id="prices"></div>
+        <form id="priceForm" class="inline" style="margin-top:16px" autocomplete="off">
+          <input name="commodity" placeholder="Commodity" required style="width:auto;flex:1">
+          <input name="mandi" placeholder="Mandi" required style="width:auto;flex:1">
+          <input name="pricePerQuintal" type="number" placeholder="₹/qtl" required>
+          <button>Add</button>
+        </form>
+      </section>
+      <section>
+        <div class="head"><span class="num">&nbsp;</span><h2>MSP</h2></div>
+        <p class="lede">Minimum support price per quintal.</p>
+        <div id="msp"></div>
+      </section>
+    </div>
 
-  <section>
-    <h2>Soil reports</h2>
-    <div class="scroll" id="soil"></div>
-  </section>
-</main>
+    <div class="two" id="orders">
+      <section>
+        <div class="head"><span class="num">06</span><h2>Orders</h2></div>
+        <p class="lede">Demo orders from phones. Status changes show in the app within ~15 s.</p>
+        <div class="scroll" id="ordersT"></div>
+      </section>
+      <section>
+        <div class="head"><span class="num">&nbsp;</span><h2>Soil <em>tests</em></h2></div>
+        <p class="lede">Soil Health Card values submitted from phones.</p>
+        <div class="scroll" id="soil"></div>
+      </section>
+    </div>
+  </main>
+</div>
 <div class="toast" id="toast"></div>
+
 <script>
 const CROPS = {
   potato: ['Potato___Late_blight', 'Potato___Early_blight'],
   rice: ['blast', 'brown_spot', 'bacterial_leaf_blight', 'tungro', 'hispa'],
   wheat: ['Yellow Rust', 'Brown Rust', 'Black Rust', 'Leaf Blight', 'Aphid'],
   cotton: ['Bacterial Blight', 'Aphids', 'Army worm', 'Powdery Mildew', 'Target spot'],
-  staple_crops: ['Corn___Common_Rust', 'Sugarcane___Red_Rot'],
+  staple_crops: ['Corn___Common_Rust', 'Corn___Northern_Leaf_Blight', 'Sugarcane_Red Rot'],
 };
 const PLACES = [
   ['Chengalpattu, TN', 12.84, 80.15], ['Chennai, TN', 13.08, 80.27], ['Coimbatore, TN', 11.02, 76.96],
@@ -118,19 +261,26 @@ const PLACES = [
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const pretty = (l) => { const p = String(l).split('___'); const t = (p.length > 1 ? p.slice(1).join(' ') : l).replace(/_/g, ' ').toLowerCase(); return t.charAt(0).toUpperCase() + t.slice(1); };
-const ago = (iso) => { const s = (Date.now() - new Date(iso)) / 1000; return s < 60 ? `${Math.round(s)}s ago` : s < 3600 ? `${Math.round(s / 60)} min ago` : s < 86400 ? `${Math.round(s / 3600)} h ago` : new Date(iso).toLocaleDateString(); };
+const ago = (iso) => { const s = (Date.now() - new Date(iso)) / 1000; return s < 60 ? `${Math.max(0, Math.round(s))}s ago` : s < 3600 ? `${Math.round(s / 60)} min ago` : s < 86400 ? `${Math.round(s / 3600)} h ago` : new Date(iso).toLocaleDateString(); };
 const when = (iso) => new Date(iso).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-const place = (lat, lng) => PLACES.reduce((b, p) => (Math.hypot(p[1] - lat, p[2] - lng) < Math.hypot(b[1] - lat, b[2] - lng) ? p : b))[0];
-function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); }
+const nearest = (lat, lng) => PLACES.reduce((b, p) => (Math.hypot(p[1] - lat, p[2] - lng) < Math.hypot(b[1] - lat, b[2] - lng) ? p : b))[0];
+const sid = (id) => `${esc(String(id).slice(0, 4))}·${esc(String(id).slice(4, 8))}`;
+const sev = (s) => { const n = { low: 1, medium: 2, high: 3 }[s] || 2; return `<span class="sev" title="${esc(s)} severity">${[1, 2, 3].map((i) => `<i class="${i <= n ? 'f' : ''}"></i>`).join('')}</span>`; };
+const isLive = (d) => Date.now() - new Date(d.lastSeen) < 2 * 60000;
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2400); }
 async function api(path, opts = {}) {
   const r = await fetch('/api' + path, { headers: { 'content-type': 'application/json' }, ...opts });
   const body = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(body.error || r.statusText);
   return body;
 }
-const table = (heads, rows) => rows.length ? `<table><tr>${heads.map((h) => `<th>${h}</th>`).join('')}</tr>${rows.join('')}</table>` : '<div class="empty">Nothing yet.</div>';
+const table = (heads, rows) => rows.length
+  ? `<table><tr>${heads.map((h) => `<th>${h}</th>`).join('')}</tr>${rows.join('')}</table>`
+  : '<div class="empty">Nothing here yet.</div>';
 
-// form setup
+// ---- publish form
+let severity = 'medium';
+$('sev').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; severity = b.dataset.v; [...$('sev').children].forEach((x) => x.classList.toggle('on', x === b)); };
 $('crop').innerHTML = Object.keys(CROPS).map((c) => `<option value="${c}">${c.replace('_', ' ')}</option>`).join('');
 const fillDiseases = () => { $('diseaseList').innerHTML = CROPS[$('crop').value].map((d) => `<option value="${esc(d)}">${esc(pretty(d))}</option>`).join(''); };
 $('crop').onchange = fillDiseases; fillDiseases();
@@ -138,15 +288,16 @@ $('place').innerHTML = PLACES.map((p, i) => `<option value="${i}">${p[0]}</optio
 const setPlace = () => { const p = PLACES[$('place').value]; $('lat').value = p[1]; $('lng').value = p[2]; };
 $('place').onchange = setPlace; setPlace();
 $('example').onclick = () => {
-  const f = $('reportForm'); $('crop').value = 'potato'; fillDiseases(); f.label.value = 'Potato___Late_blight'; f.severity.value = 'high';
-  $('place').value = 0; setPlace(); f.note.value = 'Late blight confirmed by KVK in 3 villages. Spray mancozeb 2.5 g/L now; avoid evening irrigation.';
+  const f = $('reportForm'); $('crop').value = 'potato'; fillDiseases(); f.label.value = 'Potato___Late_blight';
+  $('sev').querySelector('[data-v=high]').click(); $('place').value = 0; setPlace();
+  f.note.value = 'Late blight confirmed by KVK in 3 villages. Spray mancozeb 2.5 g/L now; avoid evening irrigation.';
 };
 $('reportForm').onsubmit = async (e) => {
   e.preventDefault();
   const f = Object.fromEntries(new FormData(e.target));
-  f.place = PLACES[$('place').value][0];
-  try { await api('/admin/server-reports', { method: 'POST', body: JSON.stringify(f) }); toast('Published — phones will pick it up shortly'); e.target.note.value = ''; refresh(); }
-  catch (err) { toast('Error: ' + err.message); }
+  f.severity = severity; f.place = PLACES[$('place').value][0];
+  try { await api('/admin/server-reports', { method: 'POST', body: JSON.stringify(f) }); toast('Published — phones pick it up within ~15 s'); e.target.note.value = ''; refresh(); }
+  catch (err) { toast('Not published: ' + err.message); }
 };
 $('priceForm').onsubmit = async (e) => {
   e.preventDefault();
@@ -163,39 +314,68 @@ window.saveMsp = async (id) => {
   try { await api('/admin/msp/' + id, { method: 'PUT', body: JSON.stringify({ pricePerQuintal: $('m' + id).value }) }); toast('MSP saved'); refresh(); }
   catch (err) { toast('Error: ' + err.message); }
 };
-window.setOrder = async (id, status) => { await api('/admin/orders/' + id, { method: 'PUT', body: JSON.stringify({ status }) }); toast('Order ' + status); };
+window.setOrder = async (id, status) => { await api('/admin/orders/' + id, { method: 'PUT', body: JSON.stringify({ status }) }); toast('Order marked ' + status); };
 
-let editing = false; // don't redraw inputs while the user types in them
+let editing = false; // don't redraw inputs while someone types in them
 document.addEventListener('focusin', (e) => { if (e.target.closest('#prices,#msp')) editing = true; });
 document.addEventListener('focusout', (e) => { if (e.target.closest('#prices,#msp')) editing = false; });
+setInterval(() => { $('sClock').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }, 1000);
 
 async function refresh() {
   let d;
-  try { d = await api('/admin/overview'); } catch { $('meta').textContent = 'Server not reachable'; return; }
-  const online = d.devices.filter((x) => Date.now() - new Date(x.lastSeen) < 6 * 60000).length;
-  $('meta').textContent = `${online} phone${online === 1 ? '' : 's'} active · updated ${new Date().toLocaleTimeString()}`;
-  $('devices').innerHTML = table(['Phone', 'Address', 'Last seen', 'Requests'], d.devices.map((x) => {
-    const live = Date.now() - new Date(x.lastSeen) < 6 * 60000;
-    return `<tr><td><b>${esc(x.id.slice(0, 4))}-${esc(x.id.slice(4, 8))}</b> <span class="pill ${live ? '' : 'off'}">${live ? 'active' : 'idle'}</span></td><td>${esc(x.ip)}</td><td>${ago(x.lastSeen)}</td><td>${x.requests}</td></tr>`;
-  }));
+  try { d = await api('/admin/overview'); }
+  catch { $('srvState').textContent = 'unreachable'; $('liveDot').classList.add('off'); return; }
+  $('srvState').textContent = 'running'; $('liveDot').classList.remove('off');
+  if (d.phoneUrls?.length) $('phoneUrl').textContent = d.phoneUrls[0];
+
+  const live = d.devices.filter(isLive);
+  // Carried by the mesh = uploaded by a different phone than the one that made it.
+  const viaMeshOf = (r) => r.uploaded_by && r.uploaded_by !== String(r.source_device_id).slice(0, 16);
+  const meshCarried = d.phoneReports.filter(viaMeshOf);
+  const meshPhones = new Set(meshCarried.map((r) => String(r.source_device_id).slice(0, 16)));
   const now = new Date().toISOString();
-  $('serverReports').innerHTML = table(['Disease', 'Crop', 'Severity', 'Area', 'Note', 'Published', 'Status', ''], d.serverReports.map((r) => {
+  const activeOfficial = d.serverReports.filter((r) => r.expires_at > now);
+
+  $('sPhones').textContent = live.length; $('nOnline').textContent = live.length; $('nMesh').textContent = meshPhones.size;
+  $('sOfficial').textContent = activeOfficial.length; $('fOfficial').textContent = activeOfficial.length;
+  $('sField').textContent = d.phoneReports.length; $('fField').textContent = d.phoneReports.length;
+  $('fMesh').textContent = meshCarried.length; $('fOrders').textContent = d.orders.length;
+
+  $('devices').innerHTML = table(['Phone', 'Address', 'Last seen', 'Requests', ''], d.devices.map((x) =>
+    `<tr><td class="serif">${sid(x.id)}</td><td class="ink2">${esc(x.ip)}</td><td>${ago(x.lastSeen)}</td><td class="dim">${x.requests}</td>
+     <td>${isLive(x) ? '<span class="tag leaf"><span class="live"></span>online</span>' : '<span class="tag">idle</span>'}</td></tr>`));
+
+  $('serverReports').innerHTML = table(['Report', 'Severity', 'Area', 'Advice', 'Published', 'Status', ''], d.serverReports.map((r) => {
     const active = r.expires_at > now;
-    return `<tr><td><b>${esc(pretty(r.label))}</b></td><td>${esc(r.crop_id.replace('_', ' '))}</td><td><span class="pill ${esc(r.severity)}">${esc(r.severity)}</span></td><td>${esc(r.place || place(r.lat, r.lng))}</td><td class="muted">${esc(r.note || '')}</td><td>${when(r.created_at)}</td><td><span class="pill ${active ? '' : 'off'}">${active ? 'until ' + when(r.expires_at) : 'ended'}</span></td><td>${active ? `<button class="danger" onclick="endReport('${r.id}')">End</button>` : ''}</td></tr>`;
+    return `<tr><td><div class="serif">${esc(pretty(r.label))}</div><div class="dim">${esc(r.crop_id.replace('_', ' '))}</div></td>
+      <td>${sev(r.severity)}</td><td class="ink2">${esc(r.place || nearest(r.lat, r.lng))}</td><td class="note">${esc(r.note || '—')}</td>
+      <td class="dim">${when(r.created_at)}</td><td>${active ? `<span class="tag leaf">live · until ${when(r.expires_at)}</span>` : '<span class="tag">ended</span>'}</td>
+      <td>${active ? `<button class="quiet" onclick="endReport('${r.id}')">End</button>` : ''}</td></tr>`;
   }));
-  $('phoneReports').innerHTML = table(['Disease', 'Crop', 'Severity', 'Area', 'Note', 'From phone', 'Signature', 'Observed', 'Uploaded'], d.phoneReports.map((r) =>
-    `<tr><td><b>${esc(pretty(r.label))}</b></td><td>${esc(r.crop_id.replace('_', ' '))}</td><td><span class="pill ${esc(r.severity)}">${esc(r.severity)}</span></td><td>${esc(place(r.lat, r.lng))}</td><td class="muted">${esc(r.note || '')}</td><td>${esc(r.source_device_id.slice(0, 4))}-${esc(r.source_device_id.slice(4, 8))}</td><td>${r.verified ? '<span class="pill">verified</span>' : '<span class="pill off">unchecked</span>'}</td><td>${when(r.observed_at)}</td><td>${ago(r.received_at)}</td></tr>`));
+
+  $('phoneReports').innerHTML = table(['Report', 'Severity', 'Area', 'Farmer note', 'From', 'Observed', 'Arrived'], d.phoneReports.map((r) => {
+    const viaMesh = viaMeshOf(r);
+    return `<tr><td><div class="serif">${esc(pretty(r.label))}</div><div class="dim">${esc(r.crop_id.replace('_', ' '))}</div></td>
+      <td>${sev(r.severity)}</td><td class="ink2">${esc(nearest(r.lat, r.lng))}</td><td class="note">${esc(r.note || '—')}</td>
+      <td>${sid(r.source_device_id)} ${viaMesh ? `<span class="tag leaf" title="Uploaded by phone ${esc(r.uploaded_by)}">via mesh · ${sid(r.uploaded_by)}</span>` : ''} ${r.verified ? '' : '<span class="tag">unsigned</span>'}</td>
+      <td class="dim">${when(r.observed_at)}</td><td class="dim">${ago(r.received_at)}</td></tr>`;
+  }));
+
   if (!editing) {
     $('prices').innerHTML = table(['Commodity', '₹ / quintal', ''], d.prices.map((p) =>
-      `<tr><td><b>${esc(p.commodity)}</b><div class="muted">${esc(p.mandi)} · ${esc(p.price_date)}</div></td><td><div class="row"><input id="p${p.id}" class="num" type="number" value="${p.price_per_quintal}"><button onclick="savePrice(${p.id})">Save</button></div></td><td><button class="danger" title="Remove" onclick="delPrice(${p.id})">✕</button></td></tr>`));
-    $('msp').innerHTML = table(['Crop', 'Season', '₹ / quintal'], d.msp.map((m) =>
-      `<tr><td><b>${esc(m.crop)}</b></td><td>${esc(m.season)} ${m.year}</td><td><div class="row"><input id="m${m.id}" class="num" type="number" value="${m.price_per_quintal}"><button onclick="saveMsp(${m.id})">Save</button></div></td></tr>`));
+      `<tr><td><div class="serif">${esc(p.commodity)}</div><div class="dim">${esc(p.mandi)} · ${esc(p.price_date)}</div></td>
+       <td><div class="inline"><input id="p${p.id}" type="number" value="${p.price_per_quintal}"><button class="quiet" onclick="savePrice(${p.id})">Save</button></div></td>
+       <td><button class="quiet" title="Remove" onclick="delPrice(${p.id})">✕</button></td></tr>`));
+    $('msp').innerHTML = table(['Crop', '₹ / quintal'], d.msp.map((m) =>
+      `<tr><td><div class="serif">${esc(m.crop)}</div><div class="dim">${esc(m.season)} ${m.year}</div></td>
+       <td><div class="inline"><input id="m${m.id}" type="number" value="${m.price_per_quintal}"><button class="quiet" onclick="saveMsp(${m.id})">Save</button></div></td></tr>`));
   }
   const statuses = ['received', 'packed', 'shipped', 'delivered', 'cancelled'];
-  $('orders').innerHTML = table(['Placed', 'Items', 'Total', 'Status'], d.orders.map((o) =>
-    `<tr><td>${when(o.created_at)}</td><td>${esc(o.items || '')}</td><td>₹${Math.round(o.total_amount)}</td><td><select onchange="setOrder('${o.id}', this.value)">${statuses.map((s) => `<option ${s === o.status ? 'selected' : ''}>${s}</option>`).join('')}</select></td></tr>`));
+  $('ordersT').innerHTML = table(['Placed', 'Items', 'Total', 'Status'], d.orders.map((o) =>
+    `<tr><td class="dim">${when(o.created_at)}</td><td>${esc(o.items || '')}</td><td class="serif">₹${Math.round(o.total_amount)}</td>
+     <td><select onchange="setOrder('${o.id}', this.value)">${statuses.map((s) => `<option ${s === o.status ? 'selected' : ''}>${s}</option>`).join('')}</select></td></tr>`));
   $('soil').innerHTML = table(['When', 'N', 'P', 'K', 'pH', 'OC'], d.soilReports.map((s) =>
-    `<tr><td>${when(s.created_at)}</td><td>${s.nitrogen}</td><td>${s.phosphorus}</td><td>${s.potassium}</td><td>${s.ph}</td><td>${s.organic_carbon}</td></tr>`));
+    `<tr><td class="dim">${when(s.created_at)}</td><td>${s.nitrogen}</td><td>${s.phosphorus}</td><td>${s.potassium}</td><td>${s.ph}</td><td>${s.organic_carbon}</td></tr>`));
 }
 refresh();
 setInterval(refresh, 4000);

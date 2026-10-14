@@ -102,3 +102,12 @@ CREATE TABLE IF NOT EXISTS server_reports (
   created_at TEXT NOT NULL,
   expires_at TEXT NOT NULL
 );
+
+-- Phones that have talked to this server (X-AgriEdge-Device header).
+CREATE TABLE IF NOT EXISTS devices (
+  id TEXT PRIMARY KEY,
+  ip TEXT,
+  first_seen TEXT NOT NULL,
+  last_seen TEXT NOT NULL,
+  requests INTEGER NOT NULL DEFAULT 0
+);

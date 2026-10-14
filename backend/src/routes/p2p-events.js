@@ -33,8 +33,9 @@ router.post('/', (req, res) => {
 
   db.prepare(
     `INSERT OR REPLACE INTO p2p_events
-      (packet_id, crop_id, label, confidence, severity, lat, lng, observed_at, expires_at, source_device_id, verified, received_at, detection_id, note)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      (packet_id, crop_id, label, confidence, severity, lat, lng, observed_at, expires_at, source_device_id, verified, received_at, detection_id, note, uploaded_by)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(packet_id) DO UPDATE SET verified = MAX(verified, excluded.verified)`
   ).run(
     packetId,
     cropId,
@@ -49,7 +50,8 @@ router.post('/', (req, res) => {
     verified ? 1 : 0,
     new Date().toISOString(),
     detectionId ?? null,
-    typeof note === 'string' ? note.slice(0, 280) : null
+    typeof note === 'string' ? note.slice(0, 280) : null,
+    req.get('X-AgriEdge-Device') || null
   );
 
   res.status(201).json({ packetId, status: 'received' });
