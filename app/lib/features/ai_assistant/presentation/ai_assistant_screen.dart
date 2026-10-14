@@ -38,7 +38,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
     final messages = ref.watch(chatControllerProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('AI Assistant')),
+      appBar: AppBar(title: const Text('Farm assistant')),
       body: Column(
         children: [
           Expanded(
@@ -50,21 +50,45 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
             ),
           ),
           if (_sending) const LinearProgressIndicator(),
+          SizedBox(
+            height: 48,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              children: [
+                for (final q in const [
+                  'Wheat price today?',
+                  'Any disease near me?',
+                  'Will it rain this week?',
+                  'How to treat late blight?',
+                  'When to sow mustard?',
+                  'MSP for rice',
+                ])
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                    child: ActionChip(
+                      label: Text(q),
+                      onPressed: _sending
+                          ? null
+                          : () {
+                              _controller.text = q;
+                              _send();
+                            },
+                    ),
+                  ),
+              ],
+            ),
+          ),
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(8),
               child: Row(
                 children: [
-                  IconButton(
-                    tooltip: 'Voice input (coming soon)',
-                    icon: const Icon(Icons.mic_none),
-                    onPressed: null,
-                  ),
                   Expanded(
                     child: TextField(
                       controller: _controller,
                       decoration: const InputDecoration(
-                        hintText: 'Ask about crops, pests, MSP...',
+                        hintText: 'Ask about prices, diseases, weather…',
                         border: OutlineInputBorder(),
                         isDense: true,
                       ),
@@ -99,7 +123,7 @@ class _MessageBubble extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 4),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.85),
         decoration: BoxDecoration(
           color: isUser ? theme.colorScheme.primary : theme.colorScheme.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(14),
@@ -111,11 +135,11 @@ class _MessageBubble extends StatelessWidget {
               message.text,
               style: TextStyle(color: isUser ? theme.colorScheme.onPrimary : null),
             ),
-            if (message.isOfflineFallback)
+            if (message.sources.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.only(top: 4),
+                padding: const EdgeInsets.only(top: 6),
                 child: Text(
-                  'Offline answer',
+                  'Source: ${message.sources.join(' · ')}',
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: isUser ? theme.colorScheme.onPrimary.withValues(alpha: 0.7) : theme.hintColor,
                   ),

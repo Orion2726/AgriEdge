@@ -53,6 +53,7 @@ class BackendUrlController extends Notifier<String> {
 /// The persisted override, or null if none (or prefs are unavailable, e.g.
 /// under `flutter test`).
 Future<String?> readPersistedBackendUrl() async {
+  // (empty default = "not configured"; see AppConstants.defaultBackendBaseUrl)
   try {
     final prefs = await SharedPreferences.getInstance();
     final value = prefs.getString(BackendUrlController.prefsKey);

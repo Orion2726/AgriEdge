@@ -41,6 +41,18 @@ router.get('/nearby', (req, res) => {
        WHERE consent_shared = 1 AND lat IS NOT NULL AND lng IS NOT NULL AND created_at >= ?`
     )
     .all(windowStartIso)
+    .concat(
+      // Farmer reports carried over the BLE mesh and uploaded by a gateway
+      // phone. Skip ones that are the same observation as an uploaded
+      // detection (originator uploads both) so nothing is counted twice.
+      db
+        .prepare(
+          `SELECT label, lat, lng, observed_at AS created_at FROM p2p_events
+           WHERE observed_at >= ? AND expires_at >= ?
+             AND (detection_id IS NULL OR detection_id NOT IN (SELECT id FROM detections))`
+        )
+        .all(windowStartIso, new Date().toISOString())
+    )
     .filter((r) => haversineKm(lat, lng, r.lat, r.lng) <= radiusKm);
 
   const buckets = new Map();

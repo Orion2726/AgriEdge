@@ -40,6 +40,7 @@ class P2pGatewaySync {
           'expiresAt': row.expiresAt.toUtc().toIso8601String(),
           'sourceDeviceId': row.sourceDeviceId,
           'detectionId': payload.detectionId,
+          'note': payload.note,
           'verified': row.verified,
         });
         await _store.markSyncedToBackend(row.packetId);

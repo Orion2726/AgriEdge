@@ -1,14 +1,19 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
+import '../data/live_feeds.dart';
+import '../db/db_provider.dart';
+import '../settings/farm_setup.dart';
 import 'aggregation/local_aggregator.dart';
 import 'p2p_log.dart';
 import 'packet/p2p_packet.dart';
 import 'relevance/farmer_profile.dart';
 import 'relevance/relevance_engine.dart';
 import 'security/device_identity.dart';
+import 'snapshot_sync.dart';
 import 'store/p2p_packet_store.dart';
 import 'transport/p2p_transport.dart';
 import 'transport/transport_manager.dart';
@@ -46,6 +51,8 @@ class P2pAlertService {
     required DeviceIdentity deviceIdentity,
     required FarmerProfile farmerProfile,
     LocationLookup? locate,
+    this.snapshots,
+    this.onSnapshotApplied,
     this.resyncInterval = const Duration(seconds: 20),
   })  : _transportManager = transportManager,
         _packetStore = packetStore,
@@ -63,6 +70,13 @@ class P2pAlertService {
   final FarmerProfile _farmerProfile;
   final LocationLookup _locate;
   final Duration resyncInterval;
+
+  /// Everyday data (prices, MSP, weather, news) shared alongside alerts.
+  final SnapshotSync? snapshots;
+  final void Function(SnapshotKind kind)? onSnapshotApplied;
+
+  /// Which snapshot version (by dataAt) each peer device already acked.
+  final Map<String, Map<SnapshotKind, DateTime>> _snapshotsSent = {};
 
   StreamSubscription? _peerDiscoveredSub;
   Timer? _sweepTimer;
@@ -121,6 +135,8 @@ class P2pAlertService {
     required double lat,
     required double lng,
     String? detectionId,
+    String? note,
+    Uint8List? photoJpeg,
     Duration ttl = defaultAlertTtl,
   }) async {
     final now = DateTime.now().toUtc();
@@ -135,35 +151,11 @@ class P2pAlertService {
       expiresAt: now.add(ttl),
       sourceDeviceId: _deviceIdentity.publicKeyHex,
       detectionId: detectionId,
+      note: (note == null || note.trim().isEmpty) ? null : note.trim(),
+      photoJpeg: photoJpeg,
     );
 
-    final nonce = P2pAlertPacket.randomNonce();
-    final payloadMap = payload.toMap();
-    final packetId = await P2pAlertPacket.computePacketId(
-      type: P2pAlertPacketType.diseaseAlert,
-      createdAt: now,
-      nonce: nonce,
-      payload: payloadMap,
-    );
-    final signature = await _deviceIdentity.sign(P2pAlertPacket.signingInput(
-      type: P2pAlertPacketType.diseaseAlert,
-      createdAt: now,
-      nonce: nonce,
-      packetId: packetId,
-      payload: payloadMap,
-    ));
-
-    final packet = P2pAlertPacket(
-      version: 1,
-      type: P2pAlertPacketType.diseaseAlert,
-      ttlHops: 10,
-      createdAt: now,
-      nonce: nonce,
-      packetId: packetId,
-      payload: payloadMap,
-      signature: signature,
-      signerPublicKey: _deviceIdentity.publicKeyBytes,
-    );
+    final packet = await _signed(P2pAlertPacketType.diseaseAlert, payload.toMap(), now, ttlHops: 10);
 
     await _packetStore.insertIfNew(packet, verified: true);
     await _aggregator.recompute();
@@ -172,11 +164,70 @@ class P2pAlertService {
     return packet;
   }
 
+  Future<P2pAlertPacket> _signed(P2pAlertPacketType type, Map<String, Object?> payloadMap, DateTime now,
+      {required int ttlHops}) async {
+    final nonce = P2pAlertPacket.randomNonce();
+    final packetId = await P2pAlertPacket.computePacketId(type: type, createdAt: now, nonce: nonce, payload: payloadMap);
+    final signature = await _deviceIdentity.sign(P2pAlertPacket.signingInput(
+      type: type,
+      createdAt: now,
+      nonce: nonce,
+      packetId: packetId,
+      payload: payloadMap,
+    ));
+    return P2pAlertPacket(
+      version: 1,
+      type: type,
+      ttlHops: ttlHops,
+      createdAt: now,
+      nonce: nonce,
+      packetId: packetId,
+      payload: payloadMap,
+      signature: signature,
+      signerPublicKey: _deviceIdentity.publicKeyBytes,
+    );
+  }
+
+  Future<void> _applySnapshot(P2pAlertPacket packet, String from) async {
+    try {
+      if (!await _verify(packet)) {
+        p2pLog('snapshot REJECT from=$from (bad signature)');
+        return;
+      }
+      final snap = DataSnapshot.fromPayload(packet.payload);
+      // The sender evidently has this version; don't send ours back unless newer.
+      (_snapshotsSent[from] ??= {})[snap.kind] = snap.dataAt;
+      if (await snapshots!.apply(snap, fromDevice: from)) onSnapshotApplied?.call(snap.kind);
+    } catch (e) {
+      p2pLog('snapshot DROP from=$from: $e');
+    }
+  }
+
+  Future<void> _offerSnapshotsTo(PeerId peer, String deviceId) async {
+    final sync = snapshots;
+    if (sync == null) return;
+    final sent = _snapshotsSent[deviceId] ??= {};
+    for (final snap in await sync.current()) {
+      final prev = sent[snap.kind];
+      if (prev != null && !snap.dataAt.isAfter(prev)) continue;
+      final packet = await _signed(
+          P2pAlertPacketType.dataSnapshot, snap.toPayload(_deviceIdentity.publicKeyHex), DateTime.now().toUtc(),
+          ttlHops: 1);
+      await _transportManager.send(peer, packet.encode());
+      sent[snap.kind] = snap.dataAt;
+      p2pLog('snapshot SENT kind=${snap.kind.name} dataAt=${snap.dataAt.toIso8601String()} to=$deviceId');
+    }
+  }
+
   Future<void> _onDatagramReceived(ReceivedDatagram datagram) async {
     final from = datagram.senderDeviceId;
     final P2pAlertPacket packet;
     try {
       packet = P2pAlertPacket.decode(datagram.bytes);
+      if (packet.type == P2pAlertPacketType.dataSnapshot && snapshots != null) {
+        unawaited(_applySnapshot(packet, from)); // acknowledged now, applied after verification
+        return;
+      }
       if (packet.type != P2pAlertPacketType.diseaseAlert) {
         throw FormatException('unsupported packet type ${packet.type}');
       }
@@ -300,6 +351,7 @@ class P2pAlertService {
         await _packetStore.markForwardedTo(row.packetId, key);
         p2pLog('fwd DELIVERED packet=${row.packetId} to=$deviceId ttl=${packet.ttlHops}');
       }
+      await _offerSnapshotsTo(peer, deviceId);
     } catch (e) {
       p2pLog('fwd to $peer failed, will retry on next resync: $e');
     } finally {
@@ -356,5 +408,16 @@ final p2pAlertServiceFutureProvider = FutureProvider<P2pAlertService>((ref) asyn
     relevanceEngine: const RelevanceEngine(),
     deviceIdentity: deviceIdentity,
     farmerProfile: farmerProfile,
+    snapshots: SnapshotSync(ref.watch(appDatabaseProvider), () => ref.read(farmSetupProvider).location),
+    onSnapshotApplied: (kind) {
+      switch (kind) {
+        case SnapshotKind.weather:
+          ref.invalidate(weatherProvider);
+        case SnapshotKind.news:
+          ref.invalidate(newsProvider);
+        case SnapshotKind.prices || SnapshotKind.msp:
+          break; // Drift streams update the screens by themselves.
+      }
+    },
   );
 });

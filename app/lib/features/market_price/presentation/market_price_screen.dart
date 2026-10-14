@@ -1,9 +1,11 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../shared/widgets/last_synced_label.dart';
+import '../../../shared/widgets/ui.dart';
 import '../../msp/data/msp_repository.dart';
 import '../data/market_price_repository.dart';
 import '../domain/market_price_entry.dart';
@@ -20,13 +22,27 @@ class MarketPriceScreen extends ConsumerWidget {
     final currency = NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 0);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Market Price')),
+      appBar: AppBar(
+        title: const Text('Market'),
+        actions: [
+          TextButton.icon(
+            onPressed: () => context.push('/msp'),
+            icon: const Icon(Icons.price_check),
+            label: const Text('MSP'),
+          ),
+        ],
+      ),
       body: RefreshIndicator(
         onRefresh: () => ref.read(marketPriceRepositoryProvider).refresh(),
         child: prices.when(
           data: (entries) {
             if (entries.isEmpty) {
-              return const Center(child: Text('No prices yet. Pull to refresh.'));
+              return ListView(children: const [
+                StateMessage(
+                  icon: Icons.storefront_outlined,
+                  text: 'No prices saved yet. Pull down to load them from the AgriEdge server.',
+                ),
+              ]);
             }
             final mspByCrop = {
               for (final m in mspRates.value ?? []) m.crop: m,
@@ -38,10 +54,23 @@ class MarketPriceScreen extends ConsumerWidget {
                 if (index == 0) {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 8),
-                    child: lastSynced.when(
-                      data: (at) => LastSyncedLabel(lastSyncedAt: at),
-                      loading: () => const SizedBox.shrink(),
-                      error: (_, _) => const SizedBox.shrink(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SourceTag(
+                          text: 'Sample prices from the AgriEdge demo server — not live mandi data',
+                          warning: true,
+                        ),
+                        const SizedBox(height: 6),
+                        lastSynced.when(
+                          data: (at) => LastSyncedLabel(lastSyncedAt: at),
+                          loading: () => const SizedBox.shrink(),
+                          error: (_, _) => const SizedBox.shrink(),
+                        ),
+                        const SizedBox(height: 4),
+                        Text('Tap a crop to see the 7-day price outlook.',
+                            style: Theme.of(context).textTheme.bodySmall),
+                      ],
                     ),
                   );
                 }

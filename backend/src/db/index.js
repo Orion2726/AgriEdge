@@ -14,11 +14,17 @@ const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
 db.exec(schema);
 
 // CREATE TABLE IF NOT EXISTS above only applies to fresh databases — patch
-// existing local dev DBs that predate the crop_id column.
-try {
-  db.exec('ALTER TABLE detections ADD COLUMN crop_id TEXT');
-} catch (_) {
-  // column already exists
+// existing local dev DBs that predate newer columns.
+for (const ddl of [
+  'ALTER TABLE detections ADD COLUMN crop_id TEXT',
+  'ALTER TABLE p2p_events ADD COLUMN detection_id TEXT',
+  'ALTER TABLE p2p_events ADD COLUMN note TEXT',
+]) {
+  try {
+    db.exec(ddl);
+  } catch (_) {
+    // column already exists
+  }
 }
 
 /**

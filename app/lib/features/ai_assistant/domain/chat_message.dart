@@ -4,12 +4,14 @@ class ChatMessage {
     required this.role,
     required this.text,
     required this.timestamp,
-    this.isOfflineFallback = false,
+    this.sources = const [],
   });
 
   final String id;
   final String role; // 'user' | 'assistant'
   final String text;
   final DateTime timestamp;
-  final bool isOfflineFallback;
+
+  /// Where the answer's facts came from (shown under the answer).
+  final List<String> sources;
 }

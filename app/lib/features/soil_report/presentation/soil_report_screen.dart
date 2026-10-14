@@ -75,16 +75,26 @@ class _SoilReportScreenState extends ConsumerState<SoilReportScreen> {
     final history = ref.watch(soilReportsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Soil Test Report')),
+      appBar: AppBar(title: const Text('Soil test report')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          Text('Copy the numbers from your Soil Health Card.', style: Theme.of(context).textTheme.bodyMedium),
+          const SizedBox(height: 8),
           OutlinedButton.icon(
-            onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Scan-to-fill from a physical SHC report is coming soon — enter values manually for now.')),
-            ),
-            icon: const Icon(Icons.document_scanner_outlined),
-            label: const Text('Scan physical report (coming soon)'),
+            // Typical loamy-soil Soil Health Card values, for a quick demo.
+            onPressed: () {
+              _nitrogen.text = '280';
+              _phosphorus.text = '45';
+              _potassium.text = '210';
+              _ph.text = '6.8';
+              _organicCarbon.text = '0.6';
+              _rainfall.text = '900';
+              _temperature.text = '27';
+              _humidity.text = '70';
+            },
+            icon: const Icon(Icons.auto_fix_high),
+            label: const Text('Fill example values'),
           ),
           const SizedBox(height: 16),
           Form(

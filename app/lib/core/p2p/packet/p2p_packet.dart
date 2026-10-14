@@ -8,7 +8,12 @@ import 'package:cryptography/cryptography.dart';
 /// the value space is reserved so price/MSP/soil can reuse this transport
 /// later without a wire-format change (see docs/P2P_ALERT_PROTOCOL.md §3).
 enum P2pAlertPacketType {
-  diseaseAlert(1);
+  diseaseAlert(1),
+
+  /// Latest prices / MSP / weather / news held by the sender — see
+  /// core/p2p/snapshot_sync.dart. Applied by the receiver only if newer
+  /// than what it already has; never stored as an alert.
+  dataSnapshot(2);
 
   const P2pAlertPacketType(this.wireValue);
   final int wireValue;
@@ -37,7 +42,13 @@ class DiseaseAlertPayload {
     required this.expiresAt,
     required this.sourceDeviceId,
     this.detectionId,
+    this.note,
+    this.photoJpeg,
   });
+
+  /// Max lengths that keep a packet small enough for a quick BLE transfer.
+  static const maxNoteLength = 280;
+  static const maxPhotoBytes = 14 * 1024;
 
   final String cropId;
   final String label;
@@ -66,6 +77,12 @@ class DiseaseAlertPayload {
   /// (older packets and their deterministic ids are unaffected).
   final String? detectionId;
 
+  /// Farmer's own words about what they saw (optional, ≤ [maxNoteLength]).
+  final String? note;
+
+  /// Small JPEG thumbnail of the affected plant (optional, ≤ [maxPhotoBytes]).
+  final Uint8List? photoJpeg;
+
   double get lat => latE6 / 1e6;
   double get lng => lngE6 / 1e6;
 
@@ -80,6 +97,8 @@ class DiseaseAlertPayload {
         'expiresAt': expiresAt.toUtc().millisecondsSinceEpoch,
         'sourceDeviceId': sourceDeviceId,
         if (detectionId != null) 'detectionId': detectionId,
+        if (note != null) 'note': note,
+        if (photoJpeg != null) 'photo': photoJpeg,
       };
 
   static DiseaseAlertPayload fromMap(Map<Object?, Object?> map) {
@@ -94,8 +113,20 @@ class DiseaseAlertPayload {
       expiresAt: DateTime.fromMillisecondsSinceEpoch(map['expiresAt'] as int, isUtc: true),
       sourceDeviceId: map['sourceDeviceId'] as String,
       detectionId: map['detectionId'] as String?,
+      note: _limitedNote(map['note']),
+      photoJpeg: _limitedPhoto(map['photo']),
     );
   }
+}
+
+String? _limitedNote(Object? v) {
+  if (v is! String) return null;
+  return v.length > DiseaseAlertPayload.maxNoteLength ? v.substring(0, DiseaseAlertPayload.maxNoteLength) : v;
+}
+
+Uint8List? _limitedPhoto(Object? v) {
+  if (v is! List || v.length > DiseaseAlertPayload.maxPhotoBytes) return null;
+  return Uint8List.fromList(v.cast<int>());
 }
 
 /// Wire packet. Deviates from docs/P2P_ALERT_PROTOCOL.md §3's exact

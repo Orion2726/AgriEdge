@@ -21,6 +21,8 @@ router.post('/', (req, res) => {
     expiresAt,
     sourceDeviceId,
     verified,
+    detectionId,
+    note,
   } = req.body;
 
   if (!packetId || !cropId || !label || confidence == null || lat == null || lng == null) {
@@ -31,8 +33,8 @@ router.post('/', (req, res) => {
 
   db.prepare(
     `INSERT OR REPLACE INTO p2p_events
-      (packet_id, crop_id, label, confidence, severity, lat, lng, observed_at, expires_at, source_device_id, verified, received_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      (packet_id, crop_id, label, confidence, severity, lat, lng, observed_at, expires_at, source_device_id, verified, received_at, detection_id, note)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     packetId,
     cropId,
@@ -45,7 +47,9 @@ router.post('/', (req, res) => {
     expiresAt ?? new Date(Date.now() + 72 * 3600000).toISOString(),
     sourceDeviceId ?? 'unknown',
     verified ? 1 : 0,
-    new Date().toISOString()
+    new Date().toISOString(),
+    detectionId ?? null,
+    typeof note === 'string' ? note.slice(0, 280) : null
   );
 
   res.status(201).json({ packetId, status: 'received' });

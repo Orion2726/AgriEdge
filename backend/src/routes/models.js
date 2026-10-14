@@ -5,6 +5,14 @@ const path = require('path');
 const router = express.Router();
 const MODELS_ROOT = path.join(__dirname, '..', '..', 'assets', 'models', 'disease');
 
+// Models dropped into backend/assets/models/ take priority; otherwise serve
+// the trained models the app itself bundles (app/assets/ml/), so the app's
+// "Download" actions work out of the box instead of returning 404.
+const APP_ML_ROOT = path.join(__dirname, '..', '..', '..', 'app', 'assets', 'ml');
+function withFallback(primaryPath, fallbackPath) {
+  return fs.existsSync(primaryPath) ? primaryPath : fallbackPath;
+}
+
 // Crop id comes from the URL — restrict to a safe charset before ever
 // touching the filesystem, so a request can't path-traverse out of
 // assets/models/disease/ (e.g. cropId="../../..").
@@ -25,7 +33,7 @@ function cropDir(cropId) {
 router.get('/disease/:cropId', (req, res) => {
   const dir = cropDir(req.params.cropId);
   if (!dir) return res.status(400).json({ error: 'Invalid cropId' });
-  const modelPath = path.join(dir, 'model.tflite');
+  const modelPath = withFallback(path.join(dir, 'model.tflite'), path.join(APP_ML_ROOT, 'disease', req.params.cropId, 'model.tflite'));
   if (!fs.existsSync(modelPath)) {
     return res.status(404).json({
       error: `No trained model uploaded yet for "${req.params.cropId}". Drop model.tflite into backend/assets/models/disease/${req.params.cropId}/.`,
@@ -37,7 +45,7 @@ router.get('/disease/:cropId', (req, res) => {
 router.get('/disease/:cropId/manifest', (req, res) => {
   const dir = cropDir(req.params.cropId);
   if (!dir) return res.status(400).json({ error: 'Invalid cropId' });
-  const manifestPath = path.join(dir, 'manifest.json');
+  const manifestPath = withFallback(path.join(dir, 'manifest.json'), path.join(APP_ML_ROOT, 'disease', req.params.cropId, 'manifest.json'));
   if (fs.existsSync(manifestPath)) {
     return res.sendFile(manifestPath);
   }
@@ -52,7 +60,7 @@ router.get('/disease/:cropId/manifest', (req, res) => {
 router.get('/disease/:cropId/labels', (req, res) => {
   const dir = cropDir(req.params.cropId);
   if (!dir) return res.status(400).json({ error: 'Invalid cropId' });
-  const labelsPath = path.join(dir, 'labels.txt');
+  const labelsPath = withFallback(path.join(dir, 'labels.txt'), path.join(APP_ML_ROOT, 'disease', req.params.cropId, 'labels.txt'));
   if (!fs.existsSync(labelsPath)) {
     return res.status(404).json({ error: `No labels.txt for "${req.params.cropId}".` });
   }
@@ -65,7 +73,7 @@ router.get('/disease/:cropId/labels', (req, res) => {
 const CROP_REC_DIR = path.join(__dirname, '..', '..', 'assets', 'models', 'crop-recommendation');
 
 router.get('/crop-recommendation', (req, res) => {
-  const modelPath = path.join(CROP_REC_DIR, 'model.tflite');
+  const modelPath = withFallback(path.join(CROP_REC_DIR, 'model.tflite'), path.join(APP_ML_ROOT, 'crop_recommendation', 'model.tflite'));
   if (!fs.existsSync(modelPath)) {
     return res.status(404).json({
       error: 'No trained model uploaded yet. Drop model.tflite into backend/assets/models/crop-recommendation/.',
@@ -75,7 +83,7 @@ router.get('/crop-recommendation', (req, res) => {
 });
 
 router.get('/crop-recommendation/manifest', (req, res) => {
-  const manifestPath = path.join(CROP_REC_DIR, 'manifest.json');
+  const manifestPath = withFallback(path.join(CROP_REC_DIR, 'manifest.json'), path.join(APP_ML_ROOT, 'crop_recommendation', 'manifest.json'));
   if (fs.existsSync(manifestPath)) {
     return res.sendFile(manifestPath);
   }
@@ -83,7 +91,7 @@ router.get('/crop-recommendation/manifest', (req, res) => {
 });
 
 router.get('/crop-recommendation/labels', (req, res) => {
-  const labelsPath = path.join(CROP_REC_DIR, 'labels.txt');
+  const labelsPath = withFallback(path.join(CROP_REC_DIR, 'labels.txt'), path.join(APP_ML_ROOT, 'crop_recommendation', 'labels.txt'));
   if (!fs.existsSync(labelsPath)) {
     return res.status(404).json({ error: 'No labels.txt for crop-recommendation.' });
   }
@@ -95,7 +103,7 @@ router.get('/crop-recommendation/labels', (req, res) => {
 const PRICE_FORECAST_DIR = path.join(__dirname, '..', '..', 'assets', 'models', 'price-forecast');
 
 router.get('/price-forecast', (req, res) => {
-  const modelPath = path.join(PRICE_FORECAST_DIR, 'model.tflite');
+  const modelPath = withFallback(path.join(PRICE_FORECAST_DIR, 'model.tflite'), path.join(APP_ML_ROOT, 'price_forecast', 'model.tflite'));
   if (!fs.existsSync(modelPath)) {
     return res.status(404).json({
       error: 'No trained model uploaded yet. Drop model.tflite into backend/assets/models/price-forecast/.',
@@ -105,7 +113,7 @@ router.get('/price-forecast', (req, res) => {
 });
 
 router.get('/price-forecast/manifest', (req, res) => {
-  const manifestPath = path.join(PRICE_FORECAST_DIR, 'manifest.json');
+  const manifestPath = withFallback(path.join(PRICE_FORECAST_DIR, 'manifest.json'), path.join(APP_ML_ROOT, 'price_forecast', 'manifest.json'));
   if (fs.existsSync(manifestPath)) {
     return res.sendFile(manifestPath);
   }
@@ -113,7 +121,7 @@ router.get('/price-forecast/manifest', (req, res) => {
 });
 
 router.get('/price-forecast/labels', (req, res) => {
-  const labelsPath = path.join(PRICE_FORECAST_DIR, 'labels.txt');
+  const labelsPath = withFallback(path.join(PRICE_FORECAST_DIR, 'labels.txt'), path.join(APP_ML_ROOT, 'price_forecast', 'labels.txt'));
   if (!fs.existsSync(labelsPath)) {
     return res.status(404).json({ error: 'No labels.txt for price-forecast.' });
   }
@@ -121,7 +129,7 @@ router.get('/price-forecast/labels', (req, res) => {
 });
 
 router.get('/price-forecast/volatility-bands', (req, res) => {
-  const bandsPath = path.join(PRICE_FORECAST_DIR, 'volatility_bands.json');
+  const bandsPath = withFallback(path.join(PRICE_FORECAST_DIR, 'volatility_bands.json'), path.join(APP_ML_ROOT, 'price_forecast', 'volatility_bands.json'));
   if (!fs.existsSync(bandsPath)) {
     return res.status(404).json({ error: 'No volatility_bands.json for price-forecast.' });
   }

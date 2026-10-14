@@ -30,10 +30,10 @@ class BleFraming {
   static const firstHeaderLength = baseHeaderLength + 4 + senderIdLength;
   static const senderIdLength = 8;
 
-  /// Hard cap on a reassembled datagram. Real alert packets are ~300 bytes;
-  /// anything near this is malformed or hostile and is rejected before any
-  /// buffer is allocated for it.
-  static const maxDatagramLength = 16 * 1024;
+  /// Hard cap on a reassembled datagram. Alert packets are ~0.4 KB, or up
+  /// to ~15 KB with an attached photo thumbnail; anything bigger is
+  /// malformed or hostile and is rejected before any buffer is allocated.
+  static const maxDatagramLength = 20 * 1024;
 
   /// Splits [datagram] into chunks no larger than [maxChunkLength] bytes
   /// (the negotiated ATT write length).

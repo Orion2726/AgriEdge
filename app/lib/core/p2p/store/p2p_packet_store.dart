@@ -57,6 +57,8 @@ class P2pPacketStore {
   List<String> forwardedTo(P2pPacket row) =>
       (jsonDecode(row.forwardedToPeerIdsJson) as List).cast<String>();
 
+  static DiseaseAlertPayload payloadOf(P2pPacket row) => DiseaseAlertPayload.fromMap(decodeRow(row).payload);
+
   static P2pAlertPacket decodeRow(P2pPacket row) =>
       P2pAlertPacket.decode(Uint8List.fromList(row.rawBytes));
 

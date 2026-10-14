@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/ml/crop_catalog.dart';
 import '../../../core/p2p/p2p_alert_service.dart';
+import '../../../core/settings/farm_setup.dart';
 import '../data/disease_detection_repository.dart';
 import '../data/treatment_knowledge_base.dart';
 import '../domain/disease_detection_entry.dart';
@@ -65,7 +66,10 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
         lat = position.latitude;
         lng = position.longitude;
       } catch (_) {
-        // Location unavailable — still save the detection, just without a geotag.
+        // No GPS fix — fall back to the farm location chosen in setup.
+        final farm = ref.read(farmSetupProvider).location;
+        lat = farm?.lat;
+        lng = farm?.lng;
       }
     }
     final entry = await ref.read(diseaseDetectionRepositoryProvider).recordDetection(
@@ -111,7 +115,11 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Detection saved. It will sync when you\'re online.')),
+      SnackBar(
+        content: Text(_consentShared && lat != null
+            ? 'Saved. Shared with nearby phones when they are in range, and uploaded when online.'
+            : 'Saved on this phone. It will upload when you are online.'),
+      ),
     );
     setState(() {
       _image = null;

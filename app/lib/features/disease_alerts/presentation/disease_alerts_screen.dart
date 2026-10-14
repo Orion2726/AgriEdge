@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -11,12 +12,14 @@ import '../../../core/ml/crop_catalog.dart';
 import '../../../core/p2p/p2p_alert_service.dart';
 import '../../../core/p2p/relevance/farmer_profile.dart';
 import '../../../core/p2p/security/device_identity.dart';
+import '../../../core/p2p/snapshot_sync.dart';
 import '../../../core/p2p/store/p2p_packet_store.dart';
 import '../../../core/p2p/transport/p2p_transport.dart';
 import '../../../core/sync/sync_manager.dart';
 import '../../../shared/disease_label.dart';
 import '../data/disease_alerts_repository.dart';
 import '../domain/nearby_alert.dart';
+import 'share_report_sheet.dart';
 
 /// Point-in-time view of the nearby-device (BLE) session for the UI.
 class P2pSessionSnapshot {
@@ -172,7 +175,7 @@ class _DiseaseAlertsScreenState extends ConsumerState<DiseaseAlertsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Nearby Disease Alerts'),
+        title: const Text('Nearby'),
         actions: [
           if (kDebugMode)
             IconButton(
@@ -182,16 +185,22 @@ class _DiseaseAlertsScreenState extends ConsumerState<DiseaseAlertsScreen> {
             ),
         ],
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => showShareReportSheet(context, ref),
+        icon: const Icon(Icons.add_comment_outlined),
+        label: const Text('Share a report'),
+      ),
       body: SafeArea(
         top: false,
         child: RefreshIndicator(
           onRefresh: _refreshNetworkAlerts,
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
             children: [
               _P2pStatusCard(session: session, onRetry: _startP2p),
               const SizedBox(height: 8),
               const _MyCropsCard(),
+              const _SharedDataCard(),
               if (_networkError != null)
                 _InlineNotice(
                   icon: Icons.cloud_off,
@@ -260,16 +269,16 @@ class _P2pStatusCard extends StatelessWidget {
       P2pTransportState.running => (
           Icons.bluetooth_searching,
           snap!.peers.isEmpty
-              ? 'Looking for nearby AgriEdge phones…'
-              : '${snap.peers.length} nearby phone${snap.peers.length == 1 ? '' : 's'} in range',
+              ? 'Waiting for a nearby phone…'
+              : 'Sharing with ${snap.peers.length} nearby phone${snap.peers.length == 1 ? '' : 's'}',
           false
         ),
       P2pTransportState.starting || P2pTransportState.stopped => (
           Icons.bluetooth,
-          'Starting nearby-device sharing…',
+          'Starting nearby sharing…',
           false
         ),
-      P2pTransportState.bluetoothOff => (Icons.bluetooth_disabled, 'Bluetooth is off', true),
+      P2pTransportState.bluetoothOff => (Icons.bluetooth_disabled, 'Turn on Bluetooth to share with nearby phones', true),
       P2pTransportState.permissionDenied => (Icons.block, 'Nearby-devices permission needed', true),
       P2pTransportState.unsupported => (Icons.bluetooth_disabled, 'Not supported on this phone', true),
       P2pTransportState.failed => (Icons.error_outline, 'Nearby-device sharing stopped', true),
@@ -299,7 +308,7 @@ class _P2pStatusCard extends StatelessWidget {
                   child: Text(title,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(color: foreground)),
                 ),
-                if (problem && state != P2pTransportState.unsupported)
+                if (problem && state != P2pTransportState.unsupported && state != P2pTransportState.bluetoothOff)
                   TextButton(
                     onPressed: onRetry,
                     style: TextButton.styleFrom(foregroundColor: foreground),
@@ -307,7 +316,13 @@ class _P2pStatusCard extends StatelessWidget {
                   ),
               ],
             ),
-            if (problem && snap?.detail != null)
+            if (state == P2pTransportState.bluetoothOff)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text('Sharing starts again by itself once Bluetooth is on. Reports stay saved on this phone.',
+                    style: TextStyle(color: foreground)),
+              )
+            else if (problem && snap?.detail != null)
               Padding(
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(snap!.detail!, style: TextStyle(color: foreground)),
@@ -355,7 +370,7 @@ class _PeerRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final name = peer.deviceId == null ? 'Identifying…' : 'Phone ${formatDeviceId(peer.deviceId!)}';
-    final traffic = 'sent ${peer.sent} · received ${peer.received} · seen ${_ago(peer.lastSeen)}';
+    final traffic = 'in range ${_ago(peer.lastSeen)} · shared ${peer.sent} · got ${peer.received}';
     return Padding(
       padding: const EdgeInsets.only(top: 6),
       child: Row(
@@ -371,7 +386,7 @@ class _PeerRow extends StatelessWidget {
                 Text(traffic, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: color)),
                 if (peer.lastError != null)
                   Text(
-                    'Last exchange failed — retrying automatically',
+                    'Connection dropped — trying again automatically',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(color: color),
                   ),
               ],
@@ -487,26 +502,67 @@ class _ReportTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final payload = P2pPacketStore.payloadOf(row);
     final source = DeviceIdentity.shortIdOfPublicKeyHex(row.sourceDeviceId);
     final mine = source == localDeviceId;
     final from = row.receivedFromPeerId?.replaceFirst('dev:', '');
+    final reachedPhones = (jsonDecode(row.forwardedToPeerIdsJson) as List).where((k) => k != row.receivedFromPeerId).length;
     final origin = mine
         ? 'Your report'
-        : 'Reported by phone ${formatDeviceId(source)}'
-            '${from != null && from != source ? ', relayed by ${formatDeviceId(from)}' : ''}';
+        : 'Farmer report from phone ${formatDeviceId(source)}'
+            '${from != null && from != source ? ', passed on by ${formatDeviceId(from)}' : ''}';
+    final details = [
+      row.cropId.replaceAll('_', ' '),
+      '${row.severity} severity',
+      if (row.confidence > 0) '${(row.confidence * 100).toStringAsFixed(0)}% model confidence',
+      DateFormat.MMMd().add_jm().format(row.observedAt.toLocal()),
+    ].join(' · ');
+    final states = <(IconData, String)>[
+      if (mine) (Icons.save_outlined, 'Saved on this phone') else (Icons.move_to_inbox_outlined, 'Carried — passed on to phones you meet'),
+      if (reachedPhones > 0) (Icons.check_circle_outline, 'Received by $reachedPhones nearby phone${reachedPhones == 1 ? '' : 's'}')
+      else (Icons.schedule, 'Waiting for a nearby phone'),
+      if (row.syncedToBackend) (Icons.cloud_done_outlined, 'Uploaded to server') else (Icons.cloud_upload_outlined, 'Uploads when online'),
+    ];
     return Card(
-      child: ListTile(
-        leading: Icon(mine ? Icons.campaign_outlined : Icons.bluetooth, color: theme.colorScheme.primary),
-        title: Text(prettyDiseaseLabel(row.label)),
-        subtitle: Text(
-          '$origin\n'
-          '${row.cropId.replaceAll('_', ' ')} · ${row.severity} severity · '
-          '${(row.confidence * 100).toStringAsFixed(0)}% · ${DateFormat.MMMd().add_jm().format(row.observedAt.toLocal())}',
-        ),
-        isThreeLine: true,
-        trailing: row.verified
-            ? Tooltip(message: 'Signature verified', child: Icon(Icons.verified, color: theme.colorScheme.primary))
-            : Tooltip(message: 'Unverified — signature missing or invalid', child: Icon(Icons.gpp_maybe, color: theme.colorScheme.error)),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          if (payload.photoJpeg != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.memory(payload.photoJpeg!, width: 72, height: 72, fit: BoxFit.cover, gaplessPlayback: true),
+              ),
+            ),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                Expanded(child: Text(prettyDiseaseLabel(row.label), style: theme.textTheme.titleMedium)),
+                Tooltip(
+                  message: row.verified ? 'Signed by the reporting phone' : 'Signature not checked yet or invalid',
+                  child: Icon(row.verified ? Icons.verified : Icons.gpp_maybe,
+                      size: 20, color: row.verified ? theme.colorScheme.primary : theme.colorScheme.error),
+                ),
+              ]),
+              Text(origin, style: theme.textTheme.bodySmall),
+              Text(details, style: theme.textTheme.bodySmall),
+              if (payload.note != null) ...[
+                const SizedBox(height: 6),
+                Text('“${payload.note}”', style: theme.textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic)),
+              ],
+              const SizedBox(height: 6),
+              Wrap(spacing: 10, runSpacing: 2, children: [
+                for (final (icon, text) in states)
+                  Row(mainAxisSize: MainAxisSize.min, children: [
+                    Icon(icon, size: 14, color: theme.colorScheme.onSurfaceVariant),
+                    const SizedBox(width: 3),
+                    Text(text, style: theme.textTheme.labelSmall),
+                  ]),
+              ]),
+            ]),
+          ),
+        ]),
       ),
     );
   }
@@ -515,4 +571,52 @@ class _ReportTile extends StatelessWidget {
 /// "a1b2c3d4e5f60708" → "a1b2-c3d4", short enough to read aloud between
 /// two farmers comparing phones.
 String formatDeviceId(String id) =>
-    id.length >= 8 ? '${id.substring(0, 4)}-${id.substring(4, 8)}' : id;
+    id.length >= 8 ? '${id.substring(0, 4)}\u2011${id.substring(4, 8)}' : id; // non-breaking hyphen
+
+final _receivedSnapshotsProvider = FutureProvider.autoDispose((ref) async {
+  ref.watch(p2pSessionSnapshotProvider); // refresh as the session changes
+  return SnapshotSync.received();
+});
+
+/// What everyday data reached this phone from a neighbour.
+class _SharedDataCard extends ConsumerWidget {
+  const _SharedDataCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final got = ref.watch(_receivedSnapshotsProvider).value ?? const {};
+    const names = {
+      SnapshotKind.prices: 'Mandi prices',
+      SnapshotKind.msp: 'MSP',
+      SnapshotKind.weather: 'Weather forecast',
+      SnapshotKind.news: 'Farm news',
+    };
+    return Card(
+      child: ExpansionTile(
+        shape: const Border(),
+        leading: const Icon(Icons.swap_horiz),
+        title: const Text('Shared data'),
+        subtitle: Text(got.isEmpty
+            ? 'Prices, MSP, weather and news are swapped with nearby phones'
+            : 'Got ${got.length} update${got.length == 1 ? '' : 's'} from nearby phones'),
+        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        children: [
+          for (final k in SnapshotKind.values)
+            ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              title: Text(names[k]!),
+              subtitle: Text(got[k] == null
+                  ? 'Your own copy is used (or none yet)'
+                  : 'From ${got[k]!.from} · data from ${DateFormat.MMMd().add_jm().format(got[k]!.dataAt.toLocal())}'),
+            ),
+          Text(
+            'A phone only takes data that is newer than its own copy. The treatment guide, crop calendar '
+            'and FAQ are built into the app, so every phone already has them.',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
+    );
+  }
+}

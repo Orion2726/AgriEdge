@@ -25,6 +25,9 @@ class SyncIncompleteException implements Exception {
 String describeSyncError(Object error) {
   if (error is SyncIncompleteException) return error.toString();
   if (error is DioException) {
+    if (error.requestOptions.baseUrl.isEmpty) {
+      return 'No AgriEdge server set — add one in More → Sync & server';
+    }
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.connectionError:

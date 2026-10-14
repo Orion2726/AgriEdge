@@ -9,6 +9,6 @@ void main() {
     await tester.pump();
 
     expect(find.text('AgriEdge'), findsOneWidget);
-    expect(find.text('Market Price'), findsOneWidget);
+    expect(find.text('Market'), findsOneWidget);
   });
 }

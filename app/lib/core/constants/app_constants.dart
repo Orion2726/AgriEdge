@@ -3,12 +3,11 @@
 class AppConstants {
   AppConstants._();
 
-  /// The local Node dev server described in backend/README.md — there is no
-  /// deployment. Phones must be given the dev machine's LAN address at build
-  /// time (`--dart-define=AGRIEDGE_BACKEND_URL=http://192.168.x.y:4001`) or in
-  /// Sync & Data; `localhost` only works for desktop/simulator runs.
-  static const String defaultBackendBaseUrl =
-      String.fromEnvironment('AGRIEDGE_BACKEND_URL', defaultValue: 'http://localhost:4001');
+  /// The local Node server described in backend/README.md — there is no
+  /// public deployment. Empty by default (a shared APK must not point at one
+  /// developer's laptop); set it in More → Sync & server, or at build time
+  /// with `--dart-define=AGRIEDGE_BACKEND_URL=http://192.168.x.y:4001`.
+  static const String defaultBackendBaseUrl = String.fromEnvironment('AGRIEDGE_BACKEND_URL');
 
   static const String treatmentsAssetPath =
       'assets/knowledge_base/treatments.json';
