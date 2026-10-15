@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -42,6 +44,8 @@ class P2pGatewaySync {
           'detectionId': payload.detectionId,
           'note': payload.note,
           'verified': row.verified,
+          // Compressed JPEG of the plant, so the control panel can show it.
+          if (payload.photoJpeg != null) 'photo': base64Encode(payload.photoJpeg!),
         });
         await _store.markSyncedToBackend(row.packetId);
       } catch (e) {

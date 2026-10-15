@@ -31,13 +31,19 @@ final _diseaseLabelsProvider = FutureProvider.family<List<String>, String>((ref,
       .toList();
 });
 
-/// Shrinks a photo to a small JPEG thumbnail that fits in one quick BLE
-/// transfer (≤ DiseaseAlertPayload.maxPhotoBytes).
-Uint8List? makeShareThumbnail(Uint8List bytes) {
+/// Compresses a photo to a JPEG that is still clear enough to judge the
+/// disease from, yet fits in one Bluetooth message
+/// (≤ DiseaseAlertPayload.maxPhotoBytes): the largest size on the ladder
+/// that fits wins. Typically 800 px wide, 40–90 KB.
+Uint8List? makeSharePhoto(Uint8List bytes) {
   final decoded = img.decodeImage(bytes);
   if (decoded == null) return null;
-  for (final (width, quality) in [(240, 60), (200, 50), (160, 45), (120, 40)]) {
-    final out = img.encodeJpg(img.copyResize(decoded, width: width), quality: quality);
+  final oriented = img.bakeOrientation(decoded);
+  for (final (side, quality) in [(1024, 72), (800, 70), (640, 65), (512, 60), (400, 55), (320, 50), (240, 45)]) {
+    final resized = oriented.width >= oriented.height
+        ? img.copyResize(oriented, width: side < oriented.width ? side : oriented.width)
+        : img.copyResize(oriented, height: side < oriented.height ? side : oriented.height);
+    final out = img.encodeJpg(resized, quality: quality);
     if (out.length <= DiseaseAlertPayload.maxPhotoBytes) return out;
   }
   return null;
@@ -67,7 +73,7 @@ class _ShareReportSheetState extends ConsumerState<_ShareReportSheet> {
   Future<void> _pick(ImageSource source) async {
     final picked = await ImagePicker().pickImage(source: source, maxWidth: 1024);
     if (picked == null) return;
-    final thumb = makeShareThumbnail(await picked.readAsBytes());
+    final thumb = makeSharePhoto(await picked.readAsBytes());
     setState(() {
       _photo = thumb;
       _error = thumb == null ? 'Could not use that photo. Try another one.' : null;

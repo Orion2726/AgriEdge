@@ -48,7 +48,7 @@ class DiseaseAlertPayload {
 
   /// Max lengths that keep a packet small enough for a quick BLE transfer.
   static const maxNoteLength = 280;
-  static const maxPhotoBytes = 14 * 1024;
+  static const maxPhotoBytes = 100 * 1024;
 
   final String cropId;
   final String label;
@@ -80,7 +80,7 @@ class DiseaseAlertPayload {
   /// Farmer's own words about what they saw (optional, ≤ [maxNoteLength]).
   final String? note;
 
-  /// Small JPEG thumbnail of the affected plant (optional, ≤ [maxPhotoBytes]).
+  /// Compressed JPEG of the affected plant (optional, ≤ [maxPhotoBytes]).
   final Uint8List? photoJpeg;
 
   double get lat => latE6 / 1e6;

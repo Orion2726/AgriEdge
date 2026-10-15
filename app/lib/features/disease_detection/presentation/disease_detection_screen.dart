@@ -12,7 +12,7 @@ import '../../../core/p2p/p2p_alert_service.dart';
 import '../../../core/settings/farm_setup.dart';
 import '../../../core/sync/sync_manager.dart';
 import '../../../shared/disease_label.dart';
-import '../../disease_alerts/presentation/share_report_sheet.dart' show makeShareThumbnail;
+import '../../disease_alerts/presentation/share_report_sheet.dart' show makeSharePhoto;
 import '../data/disease_detection_repository.dart';
 import '../data/treatment_knowledge_base.dart';
 import '../domain/disease_detection_entry.dart';
@@ -121,7 +121,7 @@ class _DiseaseDetectionScreenState extends ConsumerState<DiseaseDetectionScreen>
           lat: lat,
           lng: lng,
           detectionId: entry.id,
-          photoJpeg: _image == null ? null : makeShareThumbnail(await _image!.readAsBytes()),
+          photoJpeg: _image == null ? null : makeSharePhoto(await _image!.readAsBytes()),
         );
       } catch (_) {
         // Non-fatal — the detection is already saved and will still sync

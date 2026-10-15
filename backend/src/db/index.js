@@ -26,6 +26,8 @@ for (const ddl of [
   // control panel, never overwritten by a fetch) / sample (old seed rows).
   'ALTER TABLE prices ADD COLUMN source TEXT',
   'ALTER TABLE orders ADD COLUMN buyer_device TEXT',
+  // Compressed JPEG of the plant from the farmer's phone (field reports).
+  'ALTER TABLE p2p_events ADD COLUMN photo BLOB',
 ]) {
   try {
     db.exec(ddl);

@@ -115,14 +115,14 @@ router.get('/regions', (req, res) => {
   const windowStartIso = new Date(Date.now() - CLUSTER_WINDOW_DAYS * 86400000).toISOString();
   const rows = db
     .prepare(
-      `SELECT crop_id, label, lat, lng, created_at FROM detections
+      `SELECT crop_id, label, lat, lng, confidence, created_at FROM detections
        WHERE consent_shared = 1 AND lat IS NOT NULL AND lng IS NOT NULL AND created_at >= ?`
     )
     .all(windowStartIso)
     .concat(
       db
         .prepare(
-          `SELECT crop_id, label, lat, lng, observed_at AS created_at FROM p2p_events
+          `SELECT crop_id, label, lat, lng, confidence, observed_at AS created_at FROM p2p_events
            WHERE observed_at >= ? AND source_device_id <> 'server'
              AND (detection_id IS NULL OR detection_id NOT IN (SELECT id FROM detections))`
         )
@@ -130,7 +130,7 @@ router.get('/regions', (req, res) => {
     )
     .concat(
       db
-        .prepare('SELECT crop_id, label, lat, lng, created_at FROM server_reports WHERE expires_at >= ?')
+        .prepare('SELECT crop_id, label, lat, lng, NULL AS confidence, 1 AS official, created_at FROM server_reports WHERE expires_at >= ?')
         .all(new Date().toISOString())
     );
 
@@ -157,6 +157,12 @@ router.get('/regions', (req, res) => {
       reportCount: pts.length,
       latestAt: pts.reduce((m, p) => (p.created_at > m ? p.created_at : m), pts[0].created_at),
       distanceKm: hasLoc ? Math.round(haversineKm(lat, lng, cLat, cLng)) : null,
+      // For the app's tap-for-details overview.
+      avgConfidence: (() => {
+        const c = pts.map((p) => p.confidence).filter((v) => v > 0);
+        return c.length ? Math.round((c.reduce((a, b) => a + b, 0) / c.length) * 100) / 100 : null;
+      })(),
+      officialCount: pts.filter((p) => p.official).length,
     });
   }
   regions.sort((a, b) => (hasLoc ? a.distanceKm - b.distanceKm : b.reportCount - a.reportCount));

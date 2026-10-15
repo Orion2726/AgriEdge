@@ -6,10 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/db/app_database.dart';
 import '../../../core/ml/crop_catalog.dart';
 import '../../../core/p2p/p2p_alert_service.dart';
+import '../../../core/p2p/packet/p2p_packet.dart';
 import '../../../core/p2p/relevance/farmer_profile.dart';
 import '../../../core/p2p/security/device_identity.dart';
 import '../../../core/p2p/snapshot_sync.dart';
@@ -529,59 +531,187 @@ class _ReportTile extends StatelessWidget {
         if (row.syncedToBackend) (Icons.cloud_done_outlined, 'Uploaded to server') else (Icons.cloud_upload_outlined, 'Uploads when online'),
     ];
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          if (payload.photoJpeg != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.memory(payload.photoJpeg!, width: 72, height: 72, fit: BoxFit.cover, gaplessPlayback: true),
-              ),
-            ),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(children: [
-                Expanded(child: Text(prettyDiseaseLabel(row.label), style: theme.textTheme.titleMedium)),
-                if (official)
-                  Container(
-                    margin: const EdgeInsets.only(right: 6),
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.tertiaryContainer,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text('Official',
-                        style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onTertiaryContainer)),
-                  ),
-                Tooltip(
-                  message: row.verified ? 'Signed by the reporting phone' : 'Signature not checked yet or invalid',
-                  child: Icon(row.verified ? Icons.verified : Icons.gpp_maybe,
-                      size: 20, color: row.verified ? theme.colorScheme.primary : theme.colorScheme.error),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => _showReportDetails(context, row: row, payload: payload, origin: origin, official: official),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            if (payload.photoJpeg != null)
+              Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.memory(payload.photoJpeg!, width: 72, height: 72, fit: BoxFit.cover, gaplessPlayback: true),
                 ),
-              ]),
-              Text(origin, style: theme.textTheme.bodySmall),
-              Text(details, style: theme.textTheme.bodySmall),
-              if (payload.note != null) ...[
+              ),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(children: [
+                  Expanded(child: Text(prettyDiseaseLabel(row.label), style: theme.textTheme.titleMedium)),
+                  if (official)
+                    Container(
+                      margin: const EdgeInsets.only(right: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.tertiaryContainer,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text('Official',
+                          style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onTertiaryContainer)),
+                    ),
+                  Tooltip(
+                    message: row.verified ? 'Signed by the reporting phone' : 'Signature not checked yet or invalid',
+                    child: Icon(row.verified ? Icons.verified : Icons.gpp_maybe,
+                        size: 20, color: row.verified ? theme.colorScheme.primary : theme.colorScheme.error),
+                  ),
+                ]),
+                Text(origin, style: theme.textTheme.bodySmall),
+                Text(details, style: theme.textTheme.bodySmall),
+                if (payload.note != null) ...[
+                  const SizedBox(height: 6),
+                  Text('“${payload.note}”', style: theme.textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic)),
+                ],
                 const SizedBox(height: 6),
-                Text('“${payload.note}”', style: theme.textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic)),
-              ],
-              const SizedBox(height: 6),
-              Wrap(spacing: 10, runSpacing: 2, children: [
-                for (final (icon, text) in states)
-                  Row(mainAxisSize: MainAxisSize.min, children: [
-                    Icon(icon, size: 14, color: theme.colorScheme.onSurfaceVariant),
-                    const SizedBox(width: 3),
-                    Text(text, style: theme.textTheme.labelSmall),
-                  ]),
+                Wrap(spacing: 10, runSpacing: 2, children: [
+                  for (final (icon, text) in states)
+                    Row(mainAxisSize: MainAxisSize.min, children: [
+                      Icon(icon, size: 14, color: theme.colorScheme.onSurfaceVariant),
+                      const SizedBox(width: 3),
+                      Text(text, style: theme.textTheme.labelSmall),
+                    ]),
+                ]),
               ]),
-            ]),
-          ),
-        ]),
+            ),
+          ]),
+        ),
       ),
     );
   }
+}
+
+/// Tap on a report: the photo, what was predicted, exactly where, and when.
+void _showReportDetails(
+  BuildContext context, {
+  required P2pPacket row,
+  required DiseaseAlertPayload payload,
+  required String origin,
+  required bool official,
+}) {
+  final theme = Theme.of(context);
+  final lat = row.lat.toStringAsFixed(5), lng = row.lng.toStringAsFixed(5);
+  final disease = prettyDiseaseLabel(row.label);
+  final crop = row.cropId.replaceAll('_', ' ');
+  final prediction = official
+      ? 'Official advisory: $disease on $crop'
+      : row.confidence > 0
+          ? 'The model thinks this is $disease on $crop (${(row.confidence * 100).toStringAsFixed(0)}% sure)'
+          : 'The farmer reported $disease on $crop (seen by eye, no model check)';
+  Widget line(IconData icon, String label, String value) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 5),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Icon(icon, size: 20, color: theme.colorScheme.primary),
+          const SizedBox(width: 10),
+          SizedBox(width: 92, child: Text(label, style: theme.textTheme.labelLarge)),
+          Expanded(child: Text(value)),
+        ]),
+      );
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    useSafeArea: true,
+    builder: (_) => SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        if (payload.photoJpeg != null) ...[
+          ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: Image.memory(payload.photoJpeg!, fit: BoxFit.cover, gaplessPlayback: true),
+          ),
+          const SizedBox(height: 14),
+        ],
+        Text(disease, style: theme.textTheme.headlineSmall),
+        const SizedBox(height: 4),
+        Text(prediction, style: theme.textTheme.bodyLarge),
+        const SizedBox(height: 10),
+        line(Icons.warning_amber_rounded, 'Severity', row.severity[0].toUpperCase() + row.severity.substring(1)),
+        line(Icons.place_outlined, 'Location', '$lat, $lng'),
+        line(Icons.schedule, 'Seen', DateFormat.yMMMd().add_jm().format(row.observedAt.toLocal())),
+        line(Icons.timer_off_outlined, 'Expires', DateFormat.yMMMd().add_jm().format(row.expiresAt.toLocal())),
+        line(Icons.person_pin_circle_outlined, 'From', origin),
+        line(row.verified ? Icons.verified : Icons.gpp_maybe, 'Signature',
+            row.verified ? 'Signed by the reporting phone' : 'Not checked yet'),
+        if (payload.note != null) line(Icons.notes, 'Note', '“${payload.note}”'),
+        const SizedBox(height: 12),
+        FilledButton.tonalIcon(
+          onPressed: () => launchUrl(
+            Uri.parse('https://www.openstreetmap.org/?mlat=$lat&mlon=$lng#map=15/$lat/$lng'),
+            mode: LaunchMode.externalApplication,
+          ),
+          icon: const Icon(Icons.map_outlined),
+          label: const Text('Open in Maps'),
+        ),
+      ]),
+    ),
+  );
+}
+
+/// Tap on an "Other regions" outbreak: what, where (centre of the reports),
+/// how many, how sure, and where this phone got the information.
+void _showRegionDetails(BuildContext context, RegionalOutbreak r, {String? via}) {
+  final theme = Theme.of(context);
+  final disease = prettyDiseaseLabel(r.label);
+  final crop = r.cropId?.replaceAll('_', ' ');
+  final hasPoint = r.lat != null && r.lng != null;
+  final lat = r.lat?.toStringAsFixed(5), lng = r.lng?.toStringAsFixed(5);
+  final reports = '${r.reportCount} report${r.reportCount == 1 ? '' : 's'}';
+  final overview = [
+    '$reports of $disease${crop == null ? '' : ' on $crop'} around ${r.region}',
+    if (r.officialCount > 0) '${r.officialCount} of them official',
+    if (r.avgConfidence != null) 'disease checks were ${(r.avgConfidence! * 100).round()}% sure on average',
+  ].join(', ');
+  Widget line(IconData icon, String label, String value) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 5),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Icon(icon, size: 20, color: theme.colorScheme.primary),
+          const SizedBox(width: 10),
+          SizedBox(width: 92, child: Text(label, style: theme.textTheme.labelLarge)),
+          Expanded(child: Text(value)),
+        ]),
+      );
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    useSafeArea: true,
+    builder: (_) => SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Text(disease, style: theme.textTheme.headlineSmall),
+        const SizedBox(height: 4),
+        Text('$overview.', style: theme.textTheme.bodyLarge),
+        const SizedBox(height: 10),
+        line(Icons.public, 'Region', r.region),
+        if (hasPoint) line(Icons.place_outlined, 'Centre', '$lat, $lng'),
+        if (r.distanceKm != null) line(Icons.straighten, 'Distance', '${r.distanceKm} km from your farm'),
+        line(Icons.summarize_outlined, 'Reports', reports),
+        line(Icons.schedule, 'Latest', DateFormat.yMMMd().add_jm().format(r.latestAt.toLocal())),
+        line(Icons.cloud_outlined, 'Source', via == null ? 'AgriEdge server' : 'AgriEdge server, passed on by $via'),
+        if (hasPoint) ...[
+          const SizedBox(height: 12),
+          FilledButton.tonalIcon(
+            onPressed: () => launchUrl(
+              Uri.parse('https://www.openstreetmap.org/?mlat=$lat&mlon=$lng#map=10/$lat/$lng'),
+              mode: LaunchMode.externalApplication,
+            ),
+            icon: const Icon(Icons.map_outlined),
+            label: const Text('Open in Maps'),
+          ),
+        ],
+      ]),
+    ),
+  );
 }
 
 /// "a1b2c3d4e5f60708" → "a1b2-c3d4", short enough to read aloud between
@@ -694,6 +824,8 @@ class _OtherRegionsSection extends ConsumerWidget {
                 subtitle: Text('${r.region}${r.distanceKm == null ? '' : ' · ${r.distanceKm} km away'}\n'
                     '${r.reportCount} report${r.reportCount == 1 ? '' : 's'} · latest ${DateFormat.MMMd().format(r.latestAt.toLocal())}'),
                 isThreeLine: true,
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => _showRegionDetails(context, r, via: data.via),
               ),
           ]),
         ),

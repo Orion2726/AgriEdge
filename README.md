@@ -19,6 +19,8 @@
 
 **[⬇ release/AgriEdge.apk](release/AgriEdge.apk)** (Android 7.0+, about 81 MB)
 
+**🍃 Demo leaf images: [demo/AgriEdge-demo-leaf-images.zip](demo/AgriEdge-demo-leaf-images.zip)**. Five checked images per crop, in folders named after the crop to choose in **Check a sick plant**. Each file name says what the app should answer.
+
 1. Open the link above on GitHub and press **Download raw file**.
 2. Open the downloaded file on the phone and allow **Install unknown apps** when asked.
 3. Allow **Bluetooth (Nearby devices)** and **Location** when the app asks. They are needed for phone-to-phone sharing.
@@ -30,8 +32,8 @@ The APK is signed with a development key, so Play Protect may warn that the app 
 
 | Feature | How it works | Needs internet? |
 |---|---|---|
-| **Disease check** | Take or pick a leaf photo. On-device TFLite (LiteRT) models for potato, rice, wheat, cotton and corn/sugarcane give a diagnosis with symptoms, treatment and prevention. Below 60 % confidence it says "Not sure" and shows the top two guesses. | No |
-| **Nearby alerts (Bluetooth mesh)** | Reports, official advisories, prices and weather are exchanged automatically with any phone running AgriEdge within Bluetooth range: signed, deduplicated, store-and-forward. | No |
+| **Disease check** | Take or pick a leaf photo (try the [demo images](demo/AgriEdge-demo-leaf-images.zip)). On-device TFLite (LiteRT) models for potato, rice, wheat, cotton and corn/sugarcane give a diagnosis with symptoms, treatment and prevention. Below 60 % confidence it says "Not sure" and shows the top two guesses. | No |
+| **Nearby alerts (Bluetooth mesh)** | Reports, official advisories, prices and weather are exchanged automatically with any phone running AgriEdge within Bluetooth range: signed, deduplicated, store-and-forward. A shared disease check carries a compressed photo (up to about 100 KB) and its exact location. Tap any report, or any outbreak under **Other regions**, for the photo, the model's prediction, exact coordinates and **Open in Maps**. | No |
 | **Gateway relay** | A phone that reaches the server uploads reports it received from offline phones and brings official advisories back down to them. | One phone does |
 | **Crop advice** | Enter Soil Health Card values (N, P, K, pH, OC, climate). An on-device model ranks suitable crops. | No |
 | **Mandi prices & outlook** | Live Agmarknet prices (median across reporting mandis) against official MSP; tap a crop for a 7-day forecast with a realistic range band. | To refresh |
@@ -55,7 +57,7 @@ The panel is live at **[https://agriedge-yztd.onrender.com](https://agriedge-yzt
 
 - **Issue an official advisory.** Crop, disease, severity, area and advice for farmers. Online phones get it within about 15 s, then it hops over Bluetooth to offline phones.
 - **Withdraw** an advisory, **edit mandi prices / MSP**, and **change order status**. Every change reaches the phones the same way.
-- **Field reports from farmers.** Reports another phone carried in over Bluetooth are tagged **via mesh**.
+- **Field reports from farmers**, with exact coordinates. **Click a report** for the farmer's photo, the model's prediction and confidence, the location with map links, and which phones made and carried it. Reports another phone carried in over Bluetooth are tagged **via mesh**.
 - **Registered phones** and live counts, with the exact address phones should enter.
 - **Marketplace**: every listing posted from the app's Sell tab, sold or not, with a take-down button.
 - **Data sources**: where each kind of data comes from, when mandi prices were last fetched, a **Refresh prices now** button, and a field for the optional free data.gov.in key.

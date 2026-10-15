@@ -147,6 +147,20 @@
   footer .links a { color: #fff; text-decoration: none; margin-right: 14px; } footer .links a:hover { text-decoration: underline; }
   footer .base { background: #1b221d; text-align: center; padding: 8px 16px; font-size: .8rem; color: #9aa59d; }
 
+  tr.click { cursor: pointer; } tr.click:hover td { background: #e8f3ea; }
+  .coords { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .85rem; white-space: nowrap; }
+  #modal { position: fixed; inset: 0; background: rgba(20, 28, 22, .55); display: none; align-items: flex-start; justify-content: center;
+           padding: 40px 16px; overflow: auto; z-index: 20; }
+  #modal.open { display: flex; }
+  #modal .box { background: #fff; width: min(620px, 100%); border-top: 4px solid var(--green); }
+  #modal .box h3 { margin: 0; padding: 10px 14px; background: var(--green-lt); color: var(--green-dk); border-bottom: 2px solid var(--green);
+                   display: flex; justify-content: space-between; align-items: center; font-size: 1.05rem; }
+  #modal .box h3 button { padding: 0 8px; }
+  #modal .content { padding: 14px; }
+  #modal img { width: 100%; max-height: 420px; object-fit: contain; background: #f2f4f2; border: 1px solid var(--line); margin-bottom: 12px; }
+  #modal .pred { font-size: 1.05rem; margin: 0 0 10px; }
+  #modal dl { display: grid; grid-template-columns: 150px 1fr; gap: 6px 12px; margin: 0; }
+  #modal dt { font-weight: 600; color: var(--muted); } #modal dd { margin: 0; }
   .toast { position: fixed; right: 20px; bottom: 20px; background: #26302a; color: #fff; padding: 10px 16px; border-left: 4px solid #4caf50;
            font-size: .92rem; transform: translateY(12px); opacity: 0; transition: .18s ease; pointer-events: none; }
   .toast.show { transform: none; opacity: 1; }
@@ -270,7 +284,7 @@
       <section class="panel" id="field">
         <h2>Field Reports from Farmers</h2>
         <div class="body">
-          <p class="help">Reports uploaded by phones. <span class="tag leaf">via mesh</span> means another phone carried the report here over Bluetooth. A signature proves which phone made a report, not that the diagnosis is correct.</p>
+          <p class="help">Reports uploaded by phones. <b>Click a report</b> for its photo, the model's prediction and the exact location. <span class="tag leaf">via mesh</span> means another phone carried the report here over Bluetooth. A signature proves which phone made a report, not that the diagnosis is correct.</p>
           <div class="scroll" id="phoneReports"></div>
         </div>
       </section>
@@ -382,6 +396,10 @@
   <div class="base">Content managed by the AgriEdge project team. Faculty demonstration prototype. Mandi prices: Agmarknet via data.gov.in / Mandi Price API (CC BY-NC-SA 4.0). Weather: Open-Meteo (CC BY 4.0). MSP: Government of India. Regional outbreak examples are demonstration data.<br>Best viewed in the latest Chrome, Firefox or Edge at 1366×768 or above.</div>
 </footer>
 <div class="toast" id="toast" role="status"></div>
+<div id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" onclick="if (event.target === this) closeModal()">
+  <div class="box"><h3><span id="modalTitle">Report</span><button type="button" onclick="closeModal()" aria-label="Close">✕</button></h3>
+  <div class="content" id="modalBody"></div></div>
+</div>
 
 <script>
 const CROPS = {
@@ -420,7 +438,7 @@ async function api(path, opts = {}) {
 }
 // Bordered register with a serial-number column.
 const table = (heads, rows) => rows.length
-  ? `<table><tr><th>S.No.</th>${heads.map((h) => `<th>${h}</th>`).join('')}</tr>${rows.map((r, i) => r.replace('<tr>', `<tr><td class="sno">${i + 1}</td>`)).join('')}</table>`
+  ? `<table><tr><th>S.No.</th>${heads.map((h) => `<th>${h}</th>`).join('')}</tr>${rows.map((r, i) => r.replace(/<tr([^>]*)>/, `<tr$1><td class="sno">${i + 1}</td>`)).join('')}</table>`
   : '<div class="empty">No records found.</div>';
 
 // ---- text size
@@ -490,6 +508,42 @@ document.addEventListener('focusout', (e) => { if (e.target.closest('#prices,#ms
 const tickClock = () => { $('sClock').textContent = new Date().toLocaleString('en-IN', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }); };
 tickClock(); setInterval(tickClock, 1000);
 
+// ---- report details (click a row)
+const reportsById = {};
+const fix = (v) => Number(v).toFixed(5);
+const mapLinks = (lat, lng) => `<a href="https://www.openstreetmap.org/?mlat=${fix(lat)}&mlon=${fix(lng)}#map=15/${fix(lat)}/${fix(lng)}" target="_blank" rel="noopener">OpenStreetMap</a> · <a href="https://www.google.com/maps?q=${fix(lat)},${fix(lng)}" target="_blank" rel="noopener">Google Maps</a>`;
+window.closeModal = () => $('modal').classList.remove('open');
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+window.showReport = (key) => {
+  const r = reportsById[key]; if (!r) return;
+  const official = key.startsWith('s:');
+  const disease = pretty(r.label), crop = cap(r.crop_id);
+  const pred = official ? `Official advisory: <b>${esc(disease)}</b> on ${esc(crop)}`
+    : r.confidence > 0 ? `Model prediction: <b>${esc(disease)}</b> on ${esc(crop)}, <b>${Math.round(r.confidence * 100)}%</b> confidence`
+    : `Farmer's own report: <b>${esc(disease)}</b> on ${esc(crop)} (seen by eye, no model check)`;
+  const rows = [
+    ['Severity', sev(r.severity)],
+    ['Coordinates', `<span class="coords">${fix(r.lat)}, ${fix(r.lng)}</span>`],
+    ['Nearest district', esc(r.place || nearest(r.lat, r.lng))],
+    ['Map', mapLinks(r.lat, r.lng)],
+    ...(official ? [
+      ['Issued', when(r.created_at)], ['Valid till', when(r.expires_at)], ['Advice', esc(r.note || '—')],
+    ] : [
+      ['Observed', when(r.observed_at)], ['Received', `${when(r.received_at)} (${ago(r.received_at)})`],
+      ['Reported by', `phone ${sid(r.source_device_id)}`],
+      ['Uploaded by', viaMeshOf(r) ? `phone ${sid(r.uploaded_by)} <span class="tag leaf">via mesh</span>` : 'the same phone'],
+      ['Signature', r.verified ? '<span class="tag ok">Signed by the reporting phone</span>' : '<span class="tag">Not verified</span>'],
+      ['Farmer note', esc(r.note || '—')],
+    ]),
+  ];
+  $('modalTitle').textContent = `${disease} · ${crop}`;
+  $('modalBody').innerHTML = (!official && r.has_photo ? `<img src="/api/admin/report-photo/${encodeURIComponent(r.packet_id)}" alt="Photo from the farmer's phone">` : '')
+    + `<p class="pred">${pred}</p><dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>`;
+  $('modal').classList.add('open');
+};
+// Carried by the mesh = uploaded by a different phone than the one that made it.
+const viaMeshOf = (r) => r.uploaded_by && r.uploaded_by !== String(r.source_device_id).slice(0, 16);
+
 let tickerText = '';
 async function refresh() {
   let d;
@@ -500,8 +554,6 @@ async function refresh() {
   $('lastUpd').textContent = when(new Date().toISOString());
 
   const live = d.devices.filter(isLive);
-  // Carried by the mesh = uploaded by a different phone than the one that made it.
-  const viaMeshOf = (r) => r.uploaded_by && r.uploaded_by !== String(r.source_device_id).slice(0, 16);
   const meshCarried = d.phoneReports.filter(viaMeshOf);
   const meshPhones = new Set(meshCarried.map((r) => String(r.source_device_id).slice(0, 16)));
   const now = new Date().toISOString();
@@ -521,18 +573,20 @@ async function refresh() {
     `<tr><td class="serif">${sid(x.id)}</td><td>${esc(x.ip)}</td><td>${ago(x.lastSeen)}</td><td>${x.requests}</td>
      <td>${isLive(x) ? '<span class="tag ok">● Online</span>' : '<span class="tag">Idle</span>'}</td></tr>`));
 
-  $('serverReports').innerHTML = table(['Advisory', 'Severity', 'Area', 'Advice', 'Issued on', 'Status', 'Action'], d.serverReports.map((r) => {
+  $('serverReports').innerHTML = table(['Advisory', 'Severity', 'Location', 'Advice', 'Issued on', 'Status', 'Action'], d.serverReports.map((r) => {
     const active = r.expires_at > now;
-    return `<tr><td><div class="serif">${esc(pretty(r.label))}</div><div class="dim">${esc(cap(r.crop_id))}</div></td>
-      <td>${sev(r.severity)}</td><td>${esc(r.place || nearest(r.lat, r.lng))}</td><td class="note">${esc(r.note || '—')}</td>
+    reportsById['s:' + r.id] = r;
+    return `<tr class="click" title="Click for details" onclick="if (!event.target.closest('button')) showReport('s:${esc(r.id)}')"><td><div class="serif">${esc(pretty(r.label))}</div><div class="dim">${esc(cap(r.crop_id))}</div></td>
+      <td>${sev(r.severity)}</td><td>${esc(r.place || nearest(r.lat, r.lng))}<div class="coords dim">${fix(r.lat)}, ${fix(r.lng)}</div></td><td class="note">${esc(r.note || '—')}</td>
       <td class="dim">${when(r.created_at)}</td><td>${active ? `<span class="tag ok">Active till ${when(r.expires_at)}</span>` : '<span class="tag">Withdrawn / expired</span>'}</td>
       <td>${active ? `<button class="quiet" onclick="endReport('${r.id}')">Withdraw</button>` : '—'}</td></tr>`;
   }));
 
-  $('phoneReports').innerHTML = table(['Report', 'Severity', 'Area', 'Farmer note', 'Reported by', 'Observed on', 'Received'], d.phoneReports.map((r) => {
+  $('phoneReports').innerHTML = table(['Report', 'Severity', 'Location', 'Farmer note', 'Reported by', 'Observed on', 'Received'], d.phoneReports.map((r) => {
     const viaMesh = viaMeshOf(r);
-    return `<tr><td><div class="serif">${esc(pretty(r.label))}</div><div class="dim">${esc(cap(r.crop_id))}</div></td>
-      <td>${sev(r.severity)}</td><td>${esc(nearest(r.lat, r.lng))}</td><td class="note">${esc(r.note || '—')}</td>
+    reportsById['p:' + r.packet_id] = r;
+    return `<tr class="click" title="Click for photo, prediction and exact location" onclick="showReport('p:${esc(r.packet_id)}')"><td><div class="serif">${esc(pretty(r.label))}${r.has_photo ? ' 📷' : ''}</div><div class="dim">${esc(cap(r.crop_id))}${r.confidence > 0 ? ` · ${Math.round(r.confidence * 100)}%` : ''}</div></td>
+      <td>${sev(r.severity)}</td><td>${esc(nearest(r.lat, r.lng))}<div class="coords dim">${fix(r.lat)}, ${fix(r.lng)}</div></td><td class="note">${esc(r.note || '—')}</td>
       <td>${sid(r.source_device_id)} ${viaMesh ? `<br><span class="tag leaf" title="Uploaded by phone ${esc(r.uploaded_by)}">via mesh · ${sid(r.uploaded_by)}</span>` : ''} ${r.verified ? '' : '<span class="tag">unsigned</span>'}</td>
       <td class="dim">${when(r.observed_at)}</td><td class="dim">${ago(r.received_at)}</td></tr>`;
   }));

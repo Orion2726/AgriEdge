@@ -31,9 +31,9 @@ class BleFraming {
   static const senderIdLength = 8;
 
   /// Hard cap on a reassembled datagram. Alert packets are ~0.4 KB, or up
-  /// to ~15 KB with an attached photo thumbnail; anything bigger is
+  /// to ~105 KB with an attached compressed photo; anything bigger is
   /// malformed or hostile and is rejected before any buffer is allocated.
-  static const maxDatagramLength = 20 * 1024;
+  static const maxDatagramLength = 160 * 1024;
 
   /// Splits [datagram] into chunks no larger than [maxChunkLength] bytes
   /// (the negotiated ATT write length).
@@ -111,13 +111,13 @@ class _Partial {
     required this.msgId,
     required this.senderId,
     required this.expectedLength,
-    required this.startedAt,
+    required this.lastChunkAt,
   });
 
   final int msgId;
   final Uint8List senderId;
   final int expectedLength;
-  final DateTime startedAt;
+  DateTime lastChunkAt;
   final BytesBuilder bytes = BytesBuilder(copy: false);
   int nextSeq = 1;
 }
@@ -171,7 +171,7 @@ class BleReassembler {
         msgId: msgId,
         senderId: Uint8List.fromList(chunk.sublist(10, 10 + BleFraming.senderIdLength)),
         expectedLength: expectedLength,
-        startedAt: _clock(),
+        lastChunkAt: _clock(),
       );
       _partials[linkId] = partial;
       dataStart = BleFraming.firstHeaderLength;
@@ -186,6 +186,7 @@ class BleReassembler {
             'out-of-order chunk: expected msg ${partial.msgId} seq ${partial.nextSeq}, got msg $msgId seq $seq');
       }
       partial.nextSeq++;
+      partial.lastChunkAt = _clock();
       dataStart = BleFraming.baseHeaderLength;
     }
 
@@ -215,10 +216,12 @@ class BleReassembler {
   void dropAll() => _partials.clear();
 
   /// Drops partial messages that stopped arriving — an interrupted transfer
-  /// must not pin memory or poison the link forever.
+  /// must not pin memory or poison the link forever. Measured from the last
+  /// chunk, not the first: a photo over a slow link may take longer than
+  /// [staleAfter] in total while still making progress.
   void dropStale() {
     final now = _clock();
-    _partials.removeWhere((_, p) => now.difference(p.startedAt) > staleAfter);
+    _partials.removeWhere((_, p) => now.difference(p.lastChunkAt) > staleAfter);
   }
 }
 

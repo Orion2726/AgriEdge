@@ -156,6 +156,10 @@ class RegionalOutbreak {
     required this.reportCount,
     required this.latestAt,
     required this.distanceKm,
+    this.lat,
+    this.lng,
+    this.avgConfidence,
+    this.officialCount = 0,
   });
   final String label;
   final String? cropId;
@@ -164,6 +168,13 @@ class RegionalOutbreak {
   final DateTime latestAt;
   final int? distanceKm;
 
+  /// Centre of the reports in this region (null in copies from older servers).
+  final double? lat, lng;
+
+  /// Average model confidence of the reports that came from a disease check.
+  final double? avgConfidence;
+  final int officialCount;
+
   static RegionalOutbreak fromJson(Map<String, dynamic> j) => RegionalOutbreak(
         label: j['label'] as String,
         cropId: j['cropId'] as String?,
@@ -171,6 +182,10 @@ class RegionalOutbreak {
         reportCount: j['reportCount'] as int,
         latestAt: DateTime.parse(j['latestAt'] as String),
         distanceKm: j['distanceKm'] as int?,
+        lat: (j['lat'] as num?)?.toDouble(),
+        lng: (j['lng'] as num?)?.toDouble(),
+        avgConfidence: (j['avgConfidence'] as num?)?.toDouble(),
+        officialCount: (j['officialCount'] as num?)?.toInt() ?? 0,
       );
 }
 

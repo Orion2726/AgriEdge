@@ -66,7 +66,8 @@ router.get('/admin/overview', (req, res) => {
     devices: all('SELECT id, ip, first_seen AS firstSeen, last_seen AS lastSeen, requests FROM devices ORDER BY last_seen DESC'),
     serverReports: all('SELECT * FROM server_reports ORDER BY created_at DESC LIMIT 100'),
     phoneReports: all(
-      `SELECT packet_id, crop_id, label, severity, lat, lng, note, source_device_id, uploaded_by, verified, observed_at, received_at
+      `SELECT packet_id, crop_id, label, confidence, severity, lat, lng, note, source_device_id, uploaded_by, verified,
+              observed_at, received_at, photo IS NOT NULL AS has_photo
        FROM p2p_events WHERE source_device_id <> 'server' ORDER BY received_at DESC LIMIT 100`
     ),
     detections: all(
@@ -115,6 +116,13 @@ router.post('/admin/refresh-prices', async (req, res) => {
   } catch (e) {
     res.status(502).json({ error: e.message });
   }
+});
+
+/** A field report's plant photo, for the panel's report details. */
+router.get('/admin/report-photo/:packetId', (req, res) => {
+  const row = db.prepare('SELECT photo FROM p2p_events WHERE packet_id = ?').get(req.params.packetId);
+  if (!row || !row.photo) return res.status(404).end();
+  res.type('jpeg').set('Cache-Control', 'private, max-age=86400').send(row.photo);
 });
 
 /** Panel can take any listing down (e.g. spam). */

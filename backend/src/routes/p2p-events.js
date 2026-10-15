@@ -23,7 +23,16 @@ router.post('/', (req, res) => {
     verified,
     detectionId,
     note,
+    photo,
   } = req.body;
+
+  // Optional compressed JPEG (base64). Kept only if it really is a JPEG of
+  // sensible size; a bad photo never blocks the report itself.
+  let photoBytes = null;
+  if (typeof photo === 'string' && photo.length < 200 * 1024) {
+    const b = Buffer.from(photo, 'base64');
+    if (b.length > 3 && b[0] === 0xff && b[1] === 0xd8) photoBytes = b;
+  }
 
   if (!packetId || !cropId || !label || confidence == null || lat == null || lng == null) {
     return res
@@ -33,9 +42,10 @@ router.post('/', (req, res) => {
 
   db.prepare(
     `INSERT OR REPLACE INTO p2p_events
-      (packet_id, crop_id, label, confidence, severity, lat, lng, observed_at, expires_at, source_device_id, verified, received_at, detection_id, note, uploaded_by)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-     ON CONFLICT(packet_id) DO UPDATE SET verified = MAX(verified, excluded.verified)`
+      (packet_id, crop_id, label, confidence, severity, lat, lng, observed_at, expires_at, source_device_id, verified, received_at, detection_id, note, uploaded_by, photo)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(packet_id) DO UPDATE SET verified = MAX(verified, excluded.verified),
+       photo = COALESCE(p2p_events.photo, excluded.photo)`
   ).run(
     packetId,
     cropId,
@@ -51,7 +61,8 @@ router.post('/', (req, res) => {
     new Date().toISOString(),
     detectionId ?? null,
     typeof note === 'string' ? note.slice(0, 280) : null,
-    req.get('X-AgriEdge-Device') || null
+    req.get('X-AgriEdge-Device') || null,
+    photoBytes
   );
 
   res.status(201).json({ packetId, status: 'received' });
