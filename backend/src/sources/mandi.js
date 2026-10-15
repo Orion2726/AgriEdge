@@ -57,8 +57,9 @@ async function fromMandiApi(name, state) {
 }
 
 async function fromDataGovIn(name, state, key) {
-  // Exact-match filters need the .keyword suffix on this API.
-  const q = new URLSearchParams({ 'api-key': key, format: 'json', limit: '1000', 'filters[commodity.keyword]': name });
+  // Parameter names as in the portal's API docs: state takes the .keyword
+  // suffix, commodity doesn't.
+  const q = new URLSearchParams({ 'api-key': key, format: 'json', limit: '1000', 'filters[commodity]': name });
   if (state) q.set('filters[state.keyword]', state);
   const body = await getJson(`https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070?${q}`);
   if (body.error) throw new Error(body.error);

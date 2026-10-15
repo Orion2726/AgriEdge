@@ -36,7 +36,7 @@ Either way, phones without internet get the latest copy from a nearby phone over
 2. Click the yellow **⚙ Generate API Key** button on that page.
 3. If you're not signed in, a box says **"To Generate API key.."**. Click **Login | Register**. Sign-in goes through **Jan Parichay / MeriPehchaan**, the government single sign-on, in a new window. Create an account there with your mobile number and OTP if you don't have one, then sign in. You come back to the dataset page.
 4. Click **⚙ Generate API Key** again. The box says *"You don't have API Key. Click on 'Generate API Key' to generate."* Click **Generate API Key**.
-5. The box now shows **API Key: …** with a copy icon. Copy it. Don't press **Regenerate API Key** later unless you mean to: the old key stops working.
+5. The box now shows **API Key: …** with a copy icon. (Once signed in, the key is also listed under **My Account** on the portal.) Copy it. Don't press **Regenerate API Key** later unless you mean to: the old key stops working.
 6. In the AgriEdge control panel, go to **Data Sources**, paste the key in **data.gov.in API key** and press **Save**. Or start the server with `DATA_GOV_IN_API_KEY=<key> npm start`.
 7. Optionally pick **Prefer mandis in state** (e.g. Tamil Nadu), then press **Refresh prices now**. The status should read "updated … from data.gov.in", and price rows are tagged `live · data.gov.in`. If the key is wrong or rate-limited, prices quietly keep coming from the keyless source.
 
