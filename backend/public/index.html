@@ -168,7 +168,8 @@
       <a href="#content">Skip to main content</a><span class="sep">|</span>
       <span class="fs">Text size <button data-fs="13" title="Decrease text size">A-</button><button data-fs="14" title="Normal text size">A</button><button data-fs="16" title="Increase text size">A+</button></span><span class="sep">|</span>
       <span><span class="dot off" id="liveDot"></span>Server: <b id="srvState">connecting</b></span><span class="sep">|</span>
-      <span id="sClock">—</span>
+      <span id="sClock">—</span><span class="sep">|</span>
+      <a href="/logout">Log out</a>
     </div>
   </div>
 </div>
@@ -412,6 +413,7 @@ const isLive = (d) => Date.now() - new Date(d.lastSeen) < 2 * 60000;
 function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2600); }
 async function api(path, opts = {}) {
   const r = await fetch('/api' + path, { headers: { 'content-type': 'application/json' }, ...opts });
+  if (r.status === 401) { location.href = '/'; throw new Error('Signed out'); } // back to the password box
   const body = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(body.error || r.statusText);
   return body;

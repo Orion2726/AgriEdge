@@ -56,10 +56,13 @@ router.get('/admin/overview', (req, res) => {
   res.json({
     serverTime: new Date().toISOString(),
     // Addresses phones should enter in More → Sync & server.
-    phoneUrls: Object.values(require('os').networkInterfaces())
-      .flat()
-      .filter((i) => i && i.family === 'IPv4' && !i.internal)
-      .map((i) => `http://${i.address}:${port}`),
+    // On a host like Render the public https address is what phones use.
+    phoneUrls: process.env.RENDER_EXTERNAL_URL
+      ? [process.env.RENDER_EXTERNAL_URL]
+      : Object.values(require('os').networkInterfaces())
+          .flat()
+          .filter((i) => i && i.family === 'IPv4' && !i.internal)
+          .map((i) => `http://${i.address}:${port}`),
     devices: all('SELECT id, ip, first_seen AS firstSeen, last_seen AS lastSeen, requests FROM devices ORDER BY last_seen DESC'),
     serverReports: all('SELECT * FROM server_reports ORDER BY created_at DESC LIMIT 100'),
     phoneReports: all(

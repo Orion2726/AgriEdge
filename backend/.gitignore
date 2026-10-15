@@ -13,3 +13,4 @@ assets/models/price-forecast/model.tflite
 assets/models/price-forecast/manifest.json
 assets/models/price-forecast/labels.txt
 assets/models/price-forecast/volatility_bands.json
+.env

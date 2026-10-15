@@ -114,6 +114,33 @@ Android may move a phone back to a saved Wi-Fi it scores higher than a hotspot (
 - Publish an advisory in the panel. It appears on B, then on A, marked Official.
 - Share a report on A (Nearby → Share a report). It appears in the panel as **via mesh**.
 
+## Put the server online (Render, free)
+
+With the server on the internet, phones reach it from anywhere (Wi-Fi or mobile data), so no shared network is needed. Offline phones still get everything over Bluetooth.
+
+1. Push this repo to GitHub, with the code on the `main` branch.
+2. Sign up at <https://render.com> with your GitHub account. The free plan needs no card.
+3. In the Render dashboard click **New → Blueprint** and pick this repository. Render reads `render.yaml`.
+4. It asks for two values:
+   - **ADMIN_PASSWORD**: the control-panel password. Required. It is stored only in Render, never in the repo.
+   - **DATA_GOV_IN_API_KEY**: optional. Leave it blank, or paste your data.gov.in key.
+5. Click **Apply** / **Deploy** and wait a few minutes. You get an address like `https://agriedge-xxxx.onrender.com`.
+6. Open it. You see only a password box; after the right password you see the panel.
+7. On each phone: **More → Sync & server**, enter that `https://` address, and tap **Save & test**.
+
+Free-plan notes:
+- The server sleeps after about 15 minutes without visits, and the first request then takes up to a minute. Open the panel a minute before a demo.
+- Its storage is temporary. Prices and MSP refill themselves, but reports, listings and orders are cleared when Render restarts or redeploys it.
+- A paid plan with a disk (or Railway) keeps them.
+
+**Password on the laptop server:** put it in `backend/.env`, which git ignores:
+
+```
+ADMIN_PASSWORD="your password"
+```
+
+Without it, the laptop panel opens with no password, which is fine on your own Wi-Fi.
+
 ## Building from source
 
 Requires Flutter 3.44 or later and the Android SDK.
@@ -153,7 +180,7 @@ release/             ready-to-install APK
 - Regional outbreak examples outside the demo area are demonstration data; no public outbreak API exists.
 - The marketplace has no payments. Buyer and seller settle in person; the app only reserves the item.
 - A listing posted on a phone without internet waits on that phone until it connects. It isn't carried through the Bluetooth mesh, unlike reports. Offline phones can still browse listings they received over Bluetooth.
-- The server is meant for a local network during a demo and has no login. Do not expose it to the internet.
+- The control panel is protected by one shared password, with a lockout after 10 wrong tries. Phone APIs are open, as phones have no login.
 
 ## Credits
 
