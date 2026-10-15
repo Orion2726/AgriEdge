@@ -4,6 +4,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:bluetooth_low_energy/bluetooth_low_energy.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../p2p_log.dart';
 import 'ble_framing.dart';
@@ -146,9 +147,11 @@ class BleTransport implements P2pTransport {
 
     try {
       await _startRoles();
-      _setState(P2pTransportState.running);
+      _setState(P2pTransportState.running, _advertising ? null : _limitedNote);
     } catch (e) {
-      _setState(P2pTransportState.failed, 'Could not start Bluetooth advertising/scanning: $e');
+      p2pLog('ble start failed: $e');
+      _setState(P2pTransportState.failed,
+          'Bluetooth sharing could not start. Tap Try again, or turn Bluetooth off and on.');
       rethrow;
     }
   }
@@ -176,14 +179,22 @@ class BleTransport implements P2pTransport {
         try {
           _rolesRunning = false;
           await _startRoles();
-          _setState(P2pTransportState.running);
+          _setState(P2pTransportState.running, _advertising ? null : _limitedNote);
         } catch (e) {
+          p2pLog('ble restart after adapter on failed: $e');
           _setState(P2pTransportState.failed,
-              'Could not restart Bluetooth after it was turned back on: $e');
+              'Bluetooth sharing could not restart. Tap Try again, or turn Bluetooth off and on.');
         }
       } else if (event.state == BluetoothLowEnergyState.poweredOff &&
           _state != P2pTransportState.stopped) {
         _rolesRunning = false;
+        // Turning Bluetooth off clears every advertising set, including any
+        // stuck ones, so a fresh request is safe once it is back on.
+        _advertiseGen++;
+        _advertising = false;
+        _advertiseRequest = null;
+        _advertiseRetries = 0;
+        _clearStuck();
         _reassembler.dropAll();
         _dropAllPeers();
         _setState(P2pTransportState.bluetoothOff, 'Bluetooth is off');
@@ -249,8 +260,119 @@ class BleTransport implements P2pTransport {
     }
   }
 
+  /// Some Android Bluetooth stacks never answer "service added" or
+  /// "advertising started" (e.g. when every advertising slot is taken by
+  /// other apps), which would leave sharing stuck on "Starting…" forever.
+  static const _stepTimeout = Duration(seconds: 8);
+  static const _limitedNote =
+      'Bluetooth on this phone is busy, so other phones can\'t find it — but it can still reach phones that are '
+      'advertising, so data keeps flowing to them. Turning Bluetooth off and on once fixes this.';
+
+  /// False while running scan-only because advertising could not start.
+  bool _advertising = false;
+
+  /// The one advertising request allowed at a time. An unanswered request
+  /// still holds an advertising set inside Android's Bluetooth stack, and
+  /// such a set can't be stopped until registration finishes — so asking
+  /// again would leak another set each time and clog the phone's few
+  /// advertising slots. Kept until Android answers, however long that takes.
+  Future<void>? _advertiseRequest;
+  int _advertiseRetries = 0;
+
+  /// Bumped when Bluetooth turns off: the stack resets, so earlier requests
+  /// are gone (they may never answer) and must not touch the new state.
+  int _advertiseGen = 0;
+  DateTime _lastAdvertiseAttempt = DateTime.fromMillisecondsSinceEpoch(0);
+  static const _maxAdvertiseRetries = 3;
+
+  /// Boot time (epoch s) of a Bluetooth session in which an advertising
+  /// request never got an answer. Its set stays stuck in the stack until
+  /// Bluetooth restarts or the phone reboots, so later app launches in the
+  /// same session must not request again (each would strand one more set).
+  static const _stuckKey = 'ble_advertise_stuck_boot';
+
+  /// When this boot started (epoch seconds), from /proc/uptime; null where
+  /// unavailable (iOS), in which case the stuck-request guard is skipped.
+  static Future<int?> _bootEpoch() async {
+    try {
+      final up = double.parse((await File('/proc/uptime').readAsString()).split(' ').first);
+      return DateTime.now().millisecondsSinceEpoch ~/ 1000 - up.round();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<void> _clearStuck() async {
+    try {
+      await (await SharedPreferences.getInstance()).remove(_stuckKey);
+    } catch (_) {}
+  }
+
   Future<void> _startRoles() async {
     if (_rolesRunning) return;
+    // Scanning is what lets this phone deliver to others (the receiver's
+    // acknowledgement comes back on the same connection), so it is required;
+    // advertising only lets others start a connection to us.
+    await _startAdvertising();
+    try {
+      await _central.stopDiscovery(); // a half-finished earlier start may have left it on
+    } catch (_) {}
+    await _central.startDiscovery(serviceUUIDs: [_serviceUuid]).timeout(_stepTimeout);
+    _rolesRunning = true;
+    p2pLog('ble ${_advertising ? 'advertising + scanning' : 'scanning only'} as ${hexOf(_localDeviceId!)}');
+  }
+
+  /// GATT inbox + advertisement. Never throws: on failure the phone runs
+  /// scan-only, and [_housekeeping] retries only after Android has
+  /// explicitly answered with a failure.
+  Future<void> _startAdvertising() async {
+    if (_advertising) return;
+    if (_advertiseRequest != null) return; // still waiting for Android; never stack another
+    _lastAdvertiseAttempt = DateTime.now();
+    final prefs = await SharedPreferences.getInstance();
+    final boot = await _bootEpoch();
+    final stuckBoot = prefs.getInt(_stuckKey);
+    if (stuckBoot != null) {
+      if (boot != null && (boot - stuckBoot).abs() < 120) {
+        p2pLog('ble advertising skipped: a request is still stuck from earlier this Bluetooth session');
+        _setState(_state, _limitedNote);
+        return;
+      }
+      await prefs.remove(_stuckKey); // rebooted since
+    }
+    final gen = _advertiseGen;
+    final request = _requestAdvertising();
+    _advertiseRequest = request;
+    request.then((_) {
+      if (gen != _advertiseGen) return;
+      _clearStuck();
+      _advertiseRequest = null;
+      _advertising = true;
+      p2pLog('ble advertising started');
+      if (_stateDetail == _limitedNote) _setState(_state);
+    }, onError: (Object e) {
+      if (gen != _advertiseGen) return;
+      _clearStuck();
+      _advertiseRequest = null; // answered, so a later retry can't leak a set
+      p2pLog('ble advertising failed: $e');
+    });
+    try {
+      await request.timeout(_stepTimeout);
+    } on TimeoutException {
+      // Unanswered: remember it so a relaunch doesn't strand another set.
+      if (boot != null) await prefs.setInt(_stuckKey, boot);
+      if (_state == P2pTransportState.running || _state == P2pTransportState.starting) {
+        _setState(_state, _limitedNote);
+      }
+    } catch (_) {
+      // Unanswered or failed: run scan-only for now.
+      if (!_advertising && (_state == P2pTransportState.running || _state == P2pTransportState.starting)) {
+        _setState(_state, _limitedNote);
+      }
+    }
+  }
+
+  Future<void> _requestAdvertising() async {
     await _peripheral.removeAllServices();
     await _peripheral.addService(GATTService(
       uuid: _serviceUuid,
@@ -275,13 +397,15 @@ class BleTransport implements P2pTransport {
     // permanently renames the phone's Bluetooth adapter system-wide (e.g.
     // "OnePlus Nord" → "AgriEdge") — a side effect on an unrelated setting.
     // Discovery filters on the service UUID, so the name isn't needed.
-    await _peripheral.startAdvertising(Advertisement(
-      name: Platform.isAndroid ? null : 'AgriEdge',
-      serviceUUIDs: [_serviceUuid],
-    ));
-    await _central.startDiscovery(serviceUUIDs: [_serviceUuid]);
-    _rolesRunning = true;
-    p2pLog('ble advertising + scanning as ${hexOf(_localDeviceId!)}');
+    try {
+      await _peripheral.startAdvertising(Advertisement(
+        name: Platform.isAndroid ? null : 'AgriEdge',
+        serviceUUIDs: [_serviceUuid],
+      ));
+    } catch (e) {
+      // ADVERTISE_FAILED_ALREADY_STARTED: this app's advertisement is live.
+      if (!'$e'.contains('error code: 3')) rethrow;
+    }
   }
 
   // ---------------------------------------------------------------- receive
@@ -388,6 +512,14 @@ class BleTransport implements P2pTransport {
 
   void _housekeeping() {
     _reassembler.dropStale();
+    if (_rolesRunning &&
+        !_advertising &&
+        _advertiseRequest == null &&
+        _advertiseRetries < _maxAdvertiseRetries &&
+        DateTime.now().difference(_lastAdvertiseAttempt) > const Duration(seconds: 60)) {
+      _advertiseRetries++;
+      unawaited(_startAdvertising());
+    }
     final now = DateTime.now();
     final stale = _links.entries
         .where((e) => !e.value.status.connected && now.difference(e.value.status.lastSeen) > _peerTimeout)
@@ -592,6 +724,7 @@ class BleTransport implements P2pTransport {
           p2pLog('ble stop step failed: $e');
         }
       }
+      _advertising = false; // an unanswered request stays tracked in _advertiseRequest
     }
     _setState(P2pTransportState.stopped);
   }
