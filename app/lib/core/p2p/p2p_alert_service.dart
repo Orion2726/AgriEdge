@@ -10,6 +10,7 @@ import 'package:geolocator/geolocator.dart';
 import '../data/live_feeds.dart';
 import '../db/db_provider.dart';
 import '../../features/disease_alerts/data/disease_alerts_repository.dart' show regionalOutbreaksProvider;
+import '../../features/orders/data/marketplace_repository.dart' show listingsProvider;
 import '../network/api_client.dart';
 import '../network/connectivity_service.dart';
 import '../sync/sync_manager.dart';
@@ -473,6 +474,8 @@ final p2pAlertServiceFutureProvider = FutureProvider<P2pAlertService>((ref) asyn
           ref.invalidate(newsProvider);
         case SnapshotKind.regions:
           ref.invalidate(regionalOutbreaksProvider);
+        case SnapshotKind.listings:
+          ref.invalidate(listingsProvider);
         case SnapshotKind.prices || SnapshotKind.msp || SnapshotKind.uploaded:
           break; // Drift streams update the screens by themselves.
       }

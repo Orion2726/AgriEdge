@@ -21,8 +21,8 @@ class AeMark extends StatelessWidget {
         child: Text(
           'Æ',
           style: TextStyle(
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.w600,
+            fontFamily: 'JetBrainsMonoNerd',
+            fontWeight: FontWeight.w800,
             fontSize: size * 0.56,
             height: 1,
             color: const Color(0xFFF3F8EE),
@@ -41,9 +41,19 @@ class AeWordmark extends StatelessWidget {
         children: [
           const AeMark(size: 30),
           const SizedBox(width: 10),
-          Text(
-            'AgriEdge',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600, letterSpacing: 0.3),
+          Text.rich(
+            TextSpan(children: [
+              const TextSpan(text: 'Agri'),
+              TextSpan(text: 'Edge', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
+            ]),
+            style: TextStyle(
+              fontFamily: 'JetBrainsMonoNerd',
+              fontWeight: FontWeight.w800,
+              fontSize: 23,
+              letterSpacing: -0.8,
+              height: 1,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
           ),
         ],
       );

@@ -12,7 +12,9 @@ npm start                    # PORT=4001 by default; prints the panel URL and th
 ```
 
 Linux firewall (ufw) — allow phones on the LAN to reach the server once:
-`sudo ufw allow from <lan-subnet>/24 to any port 4001 proto tcp`
+`sudo ufw allow 4001/tcp`
+
+Optional: `DATA_GOV_IN_API_KEY=<key> npm start` (or paste the key in the control panel) for all-India mandi prices — see `docs/DATA_SOURCES.md`.
 
 ## Control panel (for demos)
 
@@ -43,8 +45,9 @@ this local server.
 `cd app && flutter build apk --release --target-platform android-arm,android-arm64`,
 copy to the phone and open it (allow "install unknown apps").
 
-First run seeds sample market prices, MSP rates, a product catalog, and a
-handful of demo disease detections (see `src/db/index.js` — clearly not real
+Mandi prices are fetched live every 3 hours (`src/sources/mandi.js`). MSP rates
+are the official 2026-27 / 2027-28 figures and the store catalogue uses real
+fertiliser MRPs. First run also seeds a handful of demo disease detections (see `src/db/index.js` — clearly not real
 Agmarknet/CACP/crowdsourced data, just enough to exercise every screen).
 
 ## Endpoints
@@ -54,7 +57,9 @@ Agmarknet/CACP/crowdsourced data, just enough to exercise every screen).
 | GET    | `/api/prices`                     | Latest mandi prices |
 | GET    | `/api/prices/forecast/:commodity` | 7-day forecast (stub — see `ml_bridge/price_forecast`) |
 | GET    | `/api/msp`                        | MSP rates |
-| GET    | `/api/products`                   | Order catalog |
+| GET    | `/api/products`                   | Store catalogue |
+| GET/POST | `/api/listings`                 | Farm-supplies listings (Sell tab) |
+| POST   | `/api/listings/:id/buy`           | Buy a listing (one transaction; 409 if already sold) |
 | POST   | `/api/orders`                     | Place/sync an order |
 | POST   | `/api/soil-reports`               | Submit a soil report, get ranked crop recommendations back |
 | GET    | `/api/crop-recommendation/:id`    | Recompute recommendations for a stored report |

@@ -63,17 +63,37 @@ Future<Feed<T>> _cached<T>(String key, Future<Object?> Function() fetch, T Funct
 // ---------------------------------------------------------------- weather
 
 class DayForecast {
-  const DayForecast(this.date, this.maxC, this.minC, this.rainMm, this.rainChance, this.code);
+  const DayForecast(this.date, this.maxC, this.minC, this.rainMm, this.rainChance, this.code, [this.et0Mm]);
   final DateTime date;
   final double maxC, minC, rainMm;
   final int rainChance, code;
+
+  /// Reference evapotranspiration (FAO-56): water a crop loses per day.
+  final double? et0Mm;
 }
 
 class Weather {
-  const Weather({required this.tempC, required this.code, required this.days});
+  const Weather({required this.tempC, required this.code, required this.days, this.soilMoisture});
   final double tempC;
   final int code;
   final List<DayForecast> days;
+
+  /// Top 1 cm of soil, m³/m³ (null in copies saved by older app versions).
+  final double? soilMoisture;
+
+  /// Average crop water use over the next 3 days, mm/day.
+  double? get waterUseMm {
+    final e = [for (final d in days.take(3)) ?d.et0Mm];
+    return e.isEmpty ? null : e.reduce((a, b) => a + b) / e.length;
+  }
+
+  /// "Dry" / "Moist" / "Wet" topsoil, from Open-Meteo's soil moisture model.
+  String? get soilLabel => switch (soilMoisture) {
+        null => null,
+        < 0.15 => 'Dry',
+        < 0.30 => 'Moist',
+        _ => 'Wet',
+      };
 
   /// Plain-language advice from the next three days.
   List<String> get advice {
@@ -86,6 +106,14 @@ class Weather {
       tips.add('Dry next 3 days — plan irrigation; good window for spraying.');
     }
     if (next.any((d) => d.maxC >= 38)) tips.add('Heat above 38 °C expected — irrigate early morning or evening.');
+    // Water balance: what the crop will lose vs. what rain will bring.
+    final et = [for (final d in next) ?d.et0Mm];
+    if (et.length == next.length && next.isNotEmpty) {
+      final deficit = et.reduce((a, b) => a + b) - next.fold<double>(0, (a, d) => a + d.rainMm);
+      if (deficit >= 10) {
+        tips.add('Crops will lose about ${deficit.round()} mm more water than rain gives in 3 days — plan irrigation.');
+      }
+    }
     return tips;
   }
 }
@@ -129,8 +157,9 @@ final weatherProvider = FutureProvider<Feed<Weather>?>((ref) async {
     () async => (await _feedDio.get('https://api.open-meteo.com/v1/forecast', queryParameters: {
           'latitude': loc.lat,
           'longitude': loc.lng,
-          'current': 'temperature_2m,weather_code',
-          'daily': 'temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,weather_code',
+          'current': 'temperature_2m,weather_code,soil_moisture_0_to_1cm',
+          'daily':
+              'temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,weather_code,et0_fao_evapotranspiration',
           'timezone': 'auto',
           'forecast_days': 5,
         }))
@@ -147,12 +176,14 @@ final weatherProvider = FutureProvider<Feed<Weather>?>((ref) async {
           ((d['precipitation_sum'][i] as num?) ?? 0).toDouble(),
           ((d['precipitation_probability_max'][i] as num?) ?? 0).toInt(),
           (d['weather_code'][i] as num).toInt(),
+          ((d['et0_fao_evapotranspiration'] as List?)?[i] as num?)?.toDouble(),
         ));
       }
       return Weather(
         tempC: (m['current']['temperature_2m'] as num).toDouble(),
         code: (m['current']['weather_code'] as num).toInt(),
         days: days,
+        soilMoisture: (m['current']['soil_moisture_0_to_1cm'] as num?)?.toDouble(),
       );
     },
   );

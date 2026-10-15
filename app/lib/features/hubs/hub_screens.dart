@@ -64,7 +64,7 @@ class MoreScreen extends StatelessWidget {
           ActionTile(
             icon: Icons.shopping_basket_outlined,
             title: 'Farm supplies',
-            subtitle: 'Order seeds, fertiliser and tools (demo orders)',
+            subtitle: 'Buy and sell seed, fertiliser, tools and produce',
             onTap: () => context.push('/orders'),
           ),
           ActionTile(
@@ -110,8 +110,22 @@ class AboutScreen extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
         children: [
           const SectionHeader('Live sources (free, no account)'),
-          src('Open-Meteo', 'Weather forecast · CC BY 4.0 · refreshed when you open the app', 'https://open-meteo.com'),
+          src('Open-Meteo', 'Weather forecast, topsoil moisture and crop water use · CC BY 4.0', 'https://open-meteo.com'),
           for (final e in newsSources.entries) src(e.key, 'News headlines via public RSS · links open the original', e.value),
+          const SectionHeader('Through the AgriEdge server'),
+          src('Mandi prices — Agmarknet',
+              'Daily wholesale prices via data.gov.in (when the server has a key) or the open Mandi Price API '
+                  '(CC BY-NC-SA 4.0). The server fetches every 3 hours; phones without internet get them over Bluetooth.',
+              'https://www.data.gov.in/resource/current-daily-price-various-commodities-various-markets-mandi'),
+          src('Minimum Support Price', 'Kharif 2026-27 and Rabi 2027-28 MSP announced by the Government of India (CCEA).',
+              'https://www.pib.gov.in'),
+          const Card(
+            child: ListTile(
+              title: Text('Farm supplies'),
+              subtitle: Text('Listings from farmers and the AgriEdge store. Urea and DAP are government-fixed MRPs; '
+                  'other store prices are typical retail prices. Buying needs a connection to the server.'),
+            ),
+          ),
           const SectionHeader('On this phone'),
           const Card(
             child: ListTile(
@@ -125,15 +139,6 @@ class AboutScreen extends StatelessWidget {
               subtitle: Text(
                   'Farmer reports shared phone-to-phone over Bluetooth. Each report is signed by the phone that made it; '
                   'the signature proves which phone sent it, not that the diagnosis is correct.'),
-            ),
-          ),
-          const SectionHeader('AgriEdge demo server'),
-          const Card(
-            child: ListTile(
-              title: Text('Mandi prices, MSP, product catalogue'),
-              subtitle: Text(
-                  'Sample data seeded on the demo server, not live mandi feeds. Official live mandi data '
-                  '(data.gov.in / Agmarknet) needs a registered API key, which this demo does not use.'),
             ),
           ),
         ],

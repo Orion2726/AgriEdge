@@ -13,6 +13,7 @@ import 'features/disease_alerts/data/disease_alerts_repository.dart';
 import 'features/disease_detection/data/disease_detection_repository.dart';
 import 'features/market_price/data/market_price_repository.dart';
 import 'features/msp/data/msp_repository.dart';
+import 'features/orders/data/marketplace_repository.dart';
 import 'features/orders/data/orders_repository.dart';
 import 'features/soil_report/data/soil_report_repository.dart';
 
@@ -28,6 +29,13 @@ final syncRegistrationProvider = Provider<void>((ref) {
   manager.register('disease_alerts', () => ref.read(diseaseAlertsRepositoryProvider).refresh());
   manager.register('detections', () => ref.read(diseaseDetectionRepositoryProvider).refresh());
   manager.register('orders', () => ref.read(ordersRepositoryProvider).refresh());
+  manager.register('listings', () async {
+    try {
+      await ref.read(marketplaceRepositoryProvider).refresh();
+    } finally {
+      ref.invalidate(listingsProvider);
+    }
+  });
   manager.register('p2p_alerts', () => ref.read(p2pGatewaySyncProvider).refresh());
   manager.register('server_reports', () async {
     // Official reports from the server → into the mesh for offline phones.
@@ -59,7 +67,7 @@ final syncRegistrationProvider = Provider<void>((ref) {
     // so they can be relayed to phones without internet.
     final fast = Timer.periodic(const Duration(seconds: 15), (_) async {
       if (!ref.read(connectivityServiceProvider).isOnline) return;
-      for (final d in ['server_reports', 'market_price', 'msp', 'orders']) {
+      for (final d in ['server_reports', 'market_price', 'msp', 'orders', 'listings']) {
         await manager.syncDomain(d);
       }
       // Pass fresh server data on to nearby phones right away.

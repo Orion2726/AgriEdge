@@ -22,6 +22,10 @@ for (const ddl of [
   // Which phone uploaded it; differs from source_device_id when a report was
   // carried to the server by another phone over the mesh.
   'ALTER TABLE p2p_events ADD COLUMN uploaded_by TEXT',
+  // Where a price came from: mandi-api / data.gov.in / manual (set in the
+  // control panel, never overwritten by a fetch) / sample (old seed rows).
+  'ALTER TABLE prices ADD COLUMN source TEXT',
+  'ALTER TABLE orders ADD COLUMN buyer_device TEXT',
 ]) {
   try {
     db.exec(ddl);
@@ -30,20 +34,32 @@ for (const ddl of [
   }
 }
 
+const getSetting = (key) => db.prepare('SELECT value FROM settings WHERE key = ?').get(key)?.value ?? null;
+const setSetting = (key, value) =>
+  db.prepare('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value')
+    .run(key, value == null ? null : String(value));
+
 /**
- * Sample data only — NOT real Agmarknet/MSP/CACP figures. Swap
- * seedPrices/seedMsp for a real Agmarknet + data.gov.in ingestion job before
- * relying on this for anything but local development. See docs/MODEL_SPECS.md.
+ * Mandi prices come from a live source (src/sources/mandi.js); the rows seeded
+ * here are only a placeholder until the first fetch. MSP and the store
+ * catalogue are real published figures (see docs/DATA_SOURCES.md).
  */
 function seedIfEmpty() {
   const priceCount = db.prepare('SELECT COUNT(*) AS c FROM prices').get().c;
   if (priceCount === 0) seedPrices();
 
-  const mspCount = db.prepare('SELECT COUNT(*) AS c FROM msp_rates').get().c;
-  if (mspCount === 0) seedMsp();
-
-  const productCount = db.prepare('SELECT COUNT(*) AS c FROM products').get().c;
-  if (productCount === 0) seedProducts();
+  // v2: real MSP + real fertiliser MRPs. Replaces the old sample rows once on
+  // databases created before it.
+  if (Number(getSetting('data_version') || 0) < 3) {
+    db.transaction(() => {
+      db.prepare('DELETE FROM msp_rates').run();
+      seedMsp();
+      db.prepare('DELETE FROM products').run();
+      seedProducts();
+      db.prepare("UPDATE prices SET source = 'sample' WHERE source IS NULL").run();
+      setSetting('data_version', 3);
+    })();
+  }
 
   const detectionCount = db.prepare('SELECT COUNT(*) AS c FROM detections').get().c;
   if (detectionCount === 0) seedDetections();
@@ -52,36 +68,54 @@ function seedIfEmpty() {
   if (regionalCount === 0) seedRegionalDemo();
 }
 
+/** Placeholder until the first live fetch replaces them (source = 'sample'). */
 function seedPrices() {
   const today = new Date().toISOString().slice(0, 10);
   const rows = [
-    ['Wheat', 'Azadpur Mandi, Delhi', 2450, today],
-    ['Rice', 'Azadpur Mandi, Delhi', 2250, today],
-    ['Maize', 'Karnal Mandi', 2000, today],
-    ['Cotton', 'Adampur Mandi', 6800, today],
-    ['Mustard', 'Alwar Mandi', 5300, today],
-    ['Potato', 'Agra Mandi', 1250, today],
-    ['Tomato', 'Azadpur Mandi, Delhi', 1600, today],
-    ['Soybean', 'Indore Mandi', 4450, today],
+    ['Wheat', 'Sample — waiting for live prices', 2600, today],
+    ['Rice', 'Sample — waiting for live prices', 2400, today],
+    ['Maize', 'Sample — waiting for live prices', 2100, today],
+    ['Cotton', 'Sample — waiting for live prices', 7500, today],
+    ['Mustard', 'Sample — waiting for live prices', 6300, today],
+    ['Potato', 'Sample — waiting for live prices', 1300, today],
+    ['Tomato', 'Sample — waiting for live prices', 1600, today],
+    ['Soybean', 'Sample — waiting for live prices', 4800, today],
   ];
   const insert = db.prepare(
-    'INSERT INTO prices (commodity, mandi, price_per_quintal, price_date) VALUES (?, ?, ?, ?)'
+    "INSERT INTO prices (commodity, mandi, price_per_quintal, price_date, source) VALUES (?, ?, ?, ?, 'sample')"
   );
   const tx = db.transaction((rows) => rows.forEach((r) => insert.run(...r)));
   tx(rows);
 }
 
+/**
+ * Official MSP, ₹/quintal. Kharif 2026-27 (CCEA, 13 May 2026) and Rabi
+ * marketing season 2027-28 (CCEA, 30 Sep 2026). Crop names match the mandi
+ * commodity names where the app compares the two (Rice = paddy, common;
+ * Cotton = medium staple). Potato and tomato have no MSP.
+ */
 function seedMsp() {
-  const year = new Date().getFullYear();
   const rows = [
-    ['Wheat', 'Rabi', year, 2425],
-    ['Rice', 'Kharif', year, 2300],
-    ['Maize', 'Kharif', year, 2225],
-    ['Cotton', 'Kharif', year, 7521],
-    ['Mustard', 'Rabi', year, 5950],
-    ['Potato', 'Rabi', year, 1200],
-    ['Tomato', 'Year-round', year, 1400],
-    ['Soybean', 'Kharif', year, 4892],
+    ['Rice', 'Kharif 2026-27 (paddy, common)', 2026, 2441],
+    ['Maize', 'Kharif 2026-27', 2026, 2410],
+    ['Cotton', 'Kharif 2026-27 (medium staple)', 2026, 8267],
+    ['Soybean', 'Kharif 2026-27 (yellow)', 2026, 5708],
+    ['Bajra', 'Kharif 2026-27', 2026, 2900],
+    ['Jowar', 'Kharif 2026-27 (hybrid)', 2026, 4023],
+    ['Ragi', 'Kharif 2026-27', 2026, 5205],
+    ['Tur (Arhar)', 'Kharif 2026-27', 2026, 8450],
+    ['Moong', 'Kharif 2026-27', 2026, 8780],
+    ['Urad', 'Kharif 2026-27', 2026, 8200],
+    ['Groundnut', 'Kharif 2026-27', 2026, 7517],
+    ['Sunflower seed', 'Kharif 2026-27', 2026, 8343],
+    ['Sesamum', 'Kharif 2026-27', 2026, 10346],
+    ['Nigerseed', 'Kharif 2026-27', 2026, 10052],
+    ['Wheat', 'Rabi 2027-28', 2027, 2610],
+    ['Mustard', 'Rabi 2027-28 (rapeseed & mustard)', 2027, 6613],
+    ['Gram', 'Rabi 2027-28', 2027, 5958],
+    ['Masur (Lentil)', 'Rabi 2027-28', 2027, 7390],
+    ['Barley', 'Rabi 2027-28', 2027, 2286],
+    ['Safflower', 'Rabi 2027-28', 2027, 7215],
   ];
   const insert = db.prepare(
     'INSERT INTO msp_rates (crop, season, year, price_per_quintal) VALUES (?, ?, ?, ?)'
@@ -90,17 +124,18 @@ function seedMsp() {
   tx(rows);
 }
 
+/** Urea and DAP are government-fixed MRPs; the rest are typical retail prices. */
 function seedProducts() {
   const rows = [
-    ['prod-urea', 'Urea (45kg bag)', 'Fertilizer', 266, 'bag', null, 'Nitrogen fertilizer, government-subsidized rate.'],
-    ['prod-dap', 'DAP (50kg bag)', 'Fertilizer', 1350, 'bag', null, 'Di-ammonium phosphate for phosphorus deficiency.'],
-    ['prod-mop', 'MOP / Potash (50kg bag)', 'Fertilizer', 1700, 'bag', null, 'Muriate of Potash for potassium correction.'],
-    ['prod-wheat-seed', 'Certified Wheat Seed (40kg)', 'Seed', 1800, 'bag', null, 'High-yield certified wheat seed variety.'],
-    ['prod-rice-seed', 'Certified Rice Seed (25kg)', 'Seed', 1200, 'bag', null, 'High-yield certified paddy seed variety.'],
-    ['prod-tomato-seed', 'Hybrid Tomato Seed (10g)', 'Seed', 350, 'packet', null, 'Disease-resistant hybrid tomato variety.'],
-    ['prod-sprayer', 'Knapsack Sprayer 16L', 'Equipment', 1450, 'unit', null, 'Manual pesticide/fungicide sprayer.'],
-    ['prod-neem-oil', 'Neem Oil Concentrate 1L', 'Pesticide', 420, 'bottle', null, 'Organic pest control, safe pre-harvest interval.'],
-    ['prod-hand-tiller', 'Hand Tiller / Khurpi Set', 'Equipment', 350, 'set', null, 'Basic hand tools for weeding and soil prep.'],
+    ['prod-urea', 'Urea (45 kg bag)', 'Fertilizer', 266.5, 'bag', null, 'Neem-coated urea. Government-fixed MRP ₹266.50 per bag.'],
+    ['prod-dap', 'DAP 18:46:0 (50 kg bag)', 'Fertilizer', 1350, 'bag', null, 'Di-ammonium phosphate. MRP held at ₹1,350 per bag.'],
+    ['prod-mop', 'MOP / Potash (50 kg bag)', 'Fertilizer', 1550, 'bag', null, 'Muriate of potash for potassium. Approx. retail price.'],
+    ['prod-npk', 'NPK 10:26:26 (50 kg bag)', 'Fertilizer', 1470, 'bag', null, 'Complex fertiliser for basal dose. Approx. retail price.'],
+    ['prod-ssp', 'SSP (50 kg bag)', 'Fertilizer', 550, 'bag', null, 'Single super phosphate, also gives sulphur. Approx. retail price.'],
+    ['prod-wheat-seed', 'Certified Wheat Seed (40 kg)', 'Seed', 1800, 'bag', null, 'Certified seed. Approx. retail price.'],
+    ['prod-rice-seed', 'Certified Paddy Seed (25 kg)', 'Seed', 1200, 'bag', null, 'Certified seed. Approx. retail price.'],
+    ['prod-sprayer', 'Knapsack Sprayer 16 L', 'Equipment', 1450, 'unit', null, 'Manual sprayer. Approx. retail price.'],
+    ['prod-neem-oil', 'Neem Oil 1500 ppm (1 L)', 'Pesticide', 420, 'bottle', null, 'Botanical pest control. Approx. retail price.'],
   ];
   const insert = db.prepare(
     'INSERT INTO products (id, name, category, price_per_unit, unit, image_url, description) VALUES (?, ?, ?, ?, ?, ?, ?)'
@@ -180,4 +215,4 @@ function seedRegionalDemo() {
   tx();
 }
 
-module.exports = { db, seedIfEmpty };
+module.exports = { db, seedIfEmpty, getSetting, setSetting };

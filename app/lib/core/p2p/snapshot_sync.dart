@@ -14,11 +14,15 @@ import 'p2p_log.dart';
 /// phone that was offline still gets recent prices, MSP, weather and news
 /// from a neighbour that synced. (Treatment guide, crop calendar and FAQ
 /// are built into every copy of the app, so they are never sent.)
-enum SnapshotKind { prices, msp, weather, news, regions, uploaded }
+enum SnapshotKind { prices, msp, weather, news, regions, uploaded, listings }
 
 /// SharedPreferences key of the server's regional outbreak list (see
 /// regionalOutbreaksProvider).
 const regionalOutbreaksCacheKey = 'regional_outbreaks_v1';
+
+/// SharedPreferences key of the farm-supplies listings last fetched from the
+/// server (see MarketplaceRepository) — passed on so offline phones can browse.
+const listingsCacheKey = 'market_listings_v1';
 
 class DataSnapshot {
   const DataSnapshot(this.kind, this.dataAt, this.data);
@@ -91,6 +95,11 @@ class SnapshotSync {
       out.add(DataSnapshot(SnapshotKind.uploaded, DateTime.fromMillisecondsSinceEpoch(uploaded.length, isUtc: true),
           [for (final r in uploaded.take(300)) r.packetId]));
     }
+    final ls = prefs.getString(listingsCacheKey);
+    if (ls != null) {
+      final m = jsonDecode(ls) as Map<String, dynamic>;
+      out.add(DataSnapshot(SnapshotKind.listings, DateTime.parse(m['at'] as String), m['items']));
+    }
     final n = prefs.getString(newsCacheKey);
     if (n != null) {
       final m = jsonDecode(n) as Map<String, dynamic>;
@@ -159,6 +168,10 @@ class SnapshotSync {
       case SnapshotKind.regions:
         if (!newer(_cachedAt(prefs, regionalOutbreaksCacheKey))) return _ignored(s);
         await prefs.setString(regionalOutbreaksCacheKey,
+            jsonEncode({'at': s.dataAt.toIso8601String(), 'items': s.data, 'via': via}));
+      case SnapshotKind.listings:
+        if (!newer(_cachedAt(prefs, listingsCacheKey))) return _ignored(s);
+        await prefs.setString(listingsCacheKey,
             jsonEncode({'at': s.dataAt.toIso8601String(), 'items': s.data, 'via': via}));
       case SnapshotKind.news:
         if (!newer(_cachedAt(prefs, newsCacheKey))) return _ignored(s);

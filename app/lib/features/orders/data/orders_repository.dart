@@ -112,6 +112,28 @@ class OrdersRepository implements OfflineRepository<FarmOrder> {
     return id;
   }
 
+  /// Saves a purchase the server has already accepted (Buy needs a live
+  /// connection, so nothing is queued) so it shows in My orders.
+  Future<void> recordPurchase({required String id, required String status, required List<OrderLineItem> items}) async {
+    final total = items.fold<double>(0, (sum, i) => sum + i.lineTotal);
+    await _db.transaction(() async {
+      await _db.into(_db.orders).insert(OrdersCompanion.insert(
+            id: id,
+            createdAt: DateTime.now(),
+            totalAmount: total,
+            status: Value(status),
+            syncStatus: const Value('synced'),
+          ));
+      await _db.batch((b) {
+        b.insertAll(_db.orderItems, [
+          for (final i in items)
+            OrderItemsCompanion.insert(
+                orderId: id, productId: i.productId, productName: i.productName, quantity: i.quantity, unitPrice: i.unitPrice),
+        ]);
+      });
+    });
+  }
+
   @override
   Future<void> refresh() async {
     await refreshCatalog();
@@ -144,7 +166,7 @@ class OrdersRepository implements OfflineRepository<FarmOrder> {
       try {
         final res = await _dio.post('/api/orders', data: {
           'id': order.id,
-          'createdAt': order.createdAt.toIso8601String(),
+          'createdAt': order.createdAt.toUtc().toIso8601String(),
           'totalAmount': order.totalAmount,
           'items': items
               .map((i) => {

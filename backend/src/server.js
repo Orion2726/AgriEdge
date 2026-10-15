@@ -28,6 +28,7 @@ app.use('/api/prices', require('./routes/prices'));
 app.use('/api/msp', require('./routes/msp'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/orders', require('./routes/orders'));
+app.use('/api/listings', require('./routes/listings'));
 app.use('/api/soil-reports', require('./routes/soil'));
 app.use('/api/crop-recommendation', require('./routes/crop-recommendation'));
 app.use('/api/detections', require('./routes/detections'));
@@ -35,6 +36,9 @@ app.use('/api/p2p-events', require('./routes/p2p-events'));
 app.use('/api/alerts', require('./routes/alerts'));
 app.use('/api/assistant', require('./routes/assistant'));
 app.use('/api/models', require('./routes/models'));
+
+// Live mandi prices: fetched now and every 3 hours (see src/sources/mandi.js).
+require('./sources/mandi').scheduleMandiRefresh();
 
 const PORT = process.env.PORT || 4001;
 const server = app.listen(PORT, '0.0.0.0', () => {

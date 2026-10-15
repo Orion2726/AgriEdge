@@ -31,7 +31,11 @@ class MspScreen extends ConsumerWidget {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 8),
                     child: lastSynced.when(
-                      data: (at) => LastSyncedLabel(lastSyncedAt: at),
+                      data: (at) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        LastSyncedLabel(lastSyncedAt: at),
+                        Text('Official MSP set by the Government of India (CCEA), ₹ per quintal.',
+                            style: Theme.of(context).textTheme.bodySmall),
+                      ]),
                       loading: () => const SizedBox.shrink(),
                       error: (_, _) => const SizedBox.shrink(),
                     ),
@@ -41,7 +45,7 @@ class MspScreen extends ConsumerWidget {
                 return Card(
                   child: ListTile(
                     title: Text(entry.crop),
-                    subtitle: Text('${entry.season} ${entry.year}'),
+                    subtitle: Text(RegExp(r'\d').hasMatch(entry.season) ? entry.season : '${entry.season} ${entry.year}'),
                     trailing: Text(
                       '${currency.format(entry.pricePerQuintal)}/qtl',
                       style: const TextStyle(fontWeight: FontWeight.bold),

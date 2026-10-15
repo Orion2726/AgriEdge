@@ -92,6 +92,11 @@ flutter:
           weight: 600
         - asset: assets/fonts/Poppins-Bold.ttf
           weight: 700
+    # JetBrainsMono Nerd Font (OFL, assets/fonts/JetBrainsMono-OFL.txt) — the AgriEdge wordmark only.
+    - family: JetBrainsMonoNerd
+      fonts:
+        - asset: assets/fonts/JetBrainsMonoNerdFont-ExtraBold.ttf
+          weight: 800
 
   assets:
     - assets/ml/disease/potato/

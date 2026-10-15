@@ -315,7 +315,7 @@ class _P2pStatusCard extends StatelessWidget {
                 child: Text('Sharing starts again by itself once Bluetooth is on. Reports stay saved on this phone.',
                     style: TextStyle(color: foreground)),
               )
-            else if (problem && snap?.detail != null)
+            else if ((problem || state == P2pTransportState.running) && snap?.detail != null)
               Padding(
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(snap!.detail!, style: TextStyle(color: foreground)),
@@ -603,6 +603,7 @@ class _SharedDataCard extends ConsumerWidget {
       SnapshotKind.news: 'Farm news',
       SnapshotKind.regions: 'Outbreaks in other regions',
       SnapshotKind.uploaded: 'Upload confirmations',
+      SnapshotKind.listings: 'Farm supplies for sale',
     };
     return Card(
       child: ExpansionTile(
@@ -610,7 +611,7 @@ class _SharedDataCard extends ConsumerWidget {
         leading: const Icon(Icons.swap_horiz),
         title: const Text('Shared data'),
         subtitle: Text(got.isEmpty
-            ? 'Prices, MSP, weather and news are swapped with nearby phones'
+            ? 'Prices, MSP, weather, news and listings are swapped with nearby phones'
             : 'Got ${got.length} update${got.length == 1 ? '' : 's'} from nearby phones'),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         children: [

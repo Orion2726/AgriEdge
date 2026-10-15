@@ -262,6 +262,22 @@ class _WeatherCard extends ConsumerWidget {
                 Expanded(child: Text(w.advice.first, style: const TextStyle(color: Colors.white))),
               ]),
             ),
+            if (w.soilLabel != null || w.waterUseMm != null) ...[
+              const SizedBox(height: 10),
+              Row(children: [
+                const Icon(Icons.water_drop_outlined, color: Colors.white, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    [
+                      if (w.soilLabel != null) 'Topsoil ${w.soilLabel!.toLowerCase()}',
+                      if (w.waterUseMm != null) 'crops use ~${w.waterUseMm!.toStringAsFixed(1)} mm water/day',
+                    ].join(' · '),
+                    style: text.bodySmall?.copyWith(color: Colors.white.withValues(alpha: 0.9)),
+                  ),
+                ),
+              ]),
+            ],
             const SizedBox(height: 14),
             Row(children: [
               for (final d in w.days.take(5))

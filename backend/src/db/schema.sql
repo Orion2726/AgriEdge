@@ -111,3 +111,31 @@ CREATE TABLE IF NOT EXISTS devices (
   last_seen TEXT NOT NULL,
   requests INTEGER NOT NULL DEFAULT 0
 );
+
+-- Server knobs and data-source status (API keys, last fetch results).
+CREATE TABLE IF NOT EXISTS settings (
+  key TEXT PRIMARY KEY,
+  value TEXT
+);
+
+-- Farm-supplies marketplace: things farmers list for sale from the app.
+-- Buying needs a live connection to this server (one transaction marks the
+-- listing sold), so two phones can never buy the same item.
+CREATE TABLE IF NOT EXISTS listings (
+  id TEXT PRIMARY KEY,
+  seller_device TEXT,
+  seller_name TEXT NOT NULL,
+  phone TEXT,
+  title TEXT NOT NULL,
+  category TEXT NOT NULL,
+  quantity REAL NOT NULL,
+  unit TEXT NOT NULL,
+  price REAL NOT NULL,
+  place TEXT,
+  note TEXT,
+  status TEXT NOT NULL DEFAULT 'available',
+  buyer_device TEXT,
+  order_id TEXT,
+  created_at TEXT NOT NULL,
+  sold_at TEXT
+);

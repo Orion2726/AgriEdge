@@ -1,6 +1,7 @@
 const express = require('express');
 const crypto = require('crypto');
-const { db } = require('../db');
+const { db, getSetting, setSetting } = require('../db');
+const { refreshMandiPrices } = require('../sources/mandi');
 
 const router = express.Router();
 
@@ -76,7 +77,46 @@ router.get('/admin/overview', (req, res) => {
        FROM orders o ORDER BY created_at DESC LIMIT 50`
     ),
     soilReports: all('SELECT * FROM soil_reports ORDER BY created_at DESC LIMIT 20'),
+    listings: all('SELECT * FROM listings ORDER BY created_at DESC LIMIT 100'),
+    sources: sourcesStatus(),
   });
+});
+
+function sourcesStatus() {
+  const key = getSetting('datagov_api_key') || process.env.DATA_GOV_IN_API_KEY || '';
+  let mandi = null;
+  try { mandi = JSON.parse(getSetting('mandi_status') || 'null'); } catch (_) {}
+  return {
+    mandi,
+    mandiState: getSetting('mandi_state') || '',
+    datagovKeySet: Boolean(key),
+    datagovKeyHint: key ? `…${key.slice(-4)}` : '',
+  };
+}
+
+/** Data-source knobs: data.gov.in key and state filter for mandi prices. */
+router.put('/admin/settings', (req, res) => {
+  const { datagovApiKey, mandiState } = req.body || {};
+  if (datagovApiKey !== undefined) {
+    const k = String(datagovApiKey).trim();
+    if (k && !/^[0-9a-f]{20,80}$/i.test(k)) return res.status(400).json({ error: 'That does not look like a data.gov.in API key' });
+    setSetting('datagov_api_key', k || null);
+  }
+  if (mandiState !== undefined) setSetting('mandi_state', String(mandiState).slice(0, 40) || null);
+  res.json(sourcesStatus());
+});
+
+router.post('/admin/refresh-prices', async (req, res) => {
+  try {
+    res.json(await refreshMandiPrices());
+  } catch (e) {
+    res.status(502).json({ error: e.message });
+  }
+});
+
+/** Panel can take any listing down (e.g. spam). */
+router.delete('/admin/listings/:id', (req, res) => {
+  res.json({ withdrawn: db.prepare("UPDATE listings SET status = 'withdrawn' WHERE id = ?").run(req.params.id).changes });
 });
 
 router.post('/admin/server-reports', (req, res) => {
@@ -111,7 +151,7 @@ router.put('/admin/prices/:id', (req, res) => {
   if (!Number.isFinite(price) || price <= 0) return res.status(400).json({ error: 'pricePerQuintal must be > 0' });
   const today = new Date().toISOString().slice(0, 10);
   const r = db
-    .prepare('UPDATE prices SET price_per_quintal = ?, price_date = ?, mandi = COALESCE(?, mandi) WHERE id = ?')
+    .prepare("UPDATE prices SET price_per_quintal = ?, price_date = ?, mandi = COALESCE(?, mandi), source = 'manual' WHERE id = ?")
     .run(price, req.body.priceDate || today, req.body.mandi || null, req.params.id);
   res.json({ updated: r.changes });
 });
@@ -122,9 +162,18 @@ router.post('/admin/prices', (req, res) => {
   if (!commodity || !mandi || !Number.isFinite(price) || price <= 0) {
     return res.status(400).json({ error: 'commodity, mandi and a positive pricePerQuintal are required' });
   }
-  db.prepare('INSERT INTO prices (commodity, mandi, price_per_quintal, price_date) VALUES (?, ?, ?, ?)').run(
+  db.prepare("INSERT INTO prices (commodity, mandi, price_per_quintal, price_date, source) VALUES (?, ?, ?, ?, 'manual')").run(
     commodity, mandi, price, new Date().toISOString().slice(0, 10));
   res.status(201).json({ ok: true });
+});
+
+/** Drops a manual override so the next fetch brings the live price back. */
+router.post('/admin/prices/:id/live', (req, res) => {
+  const row = db.prepare('SELECT commodity FROM prices WHERE id = ?').get(req.params.id);
+  if (!row) return res.status(404).json({ error: 'not found' });
+  db.prepare("UPDATE prices SET source = 'sample' WHERE id = ?").run(req.params.id);
+  refreshMandiPrices().catch(() => {});
+  res.json({ ok: true });
 });
 
 router.delete('/admin/prices/:id', (req, res) => {
