@@ -1,6 +1,8 @@
 # Æ AgriEdge
 
-**Offline-first farming assistant for Android.** AgriEdge checks crop leaves for disease on the phone itself, suggests what to grow from a soil test, shows mandi prices with a 7-day outlook, and passes disease alerts from phone to phone over **Bluetooth**, so farmers without internet still get warnings. A laptop runs a small **control panel** where officials publish advisories and update prices. Phones with internet pick them up and relay them to phones that have none.
+**Offline-first farming assistant for Android.** AgriEdge checks crop leaves for disease on the phone itself, suggests what to grow from a soil test, shows mandi prices with a 7-day outlook, and passes disease alerts from phone to phone over **Bluetooth**, so farmers without internet still get warnings. An online **control panel** lets officials publish advisories and update prices. Phones with internet pick them up and relay them to phones that have none.
+
+**🌐 Live server: [https://agriedge-yztd.onrender.com](https://agriedge-yztd.onrender.com)**. The control panel is password-protected, and phones connect to the same address from any network.
 
 > Faculty demonstration prototype. Mandi prices are **live Agmarknet data**, MSP figures are the **official 2026-27 / 2027-28 rates**, and weather is live from Open-Meteo (see [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md)). The regional outbreak examples outside the demo area are demonstration data. The ML models are real, but they are tuned to be "good enough" for a demo, not field-validated.
 
@@ -20,6 +22,7 @@
 1. Open the link above on GitHub and press **Download raw file**.
 2. Open the downloaded file on the phone and allow **Install unknown apps** when asked.
 3. Allow **Bluetooth (Nearby devices)** and **Location** when the app asks. They are needed for phone-to-phone sharing.
+4. To connect to the live server, open **More → Sync & server**, enter `https://agriedge-yztd.onrender.com` and tap **Save & test**. Any internet connection works.
 
 The APK is signed with a development key, so Play Protect may warn that the app is from an unknown developer. Choose **Install anyway**.
 
@@ -42,13 +45,13 @@ The APK is signed with a development key, so Play Protect may warn that the app 
   <img src="docs/screenshots/app-crop-advice.png" width="220" alt="Crop advice">
 </p>
 
-## Control panel (laptop)
+## Control panel
 
 <p align="center">
   <img src="docs/screenshots/panel-dashboard.png" width="820" alt="Control panel dashboard">
 </p>
 
-The panel runs at `http://localhost:4001/` and offers:
+The panel is live at **[https://agriedge-yztd.onrender.com](https://agriedge-yztd.onrender.com)**, or at `http://localhost:4001/` when you run the server on a laptop. It opens with a single password box; once you're in, it offers:
 
 - **Issue an official advisory.** Crop, disease, severity, area and advice for farmers. Online phones get it within about 15 s, then it hops over Bluetooth to offline phones.
 - **Withdraw** an advisory, **edit mandi prices / MSP**, and **change order status**. Every change reaches the phones the same way.
@@ -65,7 +68,7 @@ The panel runs at `http://localhost:4001/` and offers:
 ## How a report travels
 
 ```
- Control panel ── Wi-Fi/LAN ──▶ Phone B (online) ── Bluetooth ──▶ Phone A (no internet)
+ Server (online) ── internet ──▶ Phone B (online) ── Bluetooth ──▶ Phone A (no internet)
       ▲                              │                                  │
       └──── upload (gateway) ◀───────┴──────── report made offline ◀────┘
 ```
@@ -79,7 +82,22 @@ Protocol details: [docs/P2P_ALERT_PROTOCOL.md](docs/P2P_ALERT_PROTOCOL.md).
 
 ## Running the demo
 
-### 1. Start the server (laptop)
+### Option A: the live server (recommended)
+
+Nothing to start. The server runs at **https://agriedge-yztd.onrender.com**.
+
+- **Online phone:** has internet over any Wi-Fi or mobile data. Set **More → Sync & server** to `https://agriedge-yztd.onrender.com`.
+- **Offline phone:** turn Wi-Fi and mobile data off, keep **Bluetooth on**.
+- Keep AgriEdge **open on both**, within a few metres of each other.
+- Open the control panel and sign in.
+  - Publish an advisory: it appears on the online phone, then on the offline phone, marked **Official**.
+  - Share a report on the offline phone (**Nearby → Share a report**): it shows up in the panel as **via mesh**.
+
+The free server sleeps after about 15 idle minutes. **Open the panel a minute before the demo** to wake it.
+
+### Option B: run the server on a laptop
+
+#### 1. Start the server
 
 Requires Node.js 22 or later.
 
@@ -100,13 +118,13 @@ sudo ufw allow 4001/tcp
 
 Optional — all-India mandi prices: get a free data.gov.in key (steps in [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md#turning-on-all-india-mandi-prices-free-key)) and paste it in the panel under **Data Sources**. Without a key, prices come from 5 states.
 
-### 2. Connect a phone
+#### 2. Connect a phone
 
 Simplest setup: turn on the **hotspot on the online phone** and connect the laptop to it. In the app on that phone open **More → Sync & server**, enter the address and tap **Save & test**. (Any shared Wi-Fi works too.)
 
 Android may move a phone back to a saved Wi-Fi it scores higher than a hotspot (e.g. a campus network). If the online phone loses the server, check which Wi-Fi it is on.
 
-### 3. Two-phone mesh demo
+#### 3. Two-phone mesh demo
 
 - **Phone B** hosts the hotspot the laptop is on (or shares its Wi-Fi), with the server address set.
 - **Phone A** has no route to the laptop (mobile data off, or a different Wi-Fi).
@@ -116,7 +134,7 @@ Android may move a phone back to a saved Wi-Fi it scores higher than a hotspot (
 
 ## Put the server online (Render, free)
 
-With the server on the internet, phones reach it from anywhere (Wi-Fi or mobile data), so no shared network is needed. Offline phones still get everything over Bluetooth.
+This is how the live server above is hosted. With the server on the internet, phones reach it from anywhere (Wi-Fi or mobile data), so no shared network is needed. Offline phones still get everything over Bluetooth. To host your own copy:
 
 1. Push this repo to GitHub, with the code on the `main` branch.
 2. Sign up at <https://render.com> with your GitHub account. The free plan needs no card.
@@ -124,7 +142,7 @@ With the server on the internet, phones reach it from anywhere (Wi-Fi or mobile 
 4. It asks for two values:
    - **ADMIN_PASSWORD**: the control-panel password. Required. It is stored only in Render, never in the repo.
    - **DATA_GOV_IN_API_KEY**: optional. Leave it blank, or paste your data.gov.in key.
-5. Click **Apply** / **Deploy** and wait a few minutes. You get an address like `https://agriedge-xxxx.onrender.com`.
+5. Click **Apply** / **Deploy** and wait a few minutes. You get an address like `https://agriedge-yztd.onrender.com`. Every push to `main` redeploys it automatically.
 6. Open it. You see only a password box; after the right password you see the panel.
 7. On each phone: **More → Sync & server**, enter that `https://` address, and tap **Save & test**.
 
