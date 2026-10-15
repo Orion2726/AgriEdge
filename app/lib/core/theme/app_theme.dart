@@ -15,17 +15,17 @@ class AppTheme {
   static ThemeData _build(Brightness brightness) {
     final scheme = ColorScheme.fromSeed(seedColor: seed, brightness: brightness);
     final isDark = brightness == Brightness.dark;
-    final base = ThemeData(useMaterial3: true, colorScheme: scheme, brightness: brightness, fontFamily: 'Manrope');
+    final base = ThemeData(useMaterial3: true, colorScheme: scheme, brightness: brightness, fontFamily: 'Poppins');
     return base.copyWith(
       scaffoldBackgroundColor: isDark ? const Color(0xFF111511) : const Color(0xFFF6F8F1),
       textTheme: base.textTheme.copyWith(
         bodyMedium: base.textTheme.bodyMedium?.copyWith(fontSize: 15, height: 1.35),
-        titleMedium: base.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.1),
-        titleLarge: base.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.4),
-        titleSmall: base.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-        headlineSmall: base.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.5),
-        displayMedium: base.textTheme.displayMedium?.copyWith(letterSpacing: -1.5),
-        labelLarge: base.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+        titleMedium: base.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+        titleLarge: base.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+        titleSmall: base.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+        headlineSmall: base.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+        displayMedium: base.textTheme.displayMedium?.copyWith(letterSpacing: -0.5),
+        labelLarge: base.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
       ),
       appBarTheme: AppBarTheme(
         centerTitle: false,
@@ -33,7 +33,7 @@ class AppTheme {
         scrolledUnderElevation: 1,
         backgroundColor: isDark ? const Color(0xFF111511) : const Color(0xFFF6F8F1),
         titleTextStyle: base.textTheme.titleLarge?.copyWith(
-            fontFamily: 'Manrope', fontWeight: FontWeight.w800, letterSpacing: -0.4, color: scheme.onSurface),
+            fontFamily: 'Poppins', fontWeight: FontWeight.w600, color: scheme.onSurface),
       ),
       cardTheme: CardThemeData(
         elevation: 0,

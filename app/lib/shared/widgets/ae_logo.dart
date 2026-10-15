@@ -21,8 +21,8 @@ class AeMark extends StatelessWidget {
         child: Text(
           'Æ',
           style: TextStyle(
-            fontFamily: 'Manrope',
-            fontWeight: FontWeight.w800,
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.w600,
             fontSize: size * 0.56,
             height: 1,
             color: const Color(0xFFF3F8EE),
@@ -43,7 +43,7 @@ class AeWordmark extends StatelessWidget {
           const SizedBox(width: 10),
           Text(
             'AgriEdge',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.6),
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600, letterSpacing: 0.3),
           ),
         ],
       );
