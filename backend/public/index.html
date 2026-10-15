@@ -539,7 +539,7 @@ async function refresh() {
   $('keyState').innerHTML = src.datagovKeySet ? `<span class="tag ok">Set ${esc(src.datagovKeyHint)}</span>` : '<span class="tag">Not set (using open API)</span>';
   const m = src.mandi;
   $('mandiState').innerHTML = !m ? '<span class="tag">Waiting for first fetch</span>'
-    : m.ok ? `<span class="tag ok">${m.updated} updated ${ago(m.at)} via ${esc(m.providers.join(' → '))}</span>${m.skippedManual ? ` <span class="tag">${m.skippedManual} manual</span>` : ''}`
+    : m.ok ? `<span class="tag ok">${m.updated} updated ${ago(m.at)} from ${esc((m.used && m.used.length ? m.used : m.providers).join(' + '))}</span>${m.skippedManual ? ` <span class="tag">${m.skippedManual} manual</span>` : ''}`
     : `<span class="badge sev-high">Failed ${ago(m.at)}</span> <span class="dim">${esc((m.errors || [])[0] || '')}</span>`;
   if (!stateLoaded) { $('mState').value = src.mandiState || ''; stateLoaded = true; }
 
@@ -554,7 +554,7 @@ async function refresh() {
 
   if (!editing) {
     $('prices').innerHTML = table(['Commodity', 'Mandi', 'Price (₹/qtl)', ''], d.prices.map((p) =>
-      `<tr><td class="serif">${esc(p.commodity)}<div>${p.source === 'manual' ? `<span class="tag">manual</span> <button class="quiet" onclick="useLive(${p.id})">Use live</button>` : p.source === 'sample' ? '<span class="tag">sample</span>' : `<span class="tag ok">live</span>`}</div></td><td>${esc(p.mandi)}<div class="dim">as on ${esc(new Date(p.price_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }))}</div></td>
+      `<tr><td class="serif">${esc(p.commodity)}<div>${p.source === 'manual' ? `<span class="tag">manual</span> <button class="quiet" onclick="useLive(${p.id})">Use live</button>` : p.source === 'sample' ? '<span class="tag">sample</span>' : `<span class="tag ok">live · ${esc(p.source)}</span>`}</div></td><td>${esc(p.mandi)}<div class="dim">as on ${esc(new Date(p.price_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }))}</div></td>
        <td><div class="inline"><input id="p${p.id}" type="number" value="${p.price_per_quintal}"><button class="quiet" onclick="savePrice(${p.id})">Save</button></div></td>
        <td><button class="quiet" title="Remove" onclick="delPrice(${p.id})">Delete</button></td></tr>`));
     $('msp').innerHTML = table(['Crop', 'Season', 'MSP (₹/qtl)'], d.msp.map((m) =>

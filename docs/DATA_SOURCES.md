@@ -32,10 +32,11 @@ Either way, phones without internet get the latest copy from a nearby phone over
 
 ## Turning on all-India mandi prices (free key)
 
-1. Register at <https://data.gov.in> with an email address or mobile number. No card is needed.
-2. Go to **My Account → API key** and copy the key.
-3. Either paste it in the control panel under **Data Sources → data.gov.in API key** and press **Save**, or start the server with `DATA_GOV_IN_API_KEY=<key> npm start`.
+1. Go to <https://data.gov.in> and **Sign Up** with your name, email address and mobile number, then verify the OTP. No card is needed.
+2. **Sign In**, open **My Account**, and copy your **API key**. On some versions of the site it is under **API Access → Generate API Key**. The official help page is <https://data.gov.in/help/how-use-datasets-apis>.
+3. Either paste the key in the control panel under **Data Sources → data.gov.in API key** and press **Save**, or start the server with `DATA_GOV_IN_API_KEY=<key> npm start`.
 4. Optionally pick **Prefer mandis in state** (e.g. Tamil Nadu) so the median uses local mandis.
+5. Press **Refresh prices now**. The status should read "updated … from data.gov.in", and each price row is tagged `live · data.gov.in`. If the key is wrong or rate-limited, prices quietly keep coming from the keyless source.
 
 ## Considered but not added
 

@@ -98,7 +98,11 @@ class _DiseaseAlertsScreenState extends ConsumerState<DiseaseAlertsScreen> {
       _service = service;
       // The session normally runs app-wide (see _TabShell); this is the
       // "Try again" path after a failed start, or the first start.
-      if (service.transportManager.state == P2pTransportState.running) return;
+      if (service.transportManager.state == P2pTransportState.running) {
+        // Limited (scan-only) mode: ask Bluetooth to advertise again.
+        await service.transportManager.retryAdvertising();
+        return;
+      }
       await service.stop();
       await service.start();
     } catch (_) {
@@ -301,7 +305,8 @@ class _P2pStatusCard extends StatelessWidget {
                   child: Text(title,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(color: foreground)),
                 ),
-                if (problem && state != P2pTransportState.unsupported && state != P2pTransportState.bluetoothOff)
+                if ((problem && state != P2pTransportState.unsupported && state != P2pTransportState.bluetoothOff) ||
+                    (state == P2pTransportState.running && snap?.detail != null))
                   TextButton(
                     onPressed: onRetry,
                     style: TextButton.styleFrom(foregroundColor: foreground),

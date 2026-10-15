@@ -64,6 +64,13 @@ class TransportManager {
     }
   }
 
+  /// Asks Bluetooth to advertise again after running scan-only.
+  Future<void> retryAdvertising() async {
+    for (final t in _transports) {
+      if (t is BleTransport) await t.retryAdvertising();
+    }
+  }
+
   Future<void> stop() async {
     _started = false;
     for (final transport in _transports) {

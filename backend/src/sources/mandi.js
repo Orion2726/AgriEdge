@@ -57,13 +57,19 @@ async function fromMandiApi(name, state) {
 }
 
 async function fromDataGovIn(name, state, key) {
-  const q = new URLSearchParams({ 'api-key': key, format: 'json', limit: '1000', 'filters[commodity]': name });
-  if (state) q.set('filters[state]', state);
+  // Exact-match filters need the .keyword suffix on this API.
+  const q = new URLSearchParams({ 'api-key': key, format: 'json', limit: '1000', 'filters[commodity.keyword]': name });
+  if (state) q.set('filters[state.keyword]', state);
   const body = await getJson(`https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070?${q}`);
   if (body.error) throw new Error(body.error);
   return (body.records || []).map((r) => {
-    const [d, m, y] = String(r.arrival_date).split('/'); // DD/MM/YYYY
-    return { state: r.state, market: r.market, modal: Number(r.modal_price), date: `${y}-${m}-${d}` };
+    const [d = '', m = '', y = ''] = String(r.arrival_date).trim().split('/'); // DD/MM/YYYY, not always zero-padded
+    return {
+      state: r.state,
+      market: r.market,
+      modal: Number(r.modal_price),
+      date: `${y.padStart(4, '20')}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`,
+    };
   });
 }
 
@@ -96,6 +102,7 @@ function refreshMandiPrices() {
     providers.push(['mandi-api', (n) => fromMandiApi(n, mandiApiState)]);
 
     const updated = [];
+    const used = new Set(); // providers that actually supplied a price
     const errors = [];
     const manual = new Set(db.prepare("SELECT commodity FROM prices WHERE source = 'manual'").all().map((r) => r.commodity));
     for (const [commodity, names] of Object.entries(COMMODITIES)) {
@@ -118,6 +125,7 @@ function refreshMandiPrices() {
         db.prepare('INSERT INTO prices (commodity, mandi, price_per_quintal, price_date, source) VALUES (?, ?, ?, ?, ?)')
           .run(commodity, got.label, got.price, got.date, got.provider);
       })();
+      used.add(got.provider);
       updated.push(`${commodity} ₹${got.price} (${got.provider}, ${got.date})`);
     }
     const status = {
@@ -126,6 +134,7 @@ function refreshMandiPrices() {
       updated: updated.length,
       skippedManual: manual.size,
       providers: providers.map((p) => p[0]),
+      used: [...used],
       errors: errors.slice(0, 5),
     };
     setSetting('mandi_status', JSON.stringify(status));

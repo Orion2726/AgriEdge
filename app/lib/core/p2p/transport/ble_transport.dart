@@ -266,7 +266,7 @@ class BleTransport implements P2pTransport {
   static const _stepTimeout = Duration(seconds: 8);
   static const _limitedNote =
       'Bluetooth on this phone is busy, so other phones can\'t find it — but it can still reach phones that are '
-      'advertising, so data keeps flowing to them. Turning Bluetooth off and on once fixes this.';
+      'advertising, so data keeps flowing to them. Turn Bluetooth off and on once, then tap Try again.';
 
   /// False while running scan-only because advertising could not start.
   bool _advertising = false;
@@ -370,6 +370,17 @@ class BleTransport implements P2pTransport {
         _setState(_state, _limitedNote);
       }
     }
+  }
+
+  /// "Try again" in limited mode — e.g. after Bluetooth was turned off and
+  /// on while the app was in the background, which this transport couldn't
+  /// see. One fresh request per tap, and still none while a request from
+  /// this run is unanswered, so taps can't pile up stuck sets.
+  Future<void> retryAdvertising() async {
+    if (!_rolesRunning || _advertising || _advertiseRequest != null) return;
+    await _clearStuck();
+    _advertiseRetries = 0;
+    await _startAdvertising();
   }
 
   Future<void> _requestAdvertising() async {

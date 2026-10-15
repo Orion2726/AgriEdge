@@ -152,6 +152,7 @@ release/             ready-to-install APK
 - Keyless mandi prices cover 5 states (MH, UP, PB, MP, KA). Add a free data.gov.in key in the control panel for all of India.
 - Regional outbreak examples outside the demo area are demonstration data; no public outbreak API exists.
 - The marketplace has no payments. Buyer and seller settle in person; the app only reserves the item.
+- A listing posted on a phone without internet waits on that phone until it connects. It isn't carried through the Bluetooth mesh, unlike reports. Offline phones can still browse listings they received over Bluetooth.
 - The server is meant for a local network during a demo and has no login. Do not expose it to the internet.
 
 ## Credits
