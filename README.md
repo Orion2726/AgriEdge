@@ -2,7 +2,7 @@
 
 **Offline-first farming assistant for Android.** AgriEdge checks crop leaves for disease on the phone itself, suggests what to grow from a soil test, shows mandi prices with a 7-day outlook, and passes disease alerts from phone to phone over **Bluetooth**, so farmers without internet still get warnings. A laptop runs a small **control panel** where officials publish advisories and update prices. Phones with internet pick them up and relay them to phones that have none.
 
-> Faculty demonstration prototype. Mandi prices, MSP rates and the regional outbreak list are **sample data**. The ML models are real, but they are tuned to be "good enough" for a demo, not field-validated.
+> Faculty demonstration prototype. Mandi prices are **live Agmarknet data**, MSP figures are the **official 2026-27 / 2027-28 rates**, and weather is live from Open-Meteo (see [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md)). The regional outbreak examples outside the demo area are demonstration data. The ML models are real, but they are tuned to be "good enough" for a demo, not field-validated.
 
 <p align="center">
   <img src="docs/screenshots/app-home.png" width="200" alt="Home screen">
@@ -15,7 +15,7 @@
 
 ## Download the app
 
-**[⬇ release/AgriEdge.apk](release/AgriEdge.apk)** (Android 7.0+, about 76 MB)
+**[⬇ release/AgriEdge.apk](release/AgriEdge.apk)** (Android 7.0+, about 81 MB)
 
 1. Open the link above on GitHub and press **Download raw file**.
 2. Open the downloaded file on the phone and allow **Install unknown apps** when asked.
@@ -31,9 +31,16 @@ The APK is signed with a development key, so Play Protect may warn that the app 
 | **Nearby alerts (Bluetooth mesh)** | Reports, official advisories, prices and weather are exchanged automatically with any phone running AgriEdge within Bluetooth range: signed, deduplicated, store-and-forward. | No |
 | **Gateway relay** | A phone that reaches the server uploads reports it received from offline phones and brings official advisories back down to them. | One phone does |
 | **Crop advice** | Enter Soil Health Card values (N, P, K, pH, OC, climate). An on-device model ranks suitable crops. | No |
-| **Mandi prices & outlook** | Latest prices against MSP; tap a crop for a 7-day forecast with a realistic range band. | To refresh |
-| **Weather & news** | Forecast with spray/irrigation hints; agriculture news. A saved copy is shown when offline. | To refresh |
-| **Orders, tips, FAQ** | Demo input-ordering flow, sowing tips from your data, and a searchable farming FAQ. | Orders sync when online |
+| **Mandi prices & outlook** | Live Agmarknet prices (median across reporting mandis) against official MSP; tap a crop for a 7-day forecast with a realistic range band. | To refresh |
+| **Weather & news** | Forecast with spray/irrigation hints, topsoil moisture and crop water use; agriculture news. A saved copy is shown when offline. | To refresh |
+| **Farm supplies: Buy / Sell** | **Sell:** list produce, seed or tools (works offline; uploads when connected). **Buy:** farmers' listings and the AgriEdge store. Buying is enabled only while the server is reachable, so an item can't be sold twice. Offline phones can still browse listings received over Bluetooth. | Buying does |
+| **Tips, FAQ** | Sowing tips from your data and a searchable farming FAQ. | No |
+
+<p align="center">
+  <img src="docs/screenshots/app-farm-buy.png" width="220" alt="Farm supplies: Buy">
+  <img src="docs/screenshots/app-farm-sell.png" width="220" alt="Farm supplies: Sell">
+  <img src="docs/screenshots/app-crop-advice.png" width="220" alt="Crop advice">
+</p>
 
 ## Control panel (laptop)
 
@@ -47,9 +54,12 @@ The panel runs at `http://localhost:4001/` and offers:
 - **Withdraw** an advisory, **edit mandi prices / MSP**, and **change order status**. Every change reaches the phones the same way.
 - **Field reports from farmers.** Reports another phone carried in over Bluetooth are tagged **via mesh**.
 - **Registered phones** and live counts, with the exact address phones should enter.
+- **Marketplace**: every listing posted from the app's Sell tab, sold or not, with a take-down button.
+- **Data sources**: where each kind of data comes from, when mandi prices were last fetched, a **Refresh prices now** button, and a field for the optional free data.gov.in key.
 
 <p align="center">
   <img src="docs/screenshots/panel-advisories.png" width="820" alt="Official advisories and field reports">
+  <img src="docs/screenshots/panel-data-sources.png" width="820" alt="Data sources and API key">
 </p>
 
 ## How a report travels
@@ -88,13 +98,17 @@ If Linux has a firewall, allow the port once:
 sudo ufw allow 4001/tcp
 ```
 
+Optional — all-India mandi prices: get a free data.gov.in key (steps in [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md#turning-on-all-india-mandi-prices-free-key)) and paste it in the panel under **Data Sources**. Without a key, prices come from 5 states.
+
 ### 2. Connect a phone
 
-Put the phone on the **same Wi-Fi or hotspot** as the laptop. In the app open **More → Sync & server**, enter the address and tap **Save & test**.
+Simplest setup: turn on the **hotspot on the online phone** and connect the laptop to it. In the app on that phone open **More → Sync & server**, enter the address and tap **Save & test**. (Any shared Wi-Fi works too.)
+
+Android may move a phone back to a saved Wi-Fi it scores higher than a hotspot (e.g. a campus network). If the online phone loses the server, check which Wi-Fi it is on.
 
 ### 3. Two-phone mesh demo
 
-- **Phone B** is on the laptop's Wi-Fi with the server address set.
+- **Phone B** hosts the hotspot the laptop is on (or shares its Wi-Fi), with the server address set.
 - **Phone A** has no route to the laptop (mobile data off, or a different Wi-Fi).
 - Keep AgriEdge **open on both** with Bluetooth on, within a few metres of each other.
 - Publish an advisory in the panel. It appears on B, then on A, marked Official.
@@ -127,7 +141,7 @@ release/             ready-to-install APK
 
 ## Tech
 
-- **App:** Flutter, Riverpod, Drift (SQLite), go_router, `tflite_flutter` 0.12 (LiteRT), `bluetooth_low_energy` (BLE central + peripheral), Poppins font.
+- **App:** Flutter, Riverpod, Drift (SQLite), go_router, `tflite_flutter` 0.12 (LiteRT), `bluetooth_low_energy` (BLE central + peripheral), Poppins (UI) and JetBrainsMono Nerd Font (wordmark).
 - **Models:** transfer-learned CNN classifiers (MobileNetV2 / EfficientNet-Lite) for leaf disease, a small dense network for crop recommendation, and a small dense network for the price outlook (honestly about as accurate as "price stays the same"; the shaded range is the useful part). See [docs/MODEL_SPECS.md](docs/MODEL_SPECS.md).
 - **Server:** Node.js, Express, better-sqlite3. The panel is a single dependency-free HTML page.
 
@@ -135,9 +149,11 @@ release/             ready-to-install APK
 
 - Bluetooth sharing runs only while the app is open in the foreground.
 - Disease models work best on close-up leaf photos. Wide field shots often come back "Not sure".
-- Prices, MSP and regional outbreaks are sample data. Live government feeds would need an API key.
+- Keyless mandi prices cover 5 states (MH, UP, PB, MP, KA). Add a free data.gov.in key in the control panel for all of India.
+- Regional outbreak examples outside the demo area are demonstration data; no public outbreak API exists.
+- The marketplace has no payments. Buyer and seller settle in person; the app only reserves the item.
 - The server is meant for a local network during a demo and has no login. Do not expose it to the internet.
 
 ## Credits
 
-Plant images used for testing came from the PlantVillage dataset and Wikimedia Commons. Poppins is used under the SIL Open Font License (`app/assets/fonts/Poppins-OFL.txt`).
+Plant images used for testing came from the PlantVillage dataset and Wikimedia Commons. Mandi prices: Agmarknet via data.gov.in (GODL) and the [Mandi Price API](https://mandi-api.vercel.app) (CC BY-NC-SA 4.0). Weather: Open-Meteo (CC BY 4.0). Poppins and JetBrainsMono Nerd Font are used under the SIL Open Font License (`app/assets/fonts/`).
