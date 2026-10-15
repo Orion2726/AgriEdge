@@ -47,6 +47,11 @@ The APK is signed with a development key, so Play Protect may warn that the app 
   <img src="docs/screenshots/app-crop-advice.png" width="220" alt="Crop advice">
 </p>
 
+<p align="center">
+  <img src="docs/screenshots/app-report-details.png" width="220" alt="Tap a report: photo, prediction, exact location">
+  <img src="docs/screenshots/app-region-details.png" width="220" alt="Tap an outbreak in Other regions: overview and location">
+</p>
+
 ## Control panel
 
 <p align="center">
@@ -65,6 +70,10 @@ The panel is live at **[https://agriedge-yztd.onrender.com](https://agriedge-yzt
 <p align="center">
   <img src="docs/screenshots/panel-advisories.png" width="820" alt="Official advisories and field reports">
   <img src="docs/screenshots/panel-data-sources.png" width="820" alt="Data sources and API key">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/panel-report-details.png" width="460" alt="Click a field report: farmer's photo, model prediction, exact coordinates">
 </p>
 
 ## How a report travels
