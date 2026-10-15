@@ -32,11 +32,13 @@ Either way, phones without internet get the latest copy from a nearby phone over
 
 ## Turning on all-India mandi prices (free key)
 
-1. Go to <https://data.gov.in> and **Sign Up** with your name, email address and mobile number, then verify the OTP. No card is needed.
-2. **Sign In**, open **My Account**, and copy your **API key**. On some versions of the site it is under **API Access → Generate API Key**. The official help page is <https://data.gov.in/help/how-use-datasets-apis>.
-3. Either paste the key in the control panel under **Data Sources → data.gov.in API key** and press **Save**, or start the server with `DATA_GOV_IN_API_KEY=<key> npm start`.
-4. Optionally pick **Prefer mandis in state** (e.g. Tamil Nadu) so the median uses local mandis.
-5. Press **Refresh prices now**. The status should read "updated … from data.gov.in", and each price row is tagged `live · data.gov.in`. If the key is wrong or rate-limited, prices quietly keep coming from the keyless source.
+1. Open the mandi price dataset: <https://data.gov.in/resource/current-daily-price-various-commodities-various-markets-mandi>
+2. Click the yellow **⚙ Generate API Key** button on that page.
+3. If you're not signed in, a box says **"To Generate API key.."**. Click **Login | Register**. Sign-in goes through **Jan Parichay / MeriPehchaan**, the government single sign-on, in a new window. Create an account there with your mobile number and OTP if you don't have one, then sign in. You come back to the dataset page.
+4. Click **⚙ Generate API Key** again. The box says *"You don't have API Key. Click on 'Generate API Key' to generate."* Click **Generate API Key**.
+5. The box now shows **API Key: …** with a copy icon. Copy it. Don't press **Regenerate API Key** later unless you mean to: the old key stops working.
+6. In the AgriEdge control panel, go to **Data Sources**, paste the key in **data.gov.in API key** and press **Save**. Or start the server with `DATA_GOV_IN_API_KEY=<key> npm start`.
+7. Optionally pick **Prefer mandis in state** (e.g. Tamil Nadu), then press **Refresh prices now**. The status should read "updated … from data.gov.in", and price rows are tagged `live · data.gov.in`. If the key is wrong or rate-limited, prices quietly keep coming from the keyless source.
 
 ## Considered but not added
 
